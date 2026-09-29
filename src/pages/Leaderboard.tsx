@@ -137,10 +137,10 @@ const Leaderboard = () => {
         </div>
 
         {/* Main Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="flex flex-col gap-8">
            
            {/* Left Column (Podium + Table) */}
-           <div className="lg:col-span-8 flex flex-col gap-6">
+           <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto">
               
               {/* Podium */}
               <div className="flex items-end justify-center gap-4 md:gap-6 pt-10 pb-6">
@@ -260,120 +260,6 @@ const Leaderboard = () => {
                  )}
               </div>
            </div>
-
-           {/* Right Column (Sidebar) */}
-           <div className="lg:col-span-4 flex flex-col gap-6">
-              
-              {/* Your Rank Card */}
-              <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 relative overflow-hidden">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full blur-2xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
-                 <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-2 text-primary-600 font-bold text-sm tracking-wider uppercase">
-                       <Target size={16} /> Your Rank
-                    </div>
-                    <button className="text-primary-500 text-xs font-bold flex items-center gap-1 hover:text-primary-600">
-                      View Profile &rarr;
-                    </button>
-                 </div>
-                 
-                 <div className="flex items-end justify-between mb-2">
-                    <div className="flex items-end gap-3">
-                       <span className="text-5xl font-extrabold text-[#121629]">#37</span>
-                       <div className="flex items-center gap-1 bg-emerald-100 text-emerald-600 px-2 py-1 rounded font-bold text-xs mb-1">
-                          <ArrowUp size={12} strokeWidth={3} /> 12
-                       </div>
-                    </div>
-                    <div className="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
-                       A
-                    </div>
-                 </div>
-                 <p className="text-sm text-neutral-500 font-medium mb-6">You're doing great! Keep practicing to climb higher.</p>
-                 
-                 <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
-                       <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center shrink-0"><Trophy size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">1,620</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Total Score</span></div>
-                    </div>
-                    <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
-                       <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0"><Target size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">78%</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Accuracy</span></div>
-                    </div>
-                    <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
-                       <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><Gamepad2 size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">42</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Games Played</span></div>
-                    </div>
-                    <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
-                       <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0"><Clock size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">02:08</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Avg. Time</span></div>
-                    </div>
-                 </div>
-              </div>
-
-              {/* Top Colleges Card */}
-              <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
-                 <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-2 text-[#121629] font-bold text-sm tracking-wider uppercase">
-                       <Landmark size={16} className="text-primary-600" /> Top Colleges
-                    </div>
-                    <button className="text-primary-500 text-xs font-bold flex items-center gap-1 hover:text-primary-600">
-                      View All &rarr;
-                    </button>
-                 </div>
-                 
-                 <div className="flex flex-col gap-4">
-                    {[
-                      { rank: 1, name: 'IIT Bombay', score: '12,420' },
-                      { rank: 2, name: 'IIT Delhi', score: '11,980' },
-                      { rank: 3, name: 'IIIT Hyderabad', score: '10,860' },
-                      { rank: 4, name: 'NIT Trichy', score: '10,240' },
-                      { rank: 5, name: 'BITS Pilani', score: '9,880' },
-                    ].map((col) => (
-                       <div key={col.rank} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                             <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", col.rank === 1 ? "bg-amber-100 text-amber-600" : col.rank === 2 ? "bg-slate-100 text-slate-500" : col.rank === 3 ? "bg-orange-100 text-orange-600" : "text-neutral-400")}>
-                               {col.rank}
-                             </div>
-                             <span className="font-semibold text-neutral-700 text-sm">{col.name}</span>
-                          </div>
-                          <span className="font-bold text-neutral-900 text-sm">{col.score}</span>
-                       </div>
-                    ))}
-                 </div>
-              </div>
-
-              {/* Your Friends Card */}
-              <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
-                 <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-2 text-[#121629] font-bold text-sm tracking-wider uppercase">
-                       <Users size={16} className="text-primary-600" /> Your Friends
-                    </div>
-                    <button className="text-primary-500 text-xs font-bold flex items-center gap-1 hover:text-primary-600">
-                      View All &rarr;
-                    </button>
-                 </div>
-                 
-                 <div className="flex flex-col gap-5">
-                    {[
-                      { rank: 1, name: 'Rohit', college: 'NIT Trichy', score: '2,690', avatar: 'https://i.pravatar.cc/150?u=rohit' },
-                      { rank: 2, name: 'Karan', college: 'VIT Vellore', score: '2,410', avatar: 'https://i.pravatar.cc/150?u=karan' },
-                    ].map((friend) => (
-                       <div key={friend.name} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                             <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-neutral-100 text-neutral-500 shrink-0", friend.rank === 1 && "bg-amber-100 text-amber-600")}>
-                               {friend.rank}
-                             </div>
-                             <img src={friend.avatar} alt="" className="w-8 h-8 rounded-full border border-neutral-200" />
-                             <div className="flex flex-col">
-                                <span className="font-bold text-neutral-900 text-sm leading-tight">{friend.name}</span>
-                                <span className="text-[10px] text-neutral-500">{friend.college}</span>
-                             </div>
-                          </div>
-                          <span className="font-bold text-primary-600 text-sm">{friend.score}</span>
-                       </div>
-                    ))}
-                 </div>
-              </div>
-
            </div>
         </div>
 
