@@ -126,56 +126,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
-        {/* Skill Analysis */}
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <h3 className="text-lg font-bold text-neutral-900">Skill Analysis</h3>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="card p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                <Brain size={24} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1">Strongest</div>
-                <div className="font-bold text-neutral-900">Spatial Reasoning</div>
-                <div className="text-sm text-emerald-600 font-medium">+12% vs avg</div>
-              </div>
-            </div>
-            <div className="card p-5 flex items-center gap-4 border-amber-200 bg-amber-50/30">
-              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                <Activity size={24} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Needs Work</div>
-                <div className="font-bold text-neutral-900">Data Interpretation</div>
-                <div className="text-sm text-amber-600 font-medium">Try Tab Based DI</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recommended */}
-        <div className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold text-neutral-900">Recommended for You</h3>
-          <Link to="/games/tab-di" className="card p-5 flex flex-col gap-4 hover:-translate-y-1 hover:shadow-md transition-all group bg-white">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
-                 <div className="flex items-end gap-1 w-6 h-6">
-                   <div className="w-1.5 h-3 bg-blue-300 rounded-sm"></div>
-                   <div className="w-1.5 h-5 bg-blue-500 rounded-sm"></div>
-                   <div className="w-1.5 h-4 bg-blue-400 rounded-sm"></div>
-                 </div>
-              </div>
-              <div>
-                <h4 className="font-bold text-neutral-900 group-hover:text-primary-600 transition-colors">Tab Based DI</h4>
-                <div className="text-sm text-neutral-500">Practice weak skill</div>
-              </div>
-            </div>
-            <Button variant="secondary" className="w-full">Play Now</Button>
-          </Link>
-        </div>
-      </div>
-
     </div>
   );
 };
