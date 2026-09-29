@@ -49,6 +49,23 @@ const Leaderboard = () => {
     return name ? name.charAt(0).toUpperCase() : 'U';
   };
 
+  const userRankIndex = leaderboard.findIndex(u => u.user_id === user?.id);
+  const userRank = userRankIndex >= 0 ? userRankIndex + 1 : '-';
+  const userStats = userRankIndex >= 0 ? leaderboard[userRankIndex] : { total_score: 0, avg_accuracy: 0, total_games: 0, total_time: 0 };
+  
+  const formatTime = (seconds: number) => Math.floor((seconds || 0) / 60) + ':' + ((seconds || 0) % 60).toString().padStart(2, '0');
+
+  const collegeMap = new Map<string, number>();
+  leaderboard.forEach(u => {
+    if (!u.college) return;
+    const current = collegeMap.get(u.college) || 0;
+    collegeMap.set(u.college, current + (u.total_score || 0));
+  });
+  const topColleges = Array.from(collegeMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map((c, i) => ({ rank: i + 1, name: c[0], score: c[1] }));
+
   return (
     <div className="flex flex-col min-h-screen bg-[#f8f9fa] font-sans pb-20">
       
@@ -278,13 +295,15 @@ const Leaderboard = () => {
                  
                  <div className="flex items-end justify-between mb-2">
                     <div className="flex items-end gap-3">
-                       <span className="text-5xl font-extrabold text-[#121629]">#37</span>
+                       <span className="text-5xl font-extrabold text-[#121629]">#{userRank}</span>
+                       {userRankIndex >= 0 && (
                        <div className="flex items-center gap-1 bg-emerald-100 text-emerald-600 px-2 py-1 rounded font-bold text-xs mb-1">
-                          <ArrowUp size={12} strokeWidth={3} /> 12
+                          <ArrowUp size={12} strokeWidth={3} />
                        </div>
+                       )}
                     </div>
                     <div className="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
-                       A
+                       {getInitial(user?.name || '')}
                     </div>
                  </div>
                  <p className="text-sm text-neutral-500 font-medium mb-6">You're doing great! Keep practicing to climb higher.</p>
@@ -292,19 +311,19 @@ const Leaderboard = () => {
                  <div className="grid grid-cols-2 gap-3">
                     <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
                        <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center shrink-0"><Trophy size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">1,620</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Total Score</span></div>
+                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{userStats.total_score}</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Total Score</span></div>
                     </div>
                     <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
                        <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0"><Target size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">78%</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Accuracy</span></div>
+                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{userStats.avg_accuracy || 0}%</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Accuracy</span></div>
                     </div>
                     <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><Gamepad2 size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">42</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Games Played</span></div>
+                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{userStats.total_games}</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Games Played</span></div>
                     </div>
                     <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
                        <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0"><Clock size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">02:08</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Avg. Time</span></div>
+                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{formatTime(userStats.total_time)}</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Avg. Time</span></div>
                     </div>
                  </div>
               </div>
@@ -321,54 +340,16 @@ const Leaderboard = () => {
                  </div>
                  
                  <div className="flex flex-col gap-4">
-                    {[
-                      { rank: 1, name: 'IIT Bombay', score: '12,420' },
-                      { rank: 2, name: 'IIT Delhi', score: '11,980' },
-                      { rank: 3, name: 'IIIT Hyderabad', score: '10,860' },
-                      { rank: 4, name: 'NIT Trichy', score: '10,240' },
-                      { rank: 5, name: 'BITS Pilani', score: '9,880' },
-                    ].map((col) => (
-                       <div key={col.rank} className="flex items-center justify-between">
+                    {topColleges.length === 0 && <span className="text-sm text-neutral-500">No college data yet.</span>}
+                    {topColleges.map((col) => (
+                       <div key={col.name} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                             <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", col.rank === 1 ? "bg-amber-100 text-amber-600" : col.rank === 2 ? "bg-slate-100 text-slate-500" : col.rank === 3 ? "bg-orange-100 text-orange-600" : "text-neutral-400")}>
+                             <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0", col.rank === 1 ? "bg-amber-100 text-amber-600" : col.rank === 2 ? "bg-slate-100 text-slate-500" : col.rank === 3 ? "bg-orange-100 text-orange-600" : "text-neutral-400")}>
                                {col.rank}
                              </div>
-                             <span className="font-semibold text-neutral-700 text-sm">{col.name}</span>
+                             <span className="font-semibold text-neutral-700 text-sm break-all">{col.name}</span>
                           </div>
-                          <span className="font-bold text-neutral-900 text-sm">{col.score}</span>
-                       </div>
-                    ))}
-                 </div>
-              </div>
-
-              {/* Your Friends Card */}
-              <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6">
-                 <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-2 text-[#121629] font-bold text-sm tracking-wider uppercase">
-                       <Users size={16} className="text-primary-600" /> Your Friends
-                    </div>
-                    <button className="text-primary-500 text-xs font-bold flex items-center gap-1 hover:text-primary-600">
-                      View All &rarr;
-                    </button>
-                 </div>
-                 
-                 <div className="flex flex-col gap-5">
-                    {[
-                      { rank: 1, name: 'Rohit', college: 'NIT Trichy', score: '2,690', avatar: 'https://i.pravatar.cc/150?u=rohit' },
-                      { rank: 2, name: 'Karan', college: 'VIT Vellore', score: '2,410', avatar: 'https://i.pravatar.cc/150?u=karan' },
-                    ].map((friend) => (
-                       <div key={friend.name} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                             <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-neutral-100 text-neutral-500 shrink-0", friend.rank === 1 && "bg-amber-100 text-amber-600")}>
-                               {friend.rank}
-                             </div>
-                             <img src={friend.avatar} alt="" className="w-8 h-8 rounded-full border border-neutral-200" />
-                             <div className="flex flex-col">
-                                <span className="font-bold text-neutral-900 text-sm leading-tight">{friend.name}</span>
-                                <span className="text-[10px] text-neutral-500">{friend.college}</span>
-                             </div>
-                          </div>
-                          <span className="font-bold text-primary-600 text-sm">{friend.score}</span>
+                          <span className="font-bold text-neutral-900 text-sm ml-2">{col.score}</span>
                        </div>
                     ))}
                  </div>
