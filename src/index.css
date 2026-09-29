@@ -1,0 +1,65 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  body {
+    @apply bg-neutral-50 text-neutral-900 font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+  }
+}
+
+@layer components {
+  /* Reusable button styles */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-xl font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 shadow-sm active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply bg-white text-neutral-900 border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 shadow-sm active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100;
+  }
+  .btn-lg {
+    @apply h-12 px-8 text-base;
+  }
+  .btn-md {
+    @apply h-10 px-6 text-sm;
+  }
+  .btn-sm {
+    @apply h-8 px-4 text-xs rounded-lg;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-2xl border border-neutral-200 shadow-soft overflow-hidden transition-all duration-200;
+  }
+  .card-hover {
+    @apply hover:shadow-premium hover:-translate-y-1 hover:border-neutral-300;
+  }
+  
+  /* Game UI specific */
+  .game-container {
+    @apply bg-neutral-900 text-white min-h-[calc(100vh-64px)] flex flex-col;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-neutral-300 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neutral-400;
+}
