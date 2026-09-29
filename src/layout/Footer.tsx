@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Logo } from '../components/ui/Logo';
 
 const Footer = () => {
   return (
@@ -8,10 +9,7 @@ const Footer = () => {
         
         <div className="flex flex-col items-center md:items-start gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-gradient-primary flex items-center justify-center text-white font-bold text-sm">
-              A
-            </div>
-            <span className="font-bold text-lg tracking-tight text-neutral-900">AptiVerse</span>
+            <Logo size={24} className="hover:opacity-90 transition-opacity" />
           </Link>
           <p className="text-sm text-neutral-500">Practice smarter. Get placement ready.</p>
         </div>

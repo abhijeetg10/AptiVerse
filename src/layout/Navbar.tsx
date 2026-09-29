@@ -3,6 +3,7 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { Search, Sun, Bell, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils/cn';
+import { Logo } from '../components/ui/Logo';
 
 const Navbar = () => {
   const { user } = useAuth();
@@ -21,11 +22,8 @@ const Navbar = () => {
         
         {/* Left: Logo */}
         <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:shadow-md transition-shadow">
-              A
-            </div>
-            <span className="font-bold text-xl tracking-tight text-neutral-900">AptiVerse</span>
+          <Link to="/" className="group cursor-pointer">
+            <Logo size={40} className="hover:opacity-90 transition-opacity" />
           </Link>
         </div>
 
