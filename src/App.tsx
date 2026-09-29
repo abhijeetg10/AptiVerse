@@ -16,6 +16,8 @@ import DIChallenge from './games/di/DIChallenge';
 import RCChallenge from './games/rc/RCChallenge';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { AdminRoute } from './components/auth/AdminRoute';
+import { AdminDashboard } from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -30,6 +32,13 @@ function App() {
             <Route path="progress" element={<Progress />} />
             <Route path="leaderboard" element={<Leaderboard />} />
             <Route path="profile" element={<Profile />} />
+            
+            {/* Admin Route */}
+            <Route path="admin" element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } />
           </Route>
 
           {/* Protected Game Routes (full screen) */}

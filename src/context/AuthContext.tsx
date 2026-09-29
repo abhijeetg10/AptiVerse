@@ -8,6 +8,7 @@ export type UserProfile = {
   college: string;
   email?: string;
   avatar_url?: string;
+  role?: string;
 };
 
 interface AuthContextType {
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         college: data.college || '',
         email: data.email,
         avatar_url: data.avatar_url,
+        role: data.role || 'user',
       });
     } else {
       // If profile doesn't exist yet, we still need to set user to something so they can complete it
@@ -51,6 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         id: userId,
         name: '',
         college: '',
+        role: 'user',
       });
     }
     setIsLoading(false);

@@ -5,6 +5,7 @@ create table profiles (
   name text,
   college text,
   avatar_url text,
+  role text default 'user',
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
