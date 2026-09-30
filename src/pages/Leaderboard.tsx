@@ -64,7 +64,6 @@ const Leaderboard = () => {
     score: u.total_score,
     accuracy: (u.avg_accuracy || 0) + '%',
     games: u.total_games,
-    time: Math.floor((u.total_time || 0) / 60) + ':' + ((u.total_time || 0) % 60).toString().padStart(2, '0'),
   }));
 
   const getInitial = (name: string) => {
@@ -73,10 +72,8 @@ const Leaderboard = () => {
 
   const userRankIndex = leaderboard.findIndex(u => u.user_id === user?.id);
   const userRank = userRankIndex >= 0 ? userRankIndex + 1 : '-';
-  const userStats = userRankIndex >= 0 ? leaderboard[userRankIndex] : { total_score: 0, avg_accuracy: 0, total_games: 0, total_time: 0 };
+  const userStats = userRankIndex >= 0 ? leaderboard[userRankIndex] : { total_score: 0, avg_accuracy: 0, total_games: 0 };
   
-  const formatTime = (seconds: number) => Math.floor((seconds || 0) / 60) + ':' + ((seconds || 0) % 60).toString().padStart(2, '0');
-
   const collegeMap = new Map<string, number>();
   leaderboard.forEach(u => {
     if (!u.college) return;
@@ -255,9 +252,8 @@ const Leaderboard = () => {
                     <div className="col-span-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">Player</div>
                     <div className="col-span-3 text-xs font-bold text-neutral-400 uppercase tracking-wider">College</div>
                     <div className="col-span-2 text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Total Score</div>
-                    <div className="col-span-1 text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Accuracy</div>
+                    <div className="col-span-2 text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Accuracy</div>
                     <div className="col-span-1 text-xs font-bold text-neutral-400 uppercase tracking-wider text-right text-center">Games</div>
-                    <div className="col-span-1 text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Time</div>
                  </div>
 
                  {loading ? (
@@ -273,9 +269,8 @@ const Leaderboard = () => {
                             </div>
                             <div className={cn("col-span-3 text-sm font-medium", row.id === user?.id ? "text-primary-600" : "text-neutral-500")}>{row.college}</div>
                             <div className={cn("col-span-2 text-sm font-bold text-right", row.id === user?.id ? "text-primary-700" : "text-neutral-900")}>{row.score}</div>
-                            <div className="col-span-1 text-sm font-bold text-emerald-500 text-right">{row.accuracy}</div>
+                            <div className="col-span-2 text-sm font-bold text-emerald-500 text-right">{row.accuracy}</div>
                             <div className={cn("col-span-1 text-sm font-medium text-center", row.id === user?.id ? "text-primary-600" : "text-neutral-500")}>{row.games}</div>
-                            <div className={cn("col-span-1 text-sm font-medium text-right", row.id === user?.id ? "text-primary-600" : "text-neutral-500")}>{row.time}</div>
                          </div>
                       ))}
                       
@@ -290,9 +285,8 @@ const Leaderboard = () => {
                          </div>
                          <div className="col-span-3 text-sm font-semibold text-primary-600">{user.college}</div>
                          <div className="col-span-2 text-sm font-bold text-primary-700 text-right">0</div>
-                         <div className="col-span-1 text-sm font-bold text-primary-600 text-right">0%</div>
+                         <div className="col-span-2 text-sm font-bold text-primary-600 text-right">0%</div>
                          <div className="col-span-1 text-sm font-bold text-primary-600 text-center">0</div>
-                         <div className="col-span-1 text-sm font-bold text-primary-600 text-right">00:00</div>
                       </div>
                       )}
                    </div>
@@ -330,22 +324,18 @@ const Leaderboard = () => {
                  </div>
                  <p className="text-sm text-neutral-500 font-medium mb-6">You're doing great! Keep practicing to climb higher.</p>
                  
-                 <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
+                 <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-neutral-50 rounded-xl p-3 flex flex-col items-center gap-2 border border-neutral-100 text-center">
                        <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center shrink-0"><Trophy size={14}/></div>
                        <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{userStats.total_score}</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Total Score</span></div>
                     </div>
-                    <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
+                    <div className="bg-neutral-50 rounded-xl p-3 flex flex-col items-center gap-2 border border-neutral-100 text-center">
                        <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0"><Target size={14}/></div>
                        <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{userStats.avg_accuracy || 0}%</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Accuracy</span></div>
                     </div>
-                    <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
+                    <div className="bg-neutral-50 rounded-xl p-3 flex flex-col items-center gap-2 border border-neutral-100 text-center">
                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><Gamepad2 size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{userStats.total_games}</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Games Played</span></div>
-                    </div>
-                    <div className="bg-neutral-50 rounded-xl p-3 flex items-center gap-3 border border-neutral-100">
-                       <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0"><Clock size={14}/></div>
-                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{formatTime(userStats.total_time)}</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Avg. Time</span></div>
+                       <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{userStats.total_games}</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Games</span></div>
                     </div>
                  </div>
               </div>

@@ -10,8 +10,7 @@ const Progress = () => {
   const [stats, setStats] = useState({
     totalScore: 0,
     accuracy: 0,
-    gamesPlayed: 0,
-    timeSpent: 0
+    gamesPlayed: 0
   });
   
   const [recentGames, setRecentGames] = useState<any[]>([]);
@@ -31,8 +30,7 @@ const Progress = () => {
         setStats({
           totalScore: kpiData.total_score || 0,
           accuracy: kpiData.avg_accuracy || 0,
-          gamesPlayed: kpiData.total_games || 0,
-          timeSpent: kpiData.total_time || 0
+          gamesPlayed: kpiData.total_games || 0
         });
       }
 
@@ -96,8 +94,8 @@ const Progress = () => {
 
       <div className="max-w-7xl mx-auto px-6 w-full -mt-5 relative z-20 flex flex-col gap-6">
         
-        {/* 4 KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 3 KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
            
            <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
@@ -126,16 +124,6 @@ const Progress = () => {
               <div className="flex flex-col">
                  <span className="text-2xl font-extrabold text-[#121629]">{stats.gamesPlayed}</span>
                  <span className="text-sm font-medium text-neutral-500">Games Played</span>
-              </div>
-           </div>
-
-           <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-                 <Clock size={24} />
-              </div>
-              <div className="flex flex-col">
-                 <span className="text-2xl font-extrabold text-[#121629]">{Math.floor(stats.timeSpent / 60)}m</span>
-                 <span className="text-sm font-medium text-neutral-500">Time Spent</span>
               </div>
            </div>
 

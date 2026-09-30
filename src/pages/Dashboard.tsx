@@ -10,7 +10,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     accuracy: 0,
     games: 0,
-    timeMins: 0,
+    score: 0,
   });
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const Dashboard = () => {
         setStats({
           accuracy: data.avg_accuracy || 0,
           games: data.total_games || 0,
-          timeMins: Math.floor((data.total_time || 0) / 60),
+          score: data.total_score || 0,
         });
       }
     };
@@ -107,7 +107,7 @@ const Dashboard = () => {
           </div>
           <div className="card p-5 flex flex-col items-start gap-3 bg-white">
             <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center">
-              <Trophy size={20} />
+              <Activity size={20} />
             </div>
             <div>
               <div className="text-2xl font-bold text-neutral-900">{stats.games}</div>
@@ -116,11 +116,11 @@ const Dashboard = () => {
           </div>
           <div className="card p-5 flex flex-col items-start gap-3 bg-white">
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
-              <Clock size={20} />
+              <Trophy size={20} />
             </div>
             <div>
-              <div className="text-2xl font-bold text-neutral-900">{Math.floor(stats.timeMins / 60)}h {stats.timeMins % 60}m</div>
-              <div className="text-sm text-neutral-500 font-medium">Practice Time</div>
+              <div className="text-2xl font-bold text-neutral-900">{stats.score}</div>
+              <div className="text-sm text-neutral-500 font-medium">Total Score</div>
             </div>
           </div>
         </div>
