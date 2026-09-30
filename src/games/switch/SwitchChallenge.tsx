@@ -12,7 +12,6 @@ import FeedbackModal from '../../components/ui/FeedbackModal';
 export const SwitchChallenge: React.FC = () => {
   const [levelIndex, setLevelIndex] = useState(0);
   const [state, setState] = useState<SwitchState>(() => createInitialState(getLevel(0)));
-  const [state, setState] = useState<SwitchState>(() => createInitialState(getLevel(0)));
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 

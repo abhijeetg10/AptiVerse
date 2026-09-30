@@ -272,7 +272,7 @@ export const AdminDashboard = () => {
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : activeTab === 'sessions' ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -317,7 +317,7 @@ export const AdminDashboard = () => {
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : activeTab === 'reviews' ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
