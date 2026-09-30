@@ -7,11 +7,13 @@ import { getLevel } from './levels';
 import { createInitialState, toggleSelection, submitAnswer } from './engine';
 import { InductiveBoard } from './InductiveBoard';
 import { useGameSession } from '../../hooks/useGameSession';
+import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const InductiveChallenge: React.FC = () => {
   const [levelIndex, setLevelIndex] = useState(0);
   const [state, setState] = useState<InductiveState>(() => createInitialState(getLevel(0)));
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -25,11 +27,7 @@ export const InductiveChallenge: React.FC = () => {
 
   useEffect(() => {
     if (state.status === 'completed') {
-      saveSession(levelIndex + 1, 1000, 100, 360 - timeLeft, true);
-      const timer = setTimeout(() => {
-        loadNextLevel();
-      }, 1500);
-      return () => clearTimeout(timer);
+      saveSession(levelIndex + 1, 10, 100, 360 - timeLeft, true);
     }
   }, [state.status, levelIndex, timeLeft]);
 
@@ -115,7 +113,11 @@ export const InductiveChallenge: React.FC = () => {
         {state.status === 'completed' && (
           <div className="mt-8 bg-emerald-50 text-emerald-800 p-6 rounded-2xl border border-emerald-200 text-center animate-in fade-in slide-in-from-bottom-4 shadow-lg shadow-emerald-500/10">
             <h2 className="text-2xl font-extrabold mb-2">Correct!</h2>
-            <p className="font-medium text-emerald-700">The rule was: {state.puzzle.ruleName}</p>
+            <p className="font-medium text-emerald-700 mb-6">The rule was: {state.puzzle.ruleName}</p>
+            <div className="flex gap-4 max-w-sm mx-auto">
+               <Button onClick={() => setIsFeedbackOpen(true)} className="flex-1 bg-white hover:bg-slate-100 text-emerald-700 border border-emerald-200">Feedback</Button>
+               <Button onClick={loadNextLevel} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">Next Level</Button>
+            </div>
           </div>
         )}
 
@@ -128,6 +130,12 @@ export const InductiveChallenge: React.FC = () => {
         )}
 
       </main>
+
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+        onSubmit={() => setIsFeedbackOpen(false)} 
+      />
     </div>
   );
 };

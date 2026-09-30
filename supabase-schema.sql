@@ -76,3 +76,42 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Create a table for feedback
+create table feedback (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references profiles(id),
+  rating integer not null,
+  tag text,
+  comment text,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+alter table feedback enable row level security;
+
+create policy "Feedback is viewable by everyone."
+  on feedback for select
+  using ( true );
+
+create policy "Anyone can insert feedback."
+  on feedback for insert
+  with check ( true );
+
+-- Create a table for bug reports and contact us messages
+create table bug_reports (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references profiles(id),
+  title text not null,
+  description text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+alter table bug_reports enable row level security;
+
+create policy "Bug reports are viewable by everyone."
+  on bug_reports for select
+  using ( true );
+
+create policy "Anyone can insert bug reports."
+  on bug_reports for insert
+  with check ( true );

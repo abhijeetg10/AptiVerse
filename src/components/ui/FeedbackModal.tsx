@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, X, Star, CheckCircle2, Gamepad2, LayoutTemplate, Zap, Trophy, Briefcase, Sparkles } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -33,6 +35,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { user } = useAuth();
 
   // Close on Escape key
   useEffect(() => {
@@ -47,20 +50,24 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
 
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (rating === 0) return;
     
     setIsSubmitting(true);
     
-    // Simulate API call for saving feedback
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
+    try {
+      const { error } = await supabase.from('feedback').insert({
+        user_id: user?.id || null,
+        rating,
+        tag: selectedTag,
+        comment
+      });
       
-      // Tell parent we succeeded
+      if (error) throw error;
+      
+      setIsSuccess(true);
       onSubmit();
       
-      // Auto close after success
       setTimeout(() => {
         setIsSuccess(false);
         setRating(0);
@@ -68,7 +75,13 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
         setComment('');
         onClose();
       }, 1500);
-    }, 800);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      // Even on error we can close or show error, but let's just alert for now
+      alert('Failed to submit feedback');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {

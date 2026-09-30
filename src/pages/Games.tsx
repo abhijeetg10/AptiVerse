@@ -90,7 +90,7 @@ const Games = () => {
             desc="Slide obstacles to clear a path and guide the ball into the target hole."
             difficulty="Medium"
             category={{ label: "Spatial Reasoning", icon: <Compass size={12}/> }}
-            score="920"
+            score="10"
             played="32"
             visual={
               <div className="w-[140px] h-[80px] bg-white rounded-lg border border-blue-100 shadow-sm p-1.5 grid grid-cols-4 grid-rows-3 gap-1 relative">
@@ -110,7 +110,7 @@ const Games = () => {
             desc="Find the missing shape using Sudoku-style row and column logic."
             difficulty="Hard"
             category={{ label: "Pattern Logic", icon: <Brain size={12}/> }}
-            score="780"
+            score="9"
             played="28"
             visual={
               <div className="w-[100px] h-[100px] bg-white rounded-lg border border-amber-100 shadow-sm p-2 grid grid-cols-3 gap-1.5">
@@ -136,7 +136,7 @@ const Games = () => {
             desc="Identify hidden rules in a sequence of shapes and predict the next step."
             difficulty="Medium"
             category={{ label: "Pattern Recognition", icon: <Eye size={12}/> }}
-            score="860"
+            score="10"
             played="25"
             visual={
               <div className="flex items-center gap-1.5">
@@ -155,7 +155,7 @@ const Games = () => {
             desc="Memorize the location of dots and reproduce them after a distraction task."
             difficulty="Hard"
             category={{ label: "Memory + Spatial", icon: <Brain size={12}/> }}
-            score="810"
+            score="8"
             played="19"
             visual={
               <div className="grid grid-cols-6 gap-1.5 relative">
@@ -176,7 +176,7 @@ const Games = () => {
             desc="Follow transformation rules and determine how inputs map to outputs."
             difficulty="Hard"
             category={{ label: "Logical Mapping", icon: <Brain size={12}/> }}
-            score="790"
+            score="9"
             played="22"
             visual={
               <div className="flex flex-col items-center gap-2">
@@ -206,7 +206,7 @@ const Games = () => {
             desc="Analyze tables and charts across multiple tabs and verify complex statements."
             difficulty="Hard"
             category={{ label: "Data Interpretation", icon: <Hash size={12}/> }}
-            score="840"
+            score="10"
             played="18"
             visual={
               <div className="w-[160px] bg-white rounded-lg border border-blue-100 shadow-sm overflow-hidden flex flex-col">
@@ -235,7 +235,7 @@ const Games = () => {
             desc="Navigate between multiple document tabs, combine information and answer questions."
             difficulty="Medium"
             category={{ label: "Reading Comprehension", icon: <BookOpen size={12}/> }}
-            score="800"
+            score="9"
             played="21"
             visual={
               <div className="w-[160px] bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">

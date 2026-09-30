@@ -7,12 +7,14 @@ import { levels } from './levels';
 import { createInitialState, submitAnswer } from './engine';
 import { cn } from '../../utils/cn';
 import { useGameSession } from '../../hooks/useGameSession';
+import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const RCChallenge: React.FC = () => {
   const [levelIndex, setLevelIndex] = useState(0);
   const [state, setState] = useState<RCState>(() => createInitialState(levels[0]));
   const [activeTab, setActiveTab] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(720); // 12 mins for RC
+  const [timeLeft, setTimeLeft] = useState(360); // 6 mins for RC
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Fullscreen logic
   const toggleFullScreen = () => {
@@ -44,7 +46,7 @@ export const RCChallenge: React.FC = () => {
 
     if (newState.status === 'completed') {
       const accuracy = Math.round((newState.score / newState.puzzle.questions.length) * 100);
-      saveSession(levelIndex + 1, newState.score * 100, accuracy, 720 - timeLeft, true);
+      saveSession(levelIndex + 1, Math.min(10, newState.score * 2), accuracy, 360 - timeLeft, true);
     }
   };
 
@@ -194,12 +196,20 @@ export const RCChallenge: React.FC = () => {
                       );
                     })}
                   </div>
-                  <Button 
-                    onClick={handleNextLevel}
-                    className="w-full py-4 text-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md shadow-emerald-600/20 transition-all"
-                  >
-                    Next Level
-                  </Button>
+                  <div className="flex gap-4 w-full">
+                    <Button 
+                      onClick={() => setIsFeedbackOpen(true)}
+                      className="flex-1 py-4 text-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all border-0"
+                    >
+                      Leave Feedback
+                    </Button>
+                    <Button 
+                      onClick={handleNextLevel}
+                      className="flex-1 py-4 text-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md shadow-emerald-600/20 transition-all border-0"
+                    >
+                      Next Level
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -224,6 +234,12 @@ export const RCChallenge: React.FC = () => {
         </div>
 
       </main>
+
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+        onSubmit={() => setIsFeedbackOpen(false)} 
+      />
     </div>
   );
 };

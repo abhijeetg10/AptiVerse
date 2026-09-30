@@ -7,6 +7,7 @@ import type { GridState } from './types';
 import { createInitialState, tickCountdown, submitDistraction, toggleCell } from './engine';
 import { generateGridLevel } from './generator';
 import { useGameSession } from '../../hooks/useGameSession';
+import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const GridChallenge: React.FC = () => {
   const [level, setLevel] = useState(1);
@@ -17,6 +18,7 @@ export const GridChallenge: React.FC = () => {
   
   const [state, setState] = useState<GridState>(() => createInitialState(puzzle));
   const { saveSession } = useGameSession('grid');
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Reset state when puzzle changes
   useEffect(() => {
@@ -26,7 +28,7 @@ export const GridChallenge: React.FC = () => {
   // Save session when won
   useEffect(() => {
     if (state.phase === 'result' && state.result === 'won') {
-      saveSession(level, level * 100, 100, 30, state.distractionPassed ?? true);
+      saveSession(level, Math.min(10, level), 100, 30, state.distractionPassed ?? true);
     }
   }, [state.phase, state.result, level, state.distractionPassed]);
 
@@ -188,7 +190,10 @@ export const GridChallenge: React.FC = () => {
                  <p className="text-slate-500 mb-2">You successfully remembered all {dotsCount} dots.</p>
                  {distractionPassed === false && <p className="text-error text-sm mb-6">However, you failed the distraction task.</p>}
                  {distractionPassed === true && <p className="text-emerald-400 text-sm mb-6">Perfect focus! Distraction task passed.</p>}
-                 <Button onClick={() => setLevel(l => l + 1)} size="lg" className="px-10">Next Level</Button>
+                 <div className="flex gap-4">
+                   <Button onClick={() => setIsFeedbackOpen(true)} size="lg" className="px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 border-0">Feedback</Button>
+                   <Button onClick={() => setLevel(l => l + 1)} size="lg" className="px-10">Next Level</Button>
+                 </div>
                </>
              ) : (
                <>
@@ -202,6 +207,12 @@ export const GridChallenge: React.FC = () => {
         )}
 
       </main>
+
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+        onSubmit={() => setIsFeedbackOpen(false)} 
+      />
     </div>
   );
 };

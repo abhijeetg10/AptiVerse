@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle } from 'lucide-react';
+import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
+
+const normalizeCollege = (name: string | null | undefined) => {
+  if (!name || name.trim() === '') return '-';
+  const lower = name.trim().toLowerCase();
+  if (lower === 'cit' || lower === 'chennai institute of technology') {
+    return 'Chennai Institute of Technology';
+  }
+  return name.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+};
 
 export const AdminDashboard = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [bugReports, setBugReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'sessions'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'sessions' | 'reviews' | 'leaderboard' | 'bugs'>('users');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -24,7 +36,7 @@ export const AdminDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (usersError) throw usersError;
-      setUsers(usersData || []);
+      setUsers(usersData ? usersData.map(u => ({ ...u, college: normalizeCollege(u.college) })) : []);
 
       // Fetch sessions with user details
       const { data: sessionsData, error: sessionsError } = await supabase
@@ -38,6 +50,40 @@ export const AdminDashboard = () => {
 
       if (sessionsError) throw sessionsError;
       setSessions(sessionsData || []);
+
+      // Fetch reviews
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('feedback')
+        .select(`
+          *,
+          profiles:user_id (name, email)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(100);
+        
+      if (!reviewsError) {
+        setReviews(reviewsData || []);
+      }
+
+      // Fetch leaderboard
+      const { data: leaderboardData } = await supabase
+        .from('global_leaderboard')
+        .select('*')
+        .order('total_score', { ascending: false });
+      
+      setLeaderboard(leaderboardData ? leaderboardData.map(u => ({ ...u, college: normalizeCollege(u.college) })) : []);
+
+      // Fetch bug reports
+      const { data: bugsData } = await supabase
+        .from('bug_reports')
+        .select(`
+          *,
+          profiles:user_id (name, email)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(100);
+        
+      setBugReports(bugsData || []);
     } catch (err) {
       console.error('Error fetching admin data:', err);
     } finally {
@@ -86,6 +132,11 @@ export const AdminDashboard = () => {
     (s.game_id?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
+  const filteredReviews = reviews.filter(r => 
+    (r.profiles?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (r.comment?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="flex flex-col gap-8 pb-12 max-w-6xl mx-auto w-full">
       {/* Header */}
@@ -101,14 +152,22 @@ export const AdminDashboard = () => {
           </p>
         </div>
         
-        <div className="relative z-10 flex gap-4 mt-4 md:mt-0">
-           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center min-w-[120px] border border-white/10">
+        <div className="relative z-10 flex flex-wrap gap-4 mt-4 md:mt-0">
+           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center min-w-[100px] border border-white/10">
               <span className="text-3xl font-bold">{users.length}</span>
-              <span className="text-xs text-primary-200 font-medium uppercase tracking-wider">Total Users</span>
+              <span className="text-[10px] text-primary-200 font-medium uppercase tracking-wider text-center">Total Users</span>
            </div>
-           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center min-w-[120px] border border-white/10">
+           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center min-w-[100px] border border-white/10">
+              <span className="text-3xl font-bold">{new Set(sessions.map(s => s.user_id)).size}</span>
+              <span className="text-[10px] text-primary-200 font-medium uppercase tracking-wider text-center">Active Users</span>
+           </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center min-w-[100px] border border-white/10">
+              <span className="text-3xl font-bold">{new Set(users.map(u => u.college).filter(c => c && c !== '-')).size}</span>
+              <span className="text-[10px] text-primary-200 font-medium uppercase tracking-wider text-center">Colleges</span>
+           </div>
+           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center min-w-[100px] border border-white/10">
               <span className="text-3xl font-bold">{sessions.length}</span>
-              <span className="text-xs text-primary-200 font-medium uppercase tracking-wider">Total Games</span>
+              <span className="text-[10px] text-primary-200 font-medium uppercase tracking-wider text-center">Total Games</span>
            </div>
         </div>
       </div>
@@ -127,6 +186,24 @@ export const AdminDashboard = () => {
             className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'sessions' ? 'bg-primary-50 text-primary-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
           >
             <Gamepad2 size={16} /> Recent Games
+          </button>
+          <button 
+            onClick={() => setActiveTab('reviews')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'reviews' ? 'bg-primary-50 text-primary-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
+          >
+            <MessageSquare size={16} /> Reviews
+          </button>
+          <button 
+            onClick={() => setActiveTab('leaderboard')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'leaderboard' ? 'bg-primary-50 text-primary-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
+          >
+            <Star size={16} /> Leaderboard
+          </button>
+          <button 
+            onClick={() => setActiveTab('bugs')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'bugs' ? 'bg-primary-50 text-primary-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
+          >
+            <Bug size={16} /> Bugs/Contact
           </button>
         </div>
         
@@ -240,7 +317,117 @@ export const AdminDashboard = () => {
               </tbody>
             </table>
           </div>
-        )}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  <th className="p-4 pl-6">User</th>
+                  <th className="p-4">Rating</th>
+                  <th className="p-4">Tag</th>
+                  <th className="p-4">Comment</th>
+                  <th className="p-4">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {filteredReviews.length === 0 && (
+                  <tr><td colSpan={5} className="p-8 text-center text-neutral-500">No reviews found.</td></tr>
+                )}
+                {filteredReviews.map(review => (
+                  <tr key={review.id} className="hover:bg-neutral-50/50 transition-colors group">
+                    <td className="p-4 pl-6 font-bold text-neutral-900 text-sm">
+                      {review.profiles?.name || 'Anonymous'}
+                      <div className="text-xs text-neutral-500 font-normal">{review.profiles?.email || '-'}</div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-1 text-amber-500">
+                        {Array.from({ length: review.rating }).map((_, i) => <Star key={i} size={14} className="fill-amber-500" />)}
+                      </div>
+                    </td>
+                    <td className="p-4 text-sm">
+                      {review.tag ? (
+                        <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-medium capitalize">
+                          {review.tag.replace('-', ' ')}
+                        </span>
+                      ) : '-'}
+                    </td>
+                    <td className="p-4 text-sm text-neutral-700 max-w-xs truncate" title={review.comment}>
+                      {review.comment || '-'}
+                    </td>
+                    <td className="p-4 text-sm text-neutral-500">
+                      {new Date(review.created_at).toLocaleDateString()} {new Date(review.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : activeTab === 'leaderboard' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  <th className="p-4 pl-6">Rank</th>
+                  <th className="p-4">Player</th>
+                  <th className="p-4">College</th>
+                  <th className="p-4">Total Score</th>
+                  <th className="p-4">Accuracy</th>
+                  <th className="p-4">Games Played</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {leaderboard.length === 0 && (
+                  <tr><td colSpan={6} className="p-8 text-center text-neutral-500">No leaderboard data found.</td></tr>
+                )}
+                {leaderboard.map((user, i) => (
+                  <tr key={user.user_id} className="hover:bg-neutral-50/50 transition-colors group">
+                    <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
+                    <td className="p-4 font-bold text-neutral-900 text-sm">{user.name || 'Unknown'}</td>
+                    <td className="p-4 text-sm text-neutral-600">{user.college || '-'}</td>
+                    <td className="p-4 font-bold text-emerald-600">{user.total_score}</td>
+                    <td className="p-4 text-sm text-neutral-600">{user.avg_accuracy}%</td>
+                    <td className="p-4 text-sm text-neutral-600">{user.total_games}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : activeTab === 'bugs' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  <th className="p-4 pl-6">User</th>
+                  <th className="p-4">Title</th>
+                  <th className="p-4">Description</th>
+                  <th className="p-4">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {bugReports.length === 0 && (
+                  <tr><td colSpan={4} className="p-8 text-center text-neutral-500">No reports found.</td></tr>
+                )}
+                {bugReports.map(report => (
+                  <tr key={report.id} className="hover:bg-neutral-50/50 transition-colors group">
+                    <td className="p-4 pl-6 font-bold text-neutral-900 text-sm">
+                      {report.profiles?.name || 'Anonymous'}
+                      <div className="text-xs text-neutral-500 font-normal">{report.profiles?.email || '-'}</div>
+                    </td>
+                    <td className="p-4 text-sm font-medium text-slate-800">
+                      {report.title}
+                    </td>
+                    <td className="p-4 text-sm text-neutral-700 max-w-sm truncate" title={report.description}>
+                      {report.description}
+                    </td>
+                    <td className="p-4 text-sm text-neutral-500">
+                      {new Date(report.created_at).toLocaleDateString()} {new Date(report.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </div>
 
     </div>

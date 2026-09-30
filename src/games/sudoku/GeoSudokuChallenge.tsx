@@ -7,11 +7,13 @@ import { getLevel } from './levels';
 import { createInitialState, applyAnswer, setActiveCell } from './engine';
 import { GeoSudokuBoard, SymbolIcon } from './GeoSudokuBoard';
 import { useGameSession } from '../../hooks/useGameSession';
+import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const GeoSudokuChallenge: React.FC = () => {
   const [levelIndex, setLevelIndex] = useState(0);
   const [state, setState] = useState<GeoSudokuState>(() => createInitialState(getLevel(0)));
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -25,11 +27,7 @@ export const GeoSudokuChallenge: React.FC = () => {
 
   useEffect(() => {
     if (state.status === 'completed') {
-      saveSession(levelIndex + 1, 500, 100, 360 - timeLeft, true);
-      const timer = setTimeout(() => {
-        loadNextLevel();
-      }, 1500);
-      return () => clearTimeout(timer);
+      saveSession(levelIndex + 1, 10, 100, 360 - timeLeft, true);
     }
   }, [state.status, levelIndex, timeLeft]);
 
@@ -121,13 +119,19 @@ export const GeoSudokuChallenge: React.FC = () => {
             <div className="absolute inset-0 z-50 bg-slate-50/60 backdrop-blur-sm rounded-xl flex items-center justify-center animate-in fade-in duration-300">
               <div className="bg-slate-50 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-200">
                 <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Level Complete!</h2>
-                <p className="text-emerald-500 font-bold mb-6">Advancing to next level...</p>
-                <div className="flex gap-3 mt-4">
+                <p className="text-emerald-500 font-bold mb-6">Great job!</p>
+                <div className="flex flex-col gap-3 mt-4">
                   <button 
                     onClick={loadNextLevel}
-                    className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2 shadow-lg shadow-emerald-500/30"
+                    className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/30"
                   >
-                    Next <Play size={18} fill="currentColor" />
+                    Next Level
+                  </button>
+                  <button 
+                    onClick={() => setIsFeedbackOpen(true)}
+                    className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                  >
+                    Leave Feedback
                   </button>
                 </div>
               </div>

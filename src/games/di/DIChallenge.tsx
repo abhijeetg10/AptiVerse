@@ -7,6 +7,7 @@ import { levels } from './levels';
 import { createInitialState, submitAnswer } from './engine';
 import { cn } from '../../utils/cn';
 import { useGameSession } from '../../hooks/useGameSession';
+import FeedbackModal from '../../components/ui/FeedbackModal';
 
 const TabContent = ({ tab }: { tab: DataTab }) => {
   if (tab.type === 'table') {
@@ -52,7 +53,8 @@ export const DIChallenge: React.FC = () => {
   const [levelIndex, setLevelIndex] = useState(0);
   const [state, setState] = useState<DIState>(() => createInitialState(levels[0]));
   const [activeTab, setActiveTab] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(720); // 12 mins for DI
+  const [timeLeft, setTimeLeft] = useState(360); // 6 mins for DI
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -72,7 +74,7 @@ export const DIChallenge: React.FC = () => {
     // Check if the game just completed
     if (newState.status === 'completed') {
       const accuracy = Math.round((newState.score / newState.puzzle.questions.length) * 100);
-      saveSession(levelIndex + 1, newState.score * 100, accuracy, 720 - timeLeft, true);
+      saveSession(levelIndex + 1, Math.min(10, newState.score * 2), accuracy, 360 - timeLeft, true);
     }
   };
 
@@ -226,12 +228,20 @@ export const DIChallenge: React.FC = () => {
                       );
                     })}
                   </div>
-                  <Button 
-                    onClick={handleNextLevel}
-                    className="w-full py-4 text-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-600/20 transition-all"
-                  >
-                    Next Level
-                  </Button>
+                  <div className="flex gap-4 w-full">
+                    <Button 
+                      onClick={() => setIsFeedbackOpen(true)}
+                      className="flex-1 py-4 text-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all border-0"
+                    >
+                      Leave Feedback
+                    </Button>
+                    <Button 
+                      onClick={handleNextLevel}
+                      className="flex-1 py-4 text-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-600/20 transition-all border-0"
+                    >
+                      Next Level
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -256,6 +266,12 @@ export const DIChallenge: React.FC = () => {
         </div>
 
       </main>
+
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+        onSubmit={() => setIsFeedbackOpen(false)} 
+      />
     </div>
   );
 };

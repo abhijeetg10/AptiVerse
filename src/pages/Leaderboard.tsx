@@ -4,6 +4,15 @@ import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
+const normalizeCollege = (name: string | null | undefined) => {
+  if (!name) return '-';
+  const lower = name.trim().toLowerCase();
+  if (lower === 'cit' || lower === 'chennai institute of technology') {
+    return 'Chennai Institute of Technology';
+  }
+  return name.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+};
+
 const Leaderboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('all-time');
@@ -19,7 +28,11 @@ const Leaderboard = () => {
         .order('total_score', { ascending: false });
 
       if (data && !error) {
-        setLeaderboard(data);
+        const normalizedData = data.map(u => ({
+          ...u,
+          college: normalizeCollege(u.college)
+        }));
+        setLeaderboard(normalizedData);
       }
       setLoading(false);
     };
@@ -34,7 +47,7 @@ const Leaderboard = () => {
     topUsers[2] ? { rank: 3, name: topUsers[2].name, college: topUsers[2].college, score: topUsers[2].total_score, accuracy: topUsers[2].avg_accuracy + '%', games: topUsers[2].total_games } : null
   ];
 
-  const tableData = leaderboard.slice(3).map((u, i) => ({
+  const tableData = leaderboard.slice(3, 10).map((u, i) => ({
     id: u.user_id,
     rank: i + 4,
     name: u.name,

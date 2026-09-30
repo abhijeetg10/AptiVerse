@@ -4,10 +4,13 @@ import { Search, Sun, Bell, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils/cn';
 import { Logo } from '../components/ui/Logo';
+import { Bug } from 'lucide-react';
+import ReportBugModal from '../components/ui/ReportBugModal';
 
 const Navbar = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isBugModalOpen, setIsBugModalOpen] = React.useState(false);
   
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -70,6 +73,14 @@ const Navbar = () => {
             <Sun size={20} />
           </button>
           
+          <button 
+            onClick={() => setIsBugModalOpen(true)}
+            className="p-2 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors relative"
+            title="Report a Bug / Contact Us"
+          >
+            <Bug size={20} />
+          </button>
+
           <button className="p-2 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors relative">
             <Bell size={20} />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
@@ -92,6 +103,12 @@ const Navbar = () => {
         </div>
 
       </div>
+
+      <ReportBugModal 
+        isOpen={isBugModalOpen}
+        onClose={() => setIsBugModalOpen(false)}
+        onSubmit={() => setIsBugModalOpen(false)}
+      />
     </nav>
   );
 };
