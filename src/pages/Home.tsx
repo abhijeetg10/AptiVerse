@@ -1,12 +1,15 @@
-import React from 'react';
-import { ArrowRight, BarChart2, Gamepad2, Users, Trophy, Briefcase, Zap, Target, Brain, LineChart, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, BarChart2, Gamepad2, Users, Trophy, Briefcase, Zap, Target, Brain, LineChart, ChevronRight, Star, MessageSquare } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { GameCard } from '../components/ui/GameCard';
 import { Link } from 'react-router-dom';
 import { cn } from '../utils/cn';
+import FeedbackModal from '../components/ui/FeedbackModal';
 
 const Home = () => {
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+
   return (
     <div className="flex flex-col font-sans bg-white">
       {/* Hero Section */}
@@ -472,6 +475,71 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Feedback Section */}
+      <section className="py-20 bg-gradient-to-b from-white to-indigo-50/30">
+        <div className="max-w-4xl mx-auto px-6 text-center flex flex-col items-center gap-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold">
+            <Star size={13} className="fill-indigo-500" />
+            Share Your Experience
+          </div>
+          <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">
+            How are we doing?<br />
+            <span className="text-indigo-600">Your feedback shapes AptiVerse.</span>
+          </h2>
+          <p className="text-base text-slate-500 max-w-lg leading-relaxed">
+            Every rating, every suggestion, every bug report helps us build a better platform for you and thousands of students preparing for placements.
+          </p>
+
+          {/* Decorative star row */}
+          <div className="flex items-center gap-1.5 my-2">
+            {[1,2,3,4,5].map(i => (
+              <Star key={i} size={32} className="text-amber-400 fill-amber-400 drop-shadow-sm" />
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
+            <button
+              onClick={() => setIsFeedbackOpen(true)}
+              className="flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-600/25 hover:-translate-y-0.5 hover:shadow-indigo-600/40 transition-all active:scale-[0.98]"
+            >
+              <MessageSquare size={18} />
+              Give Feedback & Rate Us
+            </button>
+            <Link
+              to="/leaderboard"
+              className="flex items-center gap-2 px-8 py-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm shadow-sm transition-all"
+            >
+              <Trophy size={17} className="text-amber-500" />
+              View Leaderboard
+            </Link>
+          </div>
+
+          {/* Testimonial mini-cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 w-full">
+            {[
+              { quote: "Helped me crack my TCS interview! The games make practice so much more engaging.", name: "Priya S.", stars: 5 },
+              { quote: "The leaderboard keeps me motivated. Love the variety of aptitude games!", name: "Rahul M.", stars: 5 },
+              { quote: "Finally a platform that makes aptitude prep fun. Highly recommended!", name: "Anjali K.", stars: 4 },
+            ].map((t, i) => (
+              <div key={i} className="bg-white border border-indigo-50 rounded-2xl p-5 text-left shadow-sm flex flex-col gap-3">
+                <div className="flex items-center gap-0.5">
+                  {[...Array(t.stars)].map((_, j) => <Star key={j} size={13} className="fill-amber-400 text-amber-400" />)}
+                  {[...Array(5 - t.stars)].map((_, j) => <Star key={j} size={13} className="text-slate-200" />)}
+                </div>
+                <p className="text-slate-600 text-sm leading-relaxed italic">"{t.quote}"</p>
+                <span className="text-xs font-bold text-slate-400">— {t.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        onSubmit={() => setIsFeedbackOpen(false)}
+      />
     </div>
   );
 };
