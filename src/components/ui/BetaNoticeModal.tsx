@@ -33,19 +33,19 @@ const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ onReportClick }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[99999] overflow-y-auto"
       role="dialog"
       aria-modal="true"
     >
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
-        onClick={handleClose}
-      ></div>
-      
-      {/* Modal */}
-      <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-        <div className="overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col max-h-full">
+      <div className="flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
+        {/* Backdrop */}
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
+          onClick={handleClose}
+        ></div>
+        
+        {/* Modal */}
+        <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] flex flex-col overflow-hidden text-left animate-in fade-in zoom-in-95 duration-300">
         {/* Header */}
         <div className="relative pt-10 px-8 pb-4 flex flex-col items-center text-center shrink-0">
            <button 
@@ -91,8 +91,8 @@ const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ onReportClick }) => {
               </button>
            </div>
         </div>
-        </div>
       </div>
+    </div>
     </div>
   );
 };
