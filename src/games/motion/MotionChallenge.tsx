@@ -7,6 +7,7 @@ import { MotionBoard } from './MotionBoard';
 import { RefreshCw, Undo, Play, ArrowLeft, Maximize, Lightbulb } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useGameSession } from '../../hooks/useGameSession';
+import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const MotionChallenge: React.FC = () => {
@@ -14,8 +15,6 @@ export const MotionChallenge: React.FC = () => {
   const [state, setState] = useState<GameState>(() => createInitialState(getLevel(0)));
   const [history, setHistory] = useState<GameState[]>([]);
   const [isSolving, setIsSolving] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  
   // Timer for 6-minute assessment (360 seconds)
   const [timeLeft, setTimeLeft] = useState(360);
   
@@ -114,6 +113,8 @@ export const MotionChallenge: React.FC = () => {
     setState(createInitialState(getLevel(nextIdx)));
     setHistory([]);
   };
+
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -214,20 +215,6 @@ export const MotionChallenge: React.FC = () => {
                   <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all">
                     <h2 className="text-3xl font-extrabold text-slate-900 mb-2">Level Complete!</h2>
                     <p className="text-green-600 font-bold mb-6">Great job!</p>
-                    <div className="flex flex-col gap-3 mt-4">
-                      <button 
-                        onClick={loadNextLevel}
-                        className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30"
-                      >
-                        Next Level
-                      </button>
-                      <button 
-                        onClick={() => setIsFeedbackOpen(true)}
-                        className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
-                      >
-                        Leave Feedback
-                      </button>
-                    </div>
                   </div>
                 </div>
               )}
@@ -255,8 +242,8 @@ export const MotionChallenge: React.FC = () => {
 
       <FeedbackModal 
         isOpen={isFeedbackOpen} 
-        onClose={() => setIsFeedbackOpen(false)} 
-        onSubmit={() => setIsFeedbackOpen(false)} 
+        onClose={handleFeedbackClose} 
+        onSubmit={handleFeedbackSubmit} 
       />
     </div>
   );

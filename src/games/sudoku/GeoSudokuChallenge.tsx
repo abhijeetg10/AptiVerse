@@ -7,14 +7,13 @@ import { getLevel } from './levels';
 import { createInitialState, applyAnswer, setActiveCell } from './engine';
 import { GeoSudokuBoard, SymbolIcon } from './GeoSudokuBoard';
 import { useGameSession } from '../../hooks/useGameSession';
+import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const GeoSudokuChallenge: React.FC = () => {
   const [levelIndex, setLevelIndex] = useState(0);
   const [state, setState] = useState<GeoSudokuState>(() => createInitialState(getLevel(0)));
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-
   useEffect(() => {
     if (timeLeft <= 0) return;
     const timer = setInterval(() => {
@@ -41,6 +40,8 @@ export const GeoSudokuChallenge: React.FC = () => {
     setLevelIndex(nextIdx);
     setState(createInitialState(getLevel(nextIdx)));
   };
+
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel);
 
   const handleReset = () => {
     setState(createInitialState(getLevel(levelIndex)));
@@ -120,20 +121,6 @@ export const GeoSudokuChallenge: React.FC = () => {
               <div className="bg-slate-50 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-200">
                 <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Level Complete!</h2>
                 <p className="text-emerald-500 font-bold mb-6">Great job!</p>
-                <div className="flex flex-col gap-3 mt-4">
-                  <button 
-                    onClick={loadNextLevel}
-                    className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/30"
-                  >
-                    Next Level
-                  </button>
-                  <button 
-                    onClick={() => setIsFeedbackOpen(true)}
-                    className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
-                  >
-                    Leave Feedback
-                  </button>
-                </div>
               </div>
             </div>
           )}
@@ -212,6 +199,11 @@ export const GeoSudokuChallenge: React.FC = () => {
 
       </main>
 
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={handleFeedbackClose} 
+        onSubmit={handleFeedbackSubmit} 
+      />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { levels } from './levels';
 import { createInitialState, submitAnswer } from './engine';
 import { cn } from '../../utils/cn';
 import { useGameSession } from '../../hooks/useGameSession';
+import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const RCChallenge: React.FC = () => {
@@ -14,8 +15,6 @@ export const RCChallenge: React.FC = () => {
   const [state, setState] = useState<RCState>(() => createInitialState(levels[0]));
   const [activeTab, setActiveTab] = useState(0);
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins for RC
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-
   // Fullscreen logic
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -61,6 +60,8 @@ export const RCChallenge: React.FC = () => {
     setState(createInitialState(levels[nextIdx]));
     setActiveTab(0);
   };
+
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', handleNextLevel);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -196,20 +197,7 @@ export const RCChallenge: React.FC = () => {
                       );
                     })}
                   </div>
-                  <div className="flex gap-4 w-full">
-                    <Button 
-                      onClick={() => setIsFeedbackOpen(true)}
-                      className="flex-1 py-4 text-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all border-0"
-                    >
-                      Leave Feedback
-                    </Button>
-                    <Button 
-                      onClick={handleNextLevel}
-                      className="flex-1 py-4 text-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md shadow-emerald-600/20 transition-all border-0"
-                    >
-                      Next Level
-                    </Button>
-                  </div>
+
                 </div>
               )}
             </div>
@@ -237,8 +225,8 @@ export const RCChallenge: React.FC = () => {
 
       <FeedbackModal 
         isOpen={isFeedbackOpen} 
-        onClose={() => setIsFeedbackOpen(false)} 
-        onSubmit={() => setIsFeedbackOpen(false)} 
+        onClose={handleFeedbackClose} 
+        onSubmit={handleFeedbackSubmit} 
       />
     </div>
   );
