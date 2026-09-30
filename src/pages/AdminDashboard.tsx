@@ -134,6 +134,30 @@ export const AdminDashboard = () => {
     }
   };
 
+  const deleteBugReport = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this bug report?')) return;
+    try {
+      const { error } = await supabase.from('bug_reports').delete().eq('id', id);
+      if (error) throw error;
+      setBugReports(bugReports.filter(r => r.id !== id));
+    } catch (err: any) {
+      alert(`Error deleting report: ${err?.message || 'Unknown error'}`);
+      console.error(err);
+    }
+  };
+
+  const deleteReview = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this feedback?')) return;
+    try {
+      const { error } = await supabase.from('feedback').delete().eq('id', id);
+      if (error) throw error;
+      setReviews(reviews.filter(r => r.id !== id));
+    } catch (err: any) {
+      alert(`Error deleting feedback: ${err?.message || 'Unknown error'}`);
+      console.error(err);
+    }
+  };
+
   const filteredUsers = users.filter(u => 
     (u.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || 
     (u.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
@@ -356,11 +380,12 @@ export const AdminDashboard = () => {
                   <th className="p-4">Tag</th>
                   <th className="p-4">Comment</th>
                   <th className="p-4">Date</th>
+                  <th className="p-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {filteredReviews.length === 0 && (
-                  <tr><td colSpan={5} className="p-8 text-center text-neutral-500">No reviews found.</td></tr>
+                  <tr><td colSpan={6} className="p-8 text-center text-neutral-500">No reviews found.</td></tr>
                 )}
                 {filteredReviews.map(review => (
                   <tr key={review.id} className="hover:bg-neutral-50/50 transition-colors group">
@@ -385,6 +410,15 @@ export const AdminDashboard = () => {
                     </td>
                     <td className="p-4 text-sm text-neutral-500">
                       {new Date(review.created_at).toLocaleDateString()} {new Date(review.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                    <td className="p-4 pr-6 text-right">
+                      <button
+                        onClick={() => deleteReview(review.id)}
+                        className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Feedback"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -430,11 +464,12 @@ export const AdminDashboard = () => {
                   <th className="p-4">Title</th>
                   <th className="p-4">Description</th>
                   <th className="p-4">Date</th>
+                  <th className="p-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {bugReports.length === 0 && (
-                  <tr><td colSpan={4} className="p-8 text-center text-neutral-500">No reports found.</td></tr>
+                  <tr><td colSpan={5} className="p-8 text-center text-neutral-500">No reports found.</td></tr>
                 )}
                 {bugReports.map(report => (
                   <tr key={report.id} className="hover:bg-neutral-50/50 transition-colors group">
@@ -450,6 +485,15 @@ export const AdminDashboard = () => {
                     </td>
                     <td className="p-4 text-sm text-neutral-500">
                       {new Date(report.created_at).toLocaleDateString()} {new Date(report.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                    <td className="p-4 pr-6 text-right">
+                      <button
+                        onClick={() => deleteBugReport(report.id)}
+                        className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Report"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}
