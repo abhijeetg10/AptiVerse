@@ -90,18 +90,18 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
 
   return (
     <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[99999] flex p-4 sm:p-6 overflow-y-auto"
       role="dialog"
       aria-modal="true"
     >
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
         onClick={handleClose}
       ></div>
       
       {/* Modal */}
-      <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      <div className="relative z-10 m-auto bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         
         {isSuccess ? (
            <div className="p-10 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-300 h-[400px]">
@@ -112,7 +112,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
               <p className="text-slate-500 text-sm">Your feedback helps us make AptiVerse even better.</p>
            </div>
         ) : (
-           <div className="overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col max-h-full">
+           <div className="flex flex-col">
               {/* Header */}
               <div className="relative pt-8 px-6 pb-4 flex flex-col items-center text-center shrink-0">
                  <button 

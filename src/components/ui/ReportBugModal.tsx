@@ -68,18 +68,18 @@ const ReportBugModal: React.FC<ReportBugModalProps> = ({ isOpen, onClose, onSubm
 
   return (
     <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[99999] flex p-4 sm:p-6 overflow-y-auto"
       role="dialog"
       aria-modal="true"
     >
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
         onClick={handleClose}
       ></div>
       
       {/* Modal */}
-      <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-rose-500/10 w-full max-w-[460px] max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      <div className="relative z-10 m-auto bg-white rounded-3xl shadow-2xl shadow-rose-500/10 w-full max-w-[460px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         
         {isSuccess ? (
            <div className="p-10 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-300 h-[400px]">
@@ -90,7 +90,7 @@ const ReportBugModal: React.FC<ReportBugModalProps> = ({ isOpen, onClose, onSubm
               <p className="text-slate-500 text-sm">Thank you for helping us improve.</p>
            </div>
         ) : (
-           <div className="overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col max-h-full">
+           <div className="flex flex-col">
               {/* Header */}
               <div className="relative pt-8 px-6 pb-4 flex flex-col items-center text-center shrink-0">
                  <button 
@@ -101,13 +101,13 @@ const ReportBugModal: React.FC<ReportBugModalProps> = ({ isOpen, onClose, onSubm
                     <X size={20} />
                  </button>
                  
-                 <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-red-100 rotate-[-4deg]">
-                    <Bug size={28} className="text-red-600" />
+                 <div className="w-16 h-16 bg-gradient-to-br from-rose-100 to-red-100 text-rose-600 rounded-2xl flex items-center justify-center mb-5 shadow-sm border border-rose-200 rotate-[-4deg]">
+                    <Bug size={32} className="text-rose-600" />
                  </div>
                  
-                 <h2 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Report a Bug</h2>
-                 <p className="text-[13px] text-slate-500 leading-relaxed max-w-sm">
-                    Found an issue or want to contact us? Let us know below.
+                 <h2 className="text-2xl font-extrabold text-slate-900 mb-3 tracking-tight">Report an Issue</h2>
+                 <p className="text-[14px] text-slate-600 leading-relaxed max-w-sm">
+                    Found a bug or want to suggest an improvement? We're all ears.
                  </p>
               </div>
 
@@ -121,7 +121,7 @@ const ReportBugModal: React.FC<ReportBugModalProps> = ({ isOpen, onClose, onSubm
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="e.g. Game freezing on level 2"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[13px] text-slate-700 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                      className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3.5 text-[14px] text-slate-700 focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all shadow-sm"
                     />
                  </div>
 
@@ -133,9 +133,9 @@ const ReportBugModal: React.FC<ReportBugModalProps> = ({ isOpen, onClose, onSubm
                          value={description}
                          onChange={(e) => setDescription(e.target.value.slice(0, 500))}
                          placeholder="Please describe the issue in detail..."
-                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[13px] text-slate-700 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors resize-none h-[120px]"
+                         className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-4 py-3.5 text-[14px] text-slate-700 focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all resize-none h-[120px] shadow-sm custom-scrollbar"
                        />
-                       <span className="absolute bottom-3 right-3 text-[10px] font-medium text-slate-400 bg-slate-50 px-1">
+                       <span className="absolute bottom-3 right-3 text-[11px] font-medium text-slate-400 bg-slate-50/80 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
                           {description.length} / 500
                        </span>
                     </div>
