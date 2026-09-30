@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Wrench, Bug } from 'lucide-react';
 
 interface BetaNoticeModalProps {
@@ -31,7 +32,7 @@ const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ onReportClick }) => {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div 
       className="fixed inset-0 z-[99999] overflow-y-auto"
       role="dialog"
@@ -93,7 +94,8 @@ const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ onReportClick }) => {
         </div>
       </div>
     </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

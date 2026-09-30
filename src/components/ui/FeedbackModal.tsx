@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Heart, X, Star, CheckCircle2, Gamepad2, LayoutTemplate, Zap, Trophy, Briefcase, Sparkles } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { supabase } from '../../lib/supabase';
@@ -88,7 +89,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
     onClose();
   };
 
-  return (
+  return createPortal(
     <div 
       className="fixed inset-0 z-[99999] overflow-y-auto"
       role="dialog"
@@ -241,7 +242,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
         )}
       </div>
     </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

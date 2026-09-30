@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Bug, X, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { supabase } from '../../lib/supabase';
@@ -66,7 +67,7 @@ const ReportBugModal: React.FC<ReportBugModalProps> = ({ isOpen, onClose, onSubm
     onClose();
   };
 
-  return (
+  return createPortal(
     <div 
       className="fixed inset-0 z-[99999] overflow-y-auto"
       role="dialog"
@@ -168,7 +169,8 @@ const ReportBugModal: React.FC<ReportBugModalProps> = ({ isOpen, onClose, onSubm
         )}
       </div>
     </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
