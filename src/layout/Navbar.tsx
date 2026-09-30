@@ -6,6 +6,7 @@ import { cn } from '../utils/cn';
 import { Logo } from '../components/ui/Logo';
 import { Bug } from 'lucide-react';
 import ReportBugModal from '../components/ui/ReportBugModal';
+import BetaNoticeModal from '../components/ui/BetaNoticeModal';
 
 const Navbar = () => {
   const { user } = useAuth();
@@ -109,6 +110,8 @@ const Navbar = () => {
         onClose={() => setIsBugModalOpen(false)}
         onSubmit={() => setIsBugModalOpen(false)}
       />
+      
+      <BetaNoticeModal onReportClick={() => setIsBugModalOpen(true)} />
     </nav>
   );
 };
