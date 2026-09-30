@@ -33,7 +33,7 @@ export const AdminDashboard = () => {
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (usersError) throw usersError;
       setUsers(usersData ? usersData.map(u => ({ ...u, college: normalizeCollege(u.college) })) : []);
