@@ -42,11 +42,12 @@ const Home = () => {
                   Start Playing <ArrowRight size={16} />
                 </Button>
               </Link>
-              <Link to="/progress">
-                <Button variant="secondary" size="lg" className="gap-2 text-sm px-8 h-12 rounded-xl bg-white border-0 shadow-sm text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 font-semibold">
-                  <BarChart2 size={16} className="text-primary-600" /> View My Progress
-                </Button>
-              </Link>
+              <button
+                onClick={() => setIsFeedbackOpen(true)}
+                className="flex items-center gap-2 text-sm px-8 h-12 rounded-xl bg-white border border-neutral-200 shadow-sm text-neutral-700 hover:bg-neutral-50 hover:text-indigo-600 hover:border-indigo-200 font-semibold transition-all"
+              >
+                <MessageSquare size={16} className="text-indigo-500" /> Share Feedback
+              </button>
             </div>
           </div>
 
@@ -476,25 +477,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Feedback Strip */}
-      <section className="border-y border-slate-100 bg-slate-50/60 py-4">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-0.5">
-              {[1,2,3,4,5].map(i => <Star key={i} size={14} className="fill-amber-400 text-amber-400" />)}
-            </div>
-            <span className="text-sm font-semibold text-slate-700">Loved by students across India.</span>
-            <span className="text-sm text-slate-400 hidden md:inline">Tell us what you think!</span>
-          </div>
-          <button
-            onClick={() => setIsFeedbackOpen(true)}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm shadow-indigo-600/20 hover:-translate-y-0.5 transition-all active:scale-[0.98] shrink-0"
-          >
-            <MessageSquare size={13} />
-            Rate Us
-          </button>
-        </div>
-      </section>
 
       <FeedbackModal
         isOpen={isFeedbackOpen}
