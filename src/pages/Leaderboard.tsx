@@ -28,10 +28,19 @@ const Leaderboard = () => {
         .order('total_score', { ascending: false });
 
       if (data && !error) {
-        const normalizedData = data.map(u => ({
-          ...u,
-          college: normalizeCollege(u.college)
-        }));
+        const normalizedData = data.map(u => {
+          const isOldSystem = u.total_games > 0 && (u.total_score / u.total_games > 15);
+          return {
+            ...u,
+            college: normalizeCollege(u.college),
+            total_score: isOldSystem ? 0 : u.total_score,
+            total_games: isOldSystem ? 0 : u.total_games,
+          };
+        });
+        
+        // Re-sort after adjusting scores
+        normalizedData.sort((a, b) => b.total_score - a.total_score);
+        
         setLeaderboard(normalizedData);
       }
       setLoading(false);

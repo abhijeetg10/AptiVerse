@@ -68,10 +68,22 @@ export const AdminDashboard = () => {
       // Fetch leaderboard
       const { data: leaderboardData } = await supabase
         .from('global_leaderboard')
-        .select('*')
-        .order('total_score', { ascending: false });
+        .select('*');
       
-      setLeaderboard(leaderboardData ? leaderboardData.map(u => ({ ...u, college: normalizeCollege(u.college) })) : []);
+      let normalizedLeaderboard = [];
+      if (leaderboardData) {
+        normalizedLeaderboard = leaderboardData.map(u => {
+          const isOldSystem = u.total_games > 0 && (u.total_score / u.total_games > 15);
+          return {
+            ...u,
+            college: normalizeCollege(u.college),
+            total_score: isOldSystem ? 0 : u.total_score,
+            total_games: isOldSystem ? 0 : u.total_games,
+          };
+        });
+        normalizedLeaderboard.sort((a, b) => b.total_score - a.total_score);
+      }
+      setLeaderboard(normalizedLeaderboard);
 
       // Fetch bug reports
       const { data: bugsData } = await supabase
