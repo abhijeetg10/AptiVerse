@@ -94,7 +94,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
       role="dialog"
       aria-modal="true"
     >
-      <div className="flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
+      <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 text-center">
         {/* Backdrop */}
         <div 
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
@@ -102,7 +102,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
         ></div>
         
         {/* Modal */}
-        <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] flex flex-col overflow-hidden text-left animate-in fade-in zoom-in-95 duration-300">
+        <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col text-left animate-in fade-in zoom-in-95 duration-300">
         
         {isSuccess ? (
            <div className="p-10 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-300 h-[400px]">
