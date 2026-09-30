@@ -29,9 +29,12 @@ const Navbar = () => {
       <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between">
         
         {/* Left: Logo */}
-        <div className="flex items-center gap-2">
-          <Link to="/" className="group cursor-pointer">
+        <div className="flex items-center gap-3">
+          <Link to="/" className="group cursor-pointer flex items-center gap-3">
             <Logo size={40} className="hover:opacity-90 transition-opacity" />
+            <span className="hidden sm:flex items-center px-2.5 py-0.5 rounded-md bg-indigo-50/80 border border-indigo-100/50 text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest shadow-sm">
+              Beta
+            </span>
           </Link>
         </div>
 
