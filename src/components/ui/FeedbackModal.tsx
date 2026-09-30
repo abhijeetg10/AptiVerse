@@ -75,10 +75,9 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
         setComment('');
         onClose();
       }, 1500);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting feedback:', error);
-      // Even on error we can close or show error, but let's just alert for now
-      alert('Failed to submit feedback');
+      alert(`Failed to submit feedback. Error: ${error?.message || JSON.stringify(error)}`);
     } finally {
       setIsSubmitting(false);
     }
