@@ -90,31 +90,31 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
 
   return (
     <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
     >
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px] transition-opacity animate-in fade-in duration-200"
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
         onClick={handleClose}
       ></div>
       
       {/* Modal */}
-      <div className="relative z-10 bg-white rounded-2xl shadow-xl w-full max-w-[460px] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         
         {isSuccess ? (
            <div className="p-10 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-300 h-[400px]">
-              <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6">
-                 <CheckCircle2 size={32} />
+              <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6 ring-8 ring-emerald-50/50">
+                 <CheckCircle2 size={40} />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Thanks for your feedback!</h2>
-              <p className="text-slate-500 text-sm">Your response helps us make AptiVerse better.</p>
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Thank you!</h2>
+              <p className="text-slate-500 text-sm">Your feedback helps us make AptiVerse even better.</p>
            </div>
         ) : (
-           <>
+           <div className="overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col max-h-full">
               {/* Header */}
-              <div className="relative pt-8 px-6 pb-4 flex flex-col items-center text-center">
+              <div className="relative pt-8 px-6 pb-4 flex flex-col items-center text-center shrink-0">
                  <button 
                    onClick={handleClose}
                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors"
@@ -127,13 +127,13 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
                     <Heart size={28} className="fill-indigo-600" />
                  </div>
                  
-                 <h2 className="text-xl font-extrabold text-slate-900 mb-1.5 tracking-tight">Enjoying AptiVerse?</h2>
-                 <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
+                 <h2 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Enjoying AptiVerse?</h2>
+                 <p className="text-[13px] text-slate-500 leading-relaxed max-w-sm">
                     Your feedback helps us improve and build better games for you and other students.
                  </p>
               </div>
 
-              <div className="px-6 pb-6 flex flex-col gap-6">
+              <div className="px-6 pb-6 flex flex-col gap-6 shrink-0">
                  
                  {/* Rating Section */}
                  <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-5 flex flex-col items-center">
@@ -214,11 +214,11 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
                     </div>
                  </div>
                  
-                 {/* Footer Buttons */}
-                 <div className="flex items-center gap-3 pt-2">
+                  {/* Footer Buttons */}
+                 <div className="flex items-center gap-3 pt-4 pb-2">
                     <button
                        onClick={handleClose}
-                       className="flex-1 py-3 text-[13px] font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                       className="flex-1 py-3.5 text-[14px] font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-2xl transition-colors"
                     >
                        Maybe Later
                     </button>
@@ -226,17 +226,17 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
                        onClick={handleSubmit}
                        disabled={rating === 0 || isSubmitting}
                        className={cn(
-                          "flex-[2] py-3 rounded-xl text-[14px] font-bold text-white shadow-sm transition-all flex items-center justify-center gap-2",
+                          "flex-[2] py-3.5 rounded-2xl text-[14px] font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2",
                           rating > 0
-                             ? "bg-[#4f46e5] hover:bg-[#4338ca] hover:shadow-md active:scale-[0.98]"
-                             : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                             ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25 hover:shadow-indigo-600/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+                             : "bg-slate-200 text-slate-400 shadow-none cursor-not-allowed"
                        )}
                     >
                        {isSubmitting ? "Submitting..." : "Submit Feedback"}
                     </button>
                  </div>
               </div>
-           </>
+           </div>
         )}
 
       </div>
