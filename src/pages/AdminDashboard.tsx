@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug } from 'lucide-react';
+import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug, Landmark } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 
@@ -19,7 +19,7 @@ export const AdminDashboard = () => {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [bugReports, setBugReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'sessions' | 'reviews' | 'leaderboard' | 'bugs'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'sessions' | 'reviews' | 'leaderboard' | 'bugs' | 'colleges'>('users');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -149,6 +149,17 @@ export const AdminDashboard = () => {
     (r.comment?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
+  const collegesMap = new Map<string, number>();
+  users.forEach(u => {
+    if (!u.college || u.college === '-') return;
+    collegesMap.set(u.college, (collegesMap.get(u.college) || 0) + 1);
+  });
+  const collegesList = Array.from(collegesMap.entries())
+    .map(([name, count]) => ({ name, studentCount: count }))
+    .sort((a, b) => b.studentCount - a.studentCount);
+  
+  const filteredColleges = collegesList.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
   return (
     <div className="flex flex-col gap-8 pb-12 max-w-6xl mx-auto w-full">
       {/* Header */}
@@ -198,6 +209,12 @@ export const AdminDashboard = () => {
             className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'sessions' ? 'bg-primary-50 text-primary-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
           >
             <Gamepad2 size={16} /> Recent Games
+          </button>
+          <button 
+            onClick={() => setActiveTab('colleges')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'colleges' ? 'bg-primary-50 text-primary-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
+          >
+            <Landmark size={16} /> Colleges
           </button>
           <button 
             onClick={() => setActiveTab('reviews')}
@@ -434,6 +451,30 @@ export const AdminDashboard = () => {
                     <td className="p-4 text-sm text-neutral-500">
                       {new Date(report.created_at).toLocaleDateString()} {new Date(report.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : activeTab === 'colleges' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  <th className="p-4 pl-6">Rank</th>
+                  <th className="p-4">College Name</th>
+                  <th className="p-4">Number of Students</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {filteredColleges.length === 0 && (
+                  <tr><td colSpan={3} className="p-8 text-center text-neutral-500">No colleges found.</td></tr>
+                )}
+                {filteredColleges.map((college, i) => (
+                  <tr key={college.name} className="hover:bg-neutral-50/50 transition-colors group">
+                    <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
+                    <td className="p-4 font-bold text-neutral-900 text-sm">{college.name}</td>
+                    <td className="p-4 text-sm text-emerald-600 font-bold">{college.studentCount} Students</td>
                   </tr>
                 ))}
               </tbody>
