@@ -44,8 +44,8 @@ const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ onReportClick }) => {
       ></div>
       
       {/* Modal */}
-      <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-        
+      <div className="relative z-10 bg-white rounded-3xl shadow-2xl shadow-indigo-500/10 w-full max-w-[460px] max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+        <div className="overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col max-h-full">
         {/* Header */}
         <div className="relative pt-10 px-8 pb-4 flex flex-col items-center text-center shrink-0">
            <button 
@@ -91,7 +91,7 @@ const BetaNoticeModal: React.FC<BetaNoticeModalProps> = ({ onReportClick }) => {
               </button>
            </div>
         </div>
-
+        </div>
       </div>
     </div>
   );
