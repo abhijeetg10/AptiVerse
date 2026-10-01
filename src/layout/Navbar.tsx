@@ -73,21 +73,12 @@ const Navbar = () => {
             <kbd className="hidden sm:inline-block text-[10px] font-sans px-1.5 py-0.5 bg-white border border-neutral-300 rounded text-neutral-400">⌘K</kbd>
           </div>
           
-          <button className="p-2 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
-            <Sun size={20} />
-          </button>
-          
           <button 
             onClick={() => setIsBugModalOpen(true)}
             className="p-2 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors relative"
             title="Report a Bug / Contact Us"
           >
             <Bug size={20} />
-          </button>
-
-          <button className="p-2 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
           </button>
 
           <div className="h-8 w-px bg-neutral-200 mx-1"></div>

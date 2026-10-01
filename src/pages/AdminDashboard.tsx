@@ -483,15 +483,21 @@ export const AdminDashboard = () => {
                     </td>
                     <td className="p-4 pr-6 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {report.profiles?.email && (
-                          <a
-                            href={`mailto:${report.profiles.email}?subject=Re%3A%20Your%20Feedback%20on%20AptiVerse%20%E2%80%94%20Update&body=Hi%20${encodeURIComponent(report.profiles.name || 'there')}%2C%0A%0AThank%20you%20for%20your%20feedback%20and%20suggestion%20regarding%20%22${encodeURIComponent(report.title)}%22.%0A%0AWe%20have%20carefully%20reviewed%20your%20report%20and%20worked%20on%20your%20suggestion.%20The%20platform%20has%20been%20updated%20accordingly.%0A%0AWe%20truly%20appreciate%20your%20time%20and%20effort%20in%20helping%20us%20improve%20AptiVerse.%20Your%20feedback%20makes%20the%20platform%20better%20for%20everyone!%0A%0AKeep%20playing%20and%20keep%20growing%20%F0%9F%9A%80%0A%0ABest%20Regards%2C%0ATeam%20AptiVerse%0Aargaikwad24%40gmail.com`}
-                            className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                            title={`Reply to ${report.profiles.email}`}
-                          >
-                            <Mail size={16} />
-                          </a>
-                        )}
+                        {report.profiles?.email && (() => {
+                          const name = report.profiles.name || 'there';
+                          const subject = `Re: Your Report on AptiVerse - Update`;
+                          const body = `Hi ${name},\n\nThank you for your feedback on "${report.title}".\n\nWe have reviewed and worked on your suggestion. The platform has been updated accordingly.\n\nThank you for helping us improve AptiVerse!\n\nBest Regards,\nTeam AptiVerse`;
+                          const mailtoUrl = `mailto:${report.profiles.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                          return (
+                            <button
+                              onClick={() => window.open(mailtoUrl)}
+                              className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                              title={`Reply to ${report.profiles.email}`}
+                            >
+                              <Mail size={16} />
+                            </button>
+                          );
+                        })()}
                         <button
                           onClick={() => deleteBugReport(report.id)}
                           className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
