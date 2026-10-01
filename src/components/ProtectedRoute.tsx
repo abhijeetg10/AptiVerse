@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, ArrowRight, User, Mail, Key, School } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { supabase } from '../lib/supabase';
 
 const ProtectedRoute = () => {
   const { user, authUser, isLoading, signIn, signInWithGoogle, signUp, updateProfile, isProfileComplete } = useAuth();
@@ -15,6 +16,20 @@ const ProtectedRoute = () => {
   const [college, setCollege] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [existingColleges, setExistingColleges] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  React.useEffect(() => {
+    const fetchColleges = async () => {
+      const { data } = await supabase.from('profiles').select('college');
+      if (data) {
+        const unique = [...new Set(data.map(d => d.college).filter(c => c && c !== '-'))];
+        setExistingColleges(unique.sort());
+      }
+    };
+    fetchColleges();
+  }, []);
 
   // Pre-fill name if available from Google/OAuth
   React.useEffect(() => {
@@ -116,7 +131,37 @@ const ProtectedRoute = () => {
                 </div>
                 <div className="relative">
                   <School className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-                  <input type="text" placeholder="College Name" required value={college} onChange={e => setCollege(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 transition-colors" />
+                  <input 
+                    type="text" 
+                    placeholder="College Name" 
+                    required 
+                    value={college} 
+                    onChange={e => {
+                      setCollege(e.target.value);
+                      setShowDropdown(true);
+                    }} 
+                    onFocus={() => setShowDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 transition-colors" 
+                  />
+                  {showDropdown && existingColleges.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-neutral-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      {existingColleges
+                        .filter(c => c.toLowerCase().includes(college.toLowerCase()))
+                        .map(c => (
+                          <div 
+                            key={c} 
+                            className="px-4 py-2 text-sm text-neutral-700 hover:bg-primary-50 cursor-pointer"
+                            onClick={() => {
+                              setCollege(c);
+                              setShowDropdown(false);
+                            }}
+                          >
+                            {c}
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}
