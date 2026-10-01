@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Edit3, Trophy, Target, Gamepad2, Flame } from 'lucide-react';
+import { Edit3, Trophy, Target, Gamepad2, Flame, LogOut } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 const Profile = () => {
-  const { user, updateProfile, isProfileComplete } = useAuth();
+  const { user, updateProfile, isProfileComplete, signOut } = useAuth();
   const navigate = useNavigate();
   
   const [name, setName] = useState(user?.name || '');
@@ -140,11 +140,21 @@ const Profile = () => {
           <div className="lg:col-span-5">
             <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-8">
               
-              <div className="flex items-center gap-3 mb-6">
-                 <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center">
-                    <Edit3 size={16} />
-                 </div>
-                 <h2 className="text-[22px] font-bold text-[#121629]">Edit Profile</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center">
+                      <Edit3 size={16} />
+                   </div>
+                   <h2 className="text-[22px] font-bold text-[#121629]">Edit Profile</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => { await signOut(); navigate('/'); }}
+                  className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                >
+                  <LogOut size={16} />
+                  Sign Out
+                </button>
               </div>
 
               <form onSubmit={handleSave} className="flex flex-col gap-5">
