@@ -25,14 +25,18 @@ const ShapeIcon = ({ shape, className = "" }: { shape: ShapeId, className?: stri
 const GridBox = ({ grid, selectable, selected, onClick, status, isCorrect }: { grid: Grid3x3, selectable?: boolean, selected?: boolean, onClick?: () => void, status?: string, isCorrect?: boolean }) => {
   // Outline based on status
   let outlineClass = "border-transparent";
+  const isAnswered = status === 'completed' || status === 'failed';
+  const isWrongSelected = selected && status === 'failed' && !isCorrect;
+  const isCorrectSelected = selected && (status === 'completed' || (status === 'failed' && isCorrect));
+  const isMissedCorrect = !selected && status === 'failed' && isCorrect;
+
   if (selected) {
     outlineClass = "border-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.3)]";
     if (status === 'completed') outlineClass = "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.3)]";
     else if (status === 'failed') {
       outlineClass = isCorrect ? "border-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.3)]" : "border-red-500 shadow-[0_0_0_3px_rgba(239,68,68,0.3)]";
     }
-  } else if (status === 'failed' && isCorrect) {
-    // Show what should have been selected
+  } else if (isMissedCorrect) {
     outlineClass = "border-emerald-500 border-dashed shadow-[0_0_0_3px_rgba(16,185,129,0.3)]";
   }
 
@@ -40,7 +44,7 @@ const GridBox = ({ grid, selectable, selected, onClick, status, isCorrect }: { g
     <div 
       onClick={selectable ? onClick : undefined}
       className={cn(
-        "grid grid-cols-3 grid-rows-3 gap-1 p-2 bg-white rounded-xl border-4 transition-all w-32 h-32",
+        "relative grid grid-cols-3 grid-rows-3 gap-1 p-2 bg-white rounded-xl border-4 transition-all w-32 h-32",
         outlineClass,
         selectable && status === 'playing' ? "cursor-pointer hover:border-blue-300 hover:shadow-md hover:-translate-y-1" : "cursor-default",
         selected && "scale-105"
@@ -51,9 +55,47 @@ const GridBox = ({ grid, selectable, selected, onClick, status, isCorrect }: { g
           <ShapeIcon shape={shape} />
         </div>
       ))}
+
+      {/* Wrong answer: red X overlay */}
+      {isWrongSelected && (
+        <div className="absolute inset-0 rounded-xl bg-red-500/20 flex items-center justify-center z-10 animate-in fade-in duration-200">
+          <div className="relative w-10 h-10">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg viewBox="0 0 40 40" className="w-10 h-10 drop-shadow-md">
+                <polygon points="20,2 24,2 20,20 20,20" fill="none"/>
+                <line x1="6" y1="6" x2="34" y2="34" stroke="#ef4444" strokeWidth="5" strokeLinecap="round"/>
+                <line x1="34" y1="6" x2="6" y2="34" stroke="#ef4444" strokeWidth="5" strokeLinecap="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Correct answer: green check overlay */}
+      {isCorrectSelected && (
+        <div className="absolute inset-0 rounded-xl bg-emerald-500/20 flex items-center justify-center z-10 animate-in fade-in duration-200">
+          <div className="relative w-10 h-10">
+            <svg viewBox="0 0 40 40" className="w-10 h-10 drop-shadow-md">
+              <polyline points="6,20 16,30 34,10" stroke="#10b981" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Missed correct answer during fail */}
+      {isMissedCorrect && (
+        <div className="absolute inset-0 rounded-xl bg-emerald-500/10 flex items-center justify-center z-10 animate-in fade-in duration-200">
+          <div className="relative w-10 h-10">
+            <svg viewBox="0 0 40 40" className="w-10 h-10 drop-shadow-md opacity-70">
+              <polyline points="6,20 16,30 34,10" stroke="#10b981" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" strokeDasharray="4"/>
+            </svg>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 export const InductiveBoard: React.FC<{
   state: InductiveState,
