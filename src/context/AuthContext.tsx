@@ -137,19 +137,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .eq('id', currentUserId)
       .maybeSingle();
 
+    const avatar_url = authUser?.user_metadata?.avatar_url || null;
+
     let error;
     if (existingProfile) {
       // Update existing
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ name, college, updated_at: new Date().toISOString() })
+        .update({ name, college, avatar_url, updated_at: new Date().toISOString() })
         .eq('id', currentUserId);
       error = updateError;
     } else {
       // Insert new
       const { error: insertError } = await supabase
         .from('profiles')
-        .insert({ id: currentUserId, name, college, updated_at: new Date().toISOString() });
+        .insert({ id: currentUserId, name, college, avatar_url, updated_at: new Date().toISOString() });
       error = insertError;
     }
       
@@ -159,6 +161,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         id: currentUserId,
         name,
         college,
+        avatar_url
       } as UserProfile));
       return { error: null };
     } else {

@@ -45,9 +45,9 @@ const Leaderboard = () => {
   // Adjust rankings for podium (Rank 2, 1, 3 for visual display order)
   const topUsers = leaderboard.slice(0, 3);
   const podium = [
-    topUsers[1] ? { rank: 2, name: topUsers[1].name, college: topUsers[1].college, score: topUsers[1].total_score, accuracy: topUsers[1].avg_accuracy + '%', games: topUsers[1].total_games } : null,
-    topUsers[0] ? { rank: 1, name: topUsers[0].name, college: topUsers[0].college, score: topUsers[0].total_score, accuracy: topUsers[0].avg_accuracy + '%', games: topUsers[0].total_games } : null,
-    topUsers[2] ? { rank: 3, name: topUsers[2].name, college: topUsers[2].college, score: topUsers[2].total_score, accuracy: topUsers[2].avg_accuracy + '%', games: topUsers[2].total_games } : null
+    topUsers[1] ? { rank: 2, name: topUsers[1].name, college: topUsers[1].college, avatar: topUsers[1].avatar_url, score: topUsers[1].total_score, accuracy: topUsers[1].avg_accuracy + '%', games: topUsers[1].total_games } : null,
+    topUsers[0] ? { rank: 1, name: topUsers[0].name, college: topUsers[0].college, avatar: topUsers[0].avatar_url, score: topUsers[0].total_score, accuracy: topUsers[0].avg_accuracy + '%', games: topUsers[0].total_games } : null,
+    topUsers[2] ? { rank: 3, name: topUsers[2].name, college: topUsers[2].college, avatar: topUsers[2].avatar_url, score: topUsers[2].total_score, accuracy: topUsers[2].avg_accuracy + '%', games: topUsers[2].total_games } : null
   ];
 
   const tableData = leaderboard.slice(3, 10).map((u, i) => ({
@@ -56,6 +56,7 @@ const Leaderboard = () => {
     name: u.name,
     college: u.college,
     score: u.total_score,
+    avatar: u.avatar_url,
     accuracy: (u.avg_accuracy || 0) + '%',
     games: u.total_games,
   }));
@@ -181,8 +182,12 @@ const Leaderboard = () => {
                     <div className="w-10 h-10 rounded-full bg-slate-200 absolute -top-5 flex items-center justify-center border-4 border-white shadow-sm">
                        <Medal size={20} className="text-slate-400" />
                     </div>
-                    <div className="w-16 h-16 rounded-full border-2 border-slate-200 mt-3 mb-3 bg-slate-100 flex items-center justify-center shadow-sm">
-                       <span className="text-2xl font-bold text-slate-500">{getInitial(podium[0].name)}</span>
+                    <div className="w-16 h-16 rounded-full border-2 border-slate-200 mt-3 mb-3 bg-slate-100 flex items-center justify-center shadow-sm overflow-hidden">
+                       {podium[0].avatar ? (
+                         <img src={podium[0].avatar} alt={podium[0].name} className="w-full h-full object-cover" />
+                       ) : (
+                         <span className="text-2xl font-bold text-slate-500">{getInitial(podium[0].name)}</span>
+                       )}
                     </div>
                     <h3 className="font-bold text-neutral-900 text-sm">{podium[0].name}</h3>
                     <p className="text-[10px] text-neutral-500 font-medium mb-4">{podium[0].college}</p>
@@ -201,8 +206,12 @@ const Leaderboard = () => {
                     <div className="absolute -top-8 text-amber-500">
                        <Crown size={40} className="drop-shadow-sm fill-amber-500" />
                     </div>
-                    <div className="w-20 h-20 rounded-full border-4 border-amber-200 mt-3 mb-4 shadow-sm bg-amber-50 flex items-center justify-center">
-                       <span className="text-3xl font-extrabold text-amber-500">{getInitial(podium[1].name)}</span>
+                    <div className="w-20 h-20 rounded-full border-4 border-amber-200 mt-3 mb-4 shadow-sm bg-amber-50 flex items-center justify-center overflow-hidden">
+                       {podium[1].avatar ? (
+                         <img src={podium[1].avatar} alt={podium[1].name} className="w-full h-full object-cover" />
+                       ) : (
+                         <span className="text-3xl font-extrabold text-amber-500">{getInitial(podium[1].name)}</span>
+                       )}
                     </div>
                     <h3 className="font-bold text-neutral-900 text-base">{podium[1].name}</h3>
                     <p className="text-xs text-neutral-500 font-medium mb-5">{podium[1].college}</p>
@@ -221,8 +230,12 @@ const Leaderboard = () => {
                     <div className="w-10 h-10 rounded-full bg-orange-100 absolute -top-5 flex items-center justify-center border-4 border-white shadow-sm">
                        <Medal size={20} className="text-orange-500" />
                     </div>
-                    <div className="w-16 h-16 rounded-full border-2 border-orange-200 mt-3 mb-3 bg-orange-50 flex items-center justify-center shadow-sm">
-                       <span className="text-2xl font-bold text-orange-500">{getInitial(podium[2].name)}</span>
+                    <div className="w-16 h-16 rounded-full border-2 border-orange-200 mt-3 mb-3 bg-orange-50 flex items-center justify-center shadow-sm overflow-hidden">
+                       {podium[2].avatar ? (
+                         <img src={podium[2].avatar} alt={podium[2].name} className="w-full h-full object-cover" />
+                       ) : (
+                         <span className="text-2xl font-bold text-orange-500">{getInitial(podium[2].name)}</span>
+                       )}
                     </div>
                     <h3 className="font-bold text-neutral-900 text-sm">{podium[2].name}</h3>
                     <p className="text-[10px] text-neutral-500 font-medium mb-4">{podium[2].college}</p>
@@ -258,7 +271,9 @@ const Leaderboard = () => {
                          <div key={row.rank} className={cn("grid grid-cols-12 gap-4 px-6 py-4 border-b border-neutral-50 items-center hover:bg-neutral-50 transition-colors", row.id === user?.id ? "bg-primary-50" : "")}>
                             <div className="col-span-1 text-sm font-semibold text-neutral-400">{row.rank}</div>
                             <div className="col-span-3 flex items-center gap-3">
-                               <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shadow-sm shrink-0">{getInitial(row.name)}</div>
+                               <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shadow-sm shrink-0 overflow-hidden">
+                                 {row.avatar ? <img src={row.avatar} alt={row.name} className="w-full h-full object-cover" /> : getInitial(row.name)}
+                               </div>
                                <span className={cn("font-bold text-sm", row.id === user?.id ? "text-primary-700" : "text-neutral-900")}>{row.name} {row.id === user?.id && '(You)'}</span>
                             </div>
                             <div className={cn("col-span-3 text-sm font-medium", row.id === user?.id ? "text-primary-600" : "text-neutral-500")}>{row.college}</div>
