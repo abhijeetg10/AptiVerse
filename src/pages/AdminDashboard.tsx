@@ -405,7 +405,7 @@ export const AdminDashboard = () => {
                         </span>
                       ) : '-'}
                     </td>
-                    <td className="p-4 text-sm text-neutral-700 max-w-xs truncate" title={review.comment}>
+                    <td className="p-4 text-sm text-neutral-700 max-w-xs break-words whitespace-normal">
                       {review.comment || '-'}
                     </td>
                     <td className="p-4 text-sm text-neutral-500">
@@ -480,7 +480,7 @@ export const AdminDashboard = () => {
                     <td className="p-4 text-sm font-medium text-slate-800">
                       {report.title}
                     </td>
-                    <td className="p-4 text-sm text-neutral-700 max-w-sm truncate" title={report.description}>
+                    <td className="p-4 text-sm text-neutral-700 max-w-xs break-words whitespace-normal">
                       {report.description}
                     </td>
                     <td className="p-4 text-sm text-neutral-500">
