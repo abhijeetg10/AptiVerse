@@ -11,8 +11,14 @@ import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const InductiveChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const [state, setState] = useState<InductiveState>(() => createInitialState(getLevel(0)));
+  const STORAGE_KEY = 'inductive_level';
+
+  const [levelIndex, setLevelIndex] = useState<number>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const [state, setState] = useState<InductiveState>(() => createInitialState(getLevel(levelIndex)));
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -27,6 +33,8 @@ export const InductiveChallenge: React.FC = () => {
   useEffect(() => {
     if (state.status === 'completed') {
       saveSession(levelIndex + 1, 10, 100, 360 - timeLeft, true);
+      // Persist progress
+      localStorage.setItem(STORAGE_KEY, String(levelIndex + 1));
     }
   }, [state.status, levelIndex, timeLeft]);
 
@@ -42,13 +50,16 @@ export const InductiveChallenge: React.FC = () => {
   const loadNextLevel = () => {
     const nextIdx = levelIndex + 1;
     setLevelIndex(nextIdx);
+    localStorage.setItem(STORAGE_KEY, String(nextIdx));
     setState(createInitialState(getLevel(nextIdx)));
+    setTimeLeft(360);
   };
 
   const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel);
 
   const handleReset = () => {
     setState(createInitialState(getLevel(levelIndex)));
+    setTimeLeft(360);
   };
 
   const formatTime = (secs: number) => {

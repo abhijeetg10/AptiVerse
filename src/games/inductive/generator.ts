@@ -130,8 +130,17 @@ const rules: RuleGenerator[] = [
   }
 ];
 
+let lastRuleIndex = -1;
+
 export function generateInductiveLevel(id: string): InductivePuzzle {
-  const rule = rules[Math.floor(Math.random() * rules.length)];
+  // Pick a rule different from the last one used
+  let ruleIndex: number;
+  do {
+    ruleIndex = Math.floor(Math.random() * rules.length);
+  } while (ruleIndex === lastRuleIndex && rules.length > 1);
+  lastRuleIndex = ruleIndex;
+
+  const rule = rules[ruleIndex];
   
   const examples: [Grid3x3, Grid3x3] = [
     rule.generateValid(),
