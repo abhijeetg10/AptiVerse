@@ -72,15 +72,10 @@ export const AdminDashboard = () => {
       
       let normalizedLeaderboard = [];
       if (leaderboardData) {
-        normalizedLeaderboard = leaderboardData.map(u => {
-          const isOldSystem = u.total_games > 0 && (u.total_score / u.total_games > 15);
-          return {
-            ...u,
-            college: normalizeCollege(u.college),
-            total_score: isOldSystem ? 0 : u.total_score,
-            total_games: isOldSystem ? 0 : u.total_games,
-          };
-        });
+        normalizedLeaderboard = leaderboardData.map(u => ({
+          ...u,
+          college: normalizeCollege(u.college),
+        }));
         normalizedLeaderboard.sort((a, b) => b.total_score - a.total_score);
       }
       setLeaderboard(normalizedLeaderboard);
