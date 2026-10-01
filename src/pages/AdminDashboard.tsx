@@ -489,13 +489,13 @@ export const AdminDashboard = () => {
                           const body = `Hi ${name},\n\nThank you for your feedback on "${report.title}".\n\nWe have reviewed and worked on your suggestion. The platform has been updated accordingly.\n\nThank you for helping us improve AptiVerse!\n\nBest Regards,\nTeam AptiVerse`;
                           const mailtoUrl = `mailto:${report.profiles.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                           return (
-                            <button
-                              onClick={() => window.open(mailtoUrl)}
-                              className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            <a
+                              href={mailtoUrl}
+                              className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex"
                               title={`Reply to ${report.profiles.email}`}
                             >
                               <Mail size={16} />
-                            </button>
+                            </a>
                           );
                         })()}
                         <button
