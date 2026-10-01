@@ -292,8 +292,12 @@ export const AdminDashboard = () => {
                 {filteredUsers.map(user => (
                   <tr key={user.id} className="hover:bg-neutral-50/50 transition-colors group">
                     <td className="p-4 pl-6 font-bold text-neutral-900 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs">
-                        {user.name?.charAt(0).toUpperCase() || 'U'}
+                      <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs overflow-hidden shrink-0">
+                        {user.avatar_url ? (
+                          <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
+                        ) : (
+                          user.name?.charAt(0).toUpperCase() || 'U'
+                        )}
                       </div>
                       {user.name || 'Unknown'}
                     </td>
