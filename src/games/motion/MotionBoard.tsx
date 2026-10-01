@@ -117,14 +117,19 @@ export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove }) => {
     >
       {/* Background Grid Cells */}
       <div className="absolute inset-0 grid gap-[2px] p-[2px]" style={{ gridTemplateRows: `repeat(${rows}, 1fr)`, gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-        {Array.from({ length: rows * cols }).map((_, i) => (
-          <div key={i} className="bg-slate-100 rounded-sm shadow-inner" />
-        ))}
+        {Array.from({ length: rows * cols }).map((_, i) => {
+          const row = Math.floor(i / cols);
+          const col = i % cols;
+          const isTarget = row === target.row && col === target.col;
+          return (
+            <div key={i} className={isTarget ? "bg-amber-950/40 rounded-sm shadow-inner" : "bg-slate-100 rounded-sm shadow-inner"} />
+          );
+        })}
       </div>
 
-      {/* Target (Hole) */}
+      {/* Target (Hole) - always visible with glow */}
       <div 
-        className="absolute flex items-center justify-center pointer-events-none z-10"
+        className="absolute flex items-center justify-center pointer-events-none z-[5]"
         style={{
           left: toPct(target.col, cols),
           top: toPct(target.row, rows),
@@ -132,8 +137,21 @@ export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove }) => {
           height: toPct(1, rows),
         }}
       >
-        <div className="w-4/5 h-4/5 rounded-full bg-slate-900 shadow-inner flex items-center justify-center">
-          <div className="w-3/5 h-3/5 rounded-full bg-black"></div>
+        {/* Outer glow ring */}
+        <div className="absolute w-[85%] h-[85%] rounded-full animate-ping opacity-30" 
+          style={{ background: 'radial-gradient(circle, #f59e0b, transparent)' }} 
+        />
+        {/* Hole */}
+        <div className="w-[75%] h-[75%] rounded-full shadow-[0_0_12px_4px_rgba(245,158,11,0.6)] flex items-center justify-center"
+          style={{ background: 'radial-gradient(circle at 35% 35%, #1e293b, #000)' }}
+        >
+          <div className="w-[45%] h-[45%] rounded-full opacity-80"
+            style={{ background: 'radial-gradient(circle at 30% 30%, #374151, #000)' }}
+          />
+        </div>
+        {/* Amber label below */}
+        <div className="absolute bottom-[2px] text-[7px] font-black text-amber-400 uppercase tracking-widest leading-none drop-shadow-md">
+          GOAL
         </div>
       </div>
 
