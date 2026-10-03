@@ -360,9 +360,6 @@ const Leaderboard = () => {
                     <div className="flex items-center gap-2 text-[#121629] font-bold text-sm tracking-wider uppercase">
                        <Landmark size={16} className="text-primary-600" /> Top Colleges
                     </div>
-                    <button className="text-primary-500 text-xs font-bold flex items-center gap-1 hover:text-primary-600">
-                      View All &rarr;
-                    </button>
                  </div>
                  
                  <div className="flex flex-col gap-4">
