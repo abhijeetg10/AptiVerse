@@ -52,7 +52,7 @@ const Home = () => {
           </div>
 
           {/* Right: Visual Showcase (The Floating Cards) */}
-          <div className="relative w-full h-[500px] flex items-center justify-center">
+          <div className="relative w-full h-[400px] lg:h-[500px] flex items-center justify-center scale-75 sm:scale-90 lg:scale-100 origin-center -mt-12 lg:mt-0">
              {/* Hand drawn arrow text */}
              <div className="absolute top-0 right-[10%] z-30 text-primary-500 font-medium text-sm rotate-[15deg] font-caveat flex flex-col items-center">
                 <span>Play</span>
@@ -149,7 +149,7 @@ const Home = () => {
 
       {/* Feature Strip */}
       <section className="bg-white border-y border-neutral-100 py-6">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center text-primary-600 shrink-0">
                <Gamepad2 size={24} />

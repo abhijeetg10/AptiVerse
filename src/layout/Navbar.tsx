@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { Search, Sun, Bell, ChevronDown } from 'lucide-react';
+import { Search, Sun, Bell, ChevronDown, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils/cn';
 import { Logo } from '../components/ui/Logo';
@@ -12,6 +12,7 @@ const Navbar = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isBugModalOpen, setIsBugModalOpen] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -66,7 +67,7 @@ const Navbar = () => {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="hidden lg:flex items-center gap-2 bg-neutral-100 px-3 py-1.5 rounded-lg border border-neutral-200 text-neutral-500 text-sm w-48">
             <Search size={16} />
             <span className="flex-1 text-left">Search...</span>
@@ -81,23 +82,53 @@ const Navbar = () => {
             <Bug size={20} />
           </button>
 
-          <div className="h-8 w-px bg-neutral-200 mx-1"></div>
+          <div className="hidden sm:block h-8 w-px bg-neutral-200 mx-1"></div>
 
           <button 
             onClick={() => navigate('/profile')}
             className="flex items-center gap-2 p-1 pl-2 pr-1 hover:bg-neutral-100 rounded-full transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-accent-500 text-white flex items-center justify-center text-sm font-medium shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-accent-500 text-white flex items-center justify-center text-sm font-medium shadow-sm shrink-0">
               {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
             <span className="text-sm font-medium text-neutral-700 hidden sm:block">
               {user?.name || 'Sign In'}
             </span>
-            <ChevronDown size={16} className="text-neutral-400" />
+            <ChevronDown size={16} className="text-neutral-400 hidden sm:block" />
+          </button>
+
+          <button 
+            className="md:hidden p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg ml-1"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white border-b border-neutral-200 px-4 py-4 flex flex-col gap-2">
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.name}
+              to={link.path}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                cn(
+                  "px-4 py-3 rounded-lg text-base font-medium transition-colors",
+                  isActive 
+                    ? "text-primary-600 bg-primary-50" 
+                    : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
+                )
+              }
+            >
+              {link.name}
+            </NavLink>
+          ))}
+        </div>
+      )}
 
       <ReportBugModal 
         isOpen={isBugModalOpen}

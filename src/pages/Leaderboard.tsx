@@ -175,11 +175,11 @@ const Leaderboard = () => {
            <div className="lg:col-span-8 flex flex-col gap-6">
               
               {/* Podium */}
-              <div className="flex items-end justify-center gap-4 md:gap-6 pt-10 pb-6">
+              <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-6 md:gap-6 pt-10 pb-6">
                  
                  {/* Rank 2 */}
                  {podium[0] && (
-                 <div className="w-[30%] bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 flex flex-col items-center text-center relative h-[230px]">
+                 <div className="w-full md:w-[30%] bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 flex flex-col items-center text-center relative h-auto md:h-[230px] order-2 md:order-1 mt-6 md:mt-0">
                     <div className="w-10 h-10 rounded-full bg-slate-200 absolute -top-5 flex items-center justify-center border-4 border-white shadow-sm">
                        <Medal size={20} className="text-slate-400" />
                     </div>
@@ -203,7 +203,7 @@ const Leaderboard = () => {
 
                  {/* Rank 1 */}
                  {podium[1] && (
-                 <div className="w-[35%] bg-gradient-to-b from-[#fffbeb] to-white rounded-2xl border border-amber-200 shadow-md p-6 flex flex-col items-center text-center relative h-[270px] z-10">
+                 <div className="w-full md:w-[35%] bg-gradient-to-b from-[#fffbeb] to-white rounded-2xl border border-amber-200 shadow-md p-6 flex flex-col items-center text-center relative h-auto md:h-[270px] z-10 order-1 md:order-2 mt-6 md:mt-0">
                     <div className="absolute -top-8 text-amber-500">
                        <Crown size={40} className="drop-shadow-sm fill-amber-500" />
                     </div>
@@ -227,7 +227,7 @@ const Leaderboard = () => {
 
                  {/* Rank 3 */}
                  {podium[2] && (
-                 <div className="w-[30%] bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 flex flex-col items-center text-center relative h-[230px]">
+                 <div className="w-full md:w-[30%] bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 flex flex-col items-center text-center relative h-auto md:h-[230px] order-3 mt-6 md:mt-0">
                     <div className="w-10 h-10 rounded-full bg-orange-100 absolute -top-5 flex items-center justify-center border-4 border-white shadow-sm">
                        <Medal size={20} className="text-orange-500" />
                     </div>
@@ -253,6 +253,8 @@ const Leaderboard = () => {
 
               {/* Table */}
               <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden flex flex-col">
+                <div className="overflow-x-auto">
+                 <div className="min-w-[800px]">
                  
                  {/* Header */}
                  <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
@@ -301,6 +303,8 @@ const Leaderboard = () => {
                       )}
                    </div>
                  )}
+                 </div>
+                </div>
               </div>
            </div>
 
