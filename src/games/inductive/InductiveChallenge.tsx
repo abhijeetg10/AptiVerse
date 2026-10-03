@@ -52,14 +52,12 @@ export const InductiveChallenge: React.FC = () => {
     setLevelIndex(nextIdx);
     localStorage.setItem(STORAGE_KEY, String(nextIdx));
     setState(createInitialState(getLevel(nextIdx)));
-    setTimeLeft(360);
   };
 
   const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel);
 
   const handleReset = () => {
     setState(createInitialState(getLevel(levelIndex)));
-    setTimeLeft(360);
   };
 
   const formatTime = (secs: number) => {
@@ -130,10 +128,31 @@ export const InductiveChallenge: React.FC = () => {
         )}
 
         {state.status === 'failed' && (
-          <div className="mt-8 bg-red-50 text-red-800 p-6 rounded-2xl border border-red-200 text-center animate-in fade-in slide-in-from-bottom-4 shadow-lg shadow-red-500/10">
+          <div className="mt-8 bg-red-50 text-red-800 p-6 rounded-2xl border border-red-200 text-center animate-in fade-in slide-in-from-bottom-4 shadow-lg shadow-red-500/10 z-10 relative">
             <h2 className="text-2xl font-extrabold mb-2">Incorrect</h2>
             <p className="font-medium text-red-700 mb-4">The rule was: {state.puzzle.ruleName}</p>
             <Button onClick={handleReset} className="bg-red-600 hover:bg-red-700 text-slate-900">Try Again</Button>
+          </div>
+        )}
+
+        {/* Timeout Overlay */}
+        {timeLeft <= 0 && (
+          <div className="absolute inset-0 z-50 bg-slate-50/80 backdrop-blur-md rounded-xl flex items-center justify-center animate-in fade-in duration-300">
+            <div className="bg-slate-100 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-red-500/50">
+              <h2 className="text-3xl font-extrabold text-red-500 mb-2">Time's Up!</h2>
+              <p className="text-slate-500 mb-6">You've completed {levelIndex} levels.</p>
+              <button 
+                onClick={() => { 
+                  setTimeLeft(360); 
+                  setLevelIndex(0); 
+                  localStorage.setItem(STORAGE_KEY, '0');
+                  setState(createInitialState(getLevel(0)));
+                }}
+                className="w-full py-3 bg-red-600 text-slate-900 font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30"
+              >
+                Restart Assessment
+              </button>
+            </div>
           </div>
         )}
 
