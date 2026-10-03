@@ -212,7 +212,6 @@ const Home = () => {
             desc="Slide obstacles to clear a path and guide the ball into the target hole."
             difficulty="Medium"
             category={{ label: "Spatial Reasoning", icon: <Gamepad2 size={12}/> }}
-            score="10"
             visual={
               <div className="w-[140px] h-[80px] bg-white rounded-lg border border-blue-100 shadow-sm p-1.5 grid grid-cols-4 grid-rows-3 gap-1 relative">
                 <div className="col-start-2 row-start-1 row-span-2 bg-primary-400 rounded-sm shadow-sm"></div>
@@ -231,7 +230,6 @@ const Home = () => {
             desc="Find the missing shape using Sudoku-style row and column logic."
             difficulty="Hard"
             category={{ label: "Pattern Logic", icon: <Gamepad2 size={12}/> }}
-            score="9"
             visual={
               <div className="w-[100px] h-[100px] bg-white rounded-lg border border-amber-100 shadow-sm p-2 grid grid-cols-3 gap-1.5">
                 <div className="flex justify-center items-center text-primary-500">★</div>
@@ -256,7 +254,6 @@ const Home = () => {
             desc="Identify hidden rules in a sequence of shapes and predict the next step."
             difficulty="Medium"
             category={{ label: "Pattern Recognition", icon: <Gamepad2 size={12}/> }}
-            score="10"
             visual={
               <div className="flex items-center gap-1.5">
                 <div className="bg-white p-2 rounded shadow-sm flex gap-1"><div className="w-3 h-3 bg-primary-500"></div><div className="w-3 h-3 bg-primary-500"></div></div>
@@ -274,7 +271,6 @@ const Home = () => {
             desc="Memorize the location of dots and reproduce them after a distraction."
             difficulty="Hard"
             category={{ label: "Memory + Spatial", icon: <Gamepad2 size={12}/> }}
-            score="8"
             visual={
               <div className="grid grid-cols-6 gap-1.5">
                 {Array.from({ length: 24 }).map((_, i) => (
@@ -291,7 +287,6 @@ const Home = () => {
             desc="Follow transformation rules and determine how inputs map to outputs."
             difficulty="Hard"
             category={{ label: "Logical Mapping", icon: <Gamepad2 size={12}/> }}
-            score="9"
             visual={
               <div className="flex flex-col items-center gap-2">
                 <div className="flex gap-2">
@@ -316,7 +311,6 @@ const Home = () => {
             desc="Analyze tables and charts across multiple tabs and verify complex statements."
             difficulty="Hard"
             category={{ label: "Data Interpretation", icon: <Gamepad2 size={12}/> }}
-            score="10"
             visual={
               <div className="w-[160px] bg-white rounded-lg border border-blue-100 shadow-sm overflow-hidden flex flex-col">
                 <div className="flex bg-blue-50 border-b border-blue-100 text-[6px] text-blue-500 font-bold">
@@ -343,7 +337,6 @@ const Home = () => {
             desc="Navigate between multiple document tabs, combine information and answer comprehension questions."
             difficulty="Medium"
             category={{ label: "Reading Comprehension", icon: <Gamepad2 size={12}/> }}
-            score="9"
             visual={
               <div className="w-[160px] bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                 <div className="flex bg-slate-50 border-b border-slate-200 text-[6px] text-slate-500 font-bold">
