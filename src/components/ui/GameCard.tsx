@@ -15,11 +15,9 @@ export interface GameCardProps {
     label: string;
     icon: React.ReactNode;
   };
-  score: string | number;
-  played?: string | number;
 }
 
-export const GameCard = ({ to, bgClass, visual, title, desc, difficulty, category, score, played }: GameCardProps) => {
+export const GameCard = ({ to, bgClass, visual, title, desc, difficulty, category }: GameCardProps) => {
   return (
     <Link to={to} className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
       <div className={cn("h-40 flex items-center justify-center p-4 relative overflow-hidden", bgClass)}>
@@ -41,22 +39,7 @@ export const GameCard = ({ to, bgClass, visual, title, desc, difficulty, categor
 
         <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Trophy size={16} className="text-amber-500" />
-              <div className="flex flex-col">
-                <span className="text-[10px] text-neutral-400 font-medium uppercase leading-none">Best Score</span>
-                <span className="font-bold text-neutral-900 leading-none mt-1">{score}</span>
-              </div>
-            </div>
-            {played && (
-              <div className="flex items-center gap-2 border-l border-neutral-100 pl-4">
-                <BarChart2 size={16} className="text-blue-500" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-neutral-400 font-medium uppercase leading-none">Played</span>
-                  <span className="font-bold text-neutral-900 leading-none mt-1">{played} times</span>
-                </div>
-              </div>
-            )}
+            <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Play Now</span>
           </div>
           <div className="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-md shadow-primary-500/30 group-hover:bg-primary-600 transition-colors shrink-0">
             <ArrowRight size={14} />

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Edit3, Trophy, Target, Gamepad2, Flame, LogOut } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { supabase } from '../lib/supabase';
 
 const Profile = () => {
   const { user, updateProfile, isProfileComplete, signOut } = useAuth();
@@ -12,6 +13,33 @@ const Profile = () => {
   const [college, setCollege] = useState(user?.college || '');
   
   const [isSaved, setIsSaved] = useState(false);
+  const [stats, setStats] = useState({
+    totalScore: 0,
+    gamesPlayed: 0,
+    accuracy: 0,
+    streak: 0
+  });
+
+  React.useEffect(() => {
+    if (!user) return;
+    const fetchStats = async () => {
+      const { data } = await supabase
+        .from('global_leaderboard')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (data) {
+        setStats({
+          totalScore: data.total_score || 0,
+          gamesPlayed: data.total_games || 0,
+          accuracy: data.avg_accuracy || 0,
+          streak: data.total_games > 0 ? 1 : 0 // Same basic streak logic as dashboard for now
+        });
+      }
+    };
+    fetchStats();
+  }, [user]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +125,7 @@ const Profile = () => {
                      <Trophy size={18} />
                   </div>
                   <div className="flex flex-col">
-                     <span className="text-lg font-bold text-[#121629] leading-none mb-1">1,620</span>
+                     <span className="text-lg font-bold text-[#121629] leading-none mb-1">{stats.totalScore.toLocaleString()}</span>
                      <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">Total Score</span>
                   </div>
                </div>
@@ -107,7 +135,7 @@ const Profile = () => {
                      <Gamepad2 size={18} />
                   </div>
                   <div className="flex flex-col">
-                     <span className="text-lg font-bold text-[#121629] leading-none mb-1">42</span>
+                     <span className="text-lg font-bold text-[#121629] leading-none mb-1">{stats.gamesPlayed}</span>
                      <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">Games Played</span>
                   </div>
                </div>
@@ -117,7 +145,7 @@ const Profile = () => {
                      <Target size={18} />
                   </div>
                   <div className="flex flex-col">
-                     <span className="text-lg font-bold text-[#121629] leading-none mb-1">78%</span>
+                     <span className="text-lg font-bold text-[#121629] leading-none mb-1">{stats.accuracy}%</span>
                      <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">Average Accuracy</span>
                   </div>
                </div>
@@ -127,7 +155,7 @@ const Profile = () => {
                      <Flame size={18} />
                   </div>
                   <div className="flex flex-col">
-                     <span className="text-lg font-bold text-[#121629] leading-none mb-1">6 Days</span>
+                     <span className="text-lg font-bold text-[#121629] leading-none mb-1">{stats.streak} Days</span>
                      <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">Current Streak</span>
                   </div>
                </div>

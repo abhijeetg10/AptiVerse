@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Target, Gamepad2, Flame, Clock, Brain, LayoutGrid, RotateCcw, PieChart, BookOpen, Boxes } from 'lucide-react';
+import { Trophy, Target, Gamepad2, Flame, Clock, Brain, LayoutGrid, RotateCcw, PieChart, BookOpen, Boxes, Eye, Compass, Hash } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -53,6 +53,10 @@ const Progress = () => {
   const getGameIcon = (gameId: string) => {
     switch (gameId) {
       case 'motion': return <Boxes size={18} className="text-blue-500" />;
+      case 'sudoku': return <Brain size={18} className="text-amber-500" />;
+      case 'inductive': return <Eye size={18} className="text-accent-500" />;
+      case 'grid': return <LayoutGrid size={18} className="text-neutral-800" />;
+      case 'switch': return <RotateCcw size={18} className="text-emerald-500" />;
       case 'di': return <PieChart size={18} className="text-pink-500" />;
       case 'rc': return <BookOpen size={18} className="text-violet-500" />;
       default: return <Gamepad2 size={18} className="text-slate-500" />;
@@ -62,8 +66,12 @@ const Progress = () => {
   const getGameName = (gameId: string) => {
     switch (gameId) {
       case 'motion': return "Motion Challenge";
-      case 'di': return "Data Interpretation";
-      case 'rc': return "Reading Comprehension";
+      case 'sudoku': return "Geo Sudoku";
+      case 'inductive': return "Inductive Challenge";
+      case 'grid': return "Grid Challenge";
+      case 'switch': return "Switch Challenge";
+      case 'di': return "Tab Based DI";
+      case 'rc': return "Tab Based RC";
       default: return "Unknown Game";
     }
   };

@@ -3,6 +3,7 @@ import { Trophy, Search, ChevronDown, Settings2, Users, Landmark, Target, Gamepa
 import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const normalizeCollege = (name: string | null | undefined) => {
   if (!name) return '-';
@@ -313,9 +314,9 @@ const Leaderboard = () => {
                     <div className="flex items-center gap-2 text-primary-600 font-bold text-sm tracking-wider uppercase">
                        <Target size={16} /> Your Rank
                     </div>
-                    <button className="text-primary-500 text-xs font-bold flex items-center gap-1 hover:text-primary-600">
+                    <Link to="/profile" className="text-primary-500 text-xs font-bold flex items-center gap-1 hover:text-primary-600">
                       View Profile &rarr;
-                    </button>
+                    </Link>
                  </div>
                  
                  <div className="flex items-end justify-between mb-2">
