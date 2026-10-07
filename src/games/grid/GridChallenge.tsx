@@ -106,9 +106,9 @@ export const GridChallenge: React.FC = () => {
                 {Array.from({ length: gridSize }).map((_, i) => {
                   const isPresent = sequence.includes(i);
                   return (
-                    <div key={i} className="flex items-center justify-center bg-slate-50/50 rounded-xl shadow-inner border border-slate-200/50">
+                    <div key={i} className="flex items-center justify-center bg-white rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100">
                       {isPresent && (
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-500 shadow-[0_0_15px_rgba(79,70,229,0.5)] flex items-center justify-center font-bold text-white" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-500 shadow-[0_4px_12px_rgba(99,102,241,0.4)] animate-in zoom-in duration-300" />
                       )}
                     </div>
                   );
@@ -128,20 +128,20 @@ export const GridChallenge: React.FC = () => {
             </h2>
             <p className="text-slate-500 text-sm mb-10">Answer quickly to proceed to the recall phase.</p>
 
-            <div className="flex gap-8 mb-10">
-              <div className="bg-white p-4 rounded-xl border border-slate-200">
-                 <div className="w-32 h-32 grid grid-cols-4 gap-1">
+            <div className="flex gap-6 sm:gap-10 mb-10">
+              <div className="bg-white p-5 rounded-2xl shadow-lg border border-slate-100">
+                 <div className="w-32 h-32 sm:w-40 sm:h-40 grid grid-cols-4 gap-1.5">
                     {distraction.grid1.map((v, i) => (
-                      <div key={i} className={cn("rounded-sm", v ? "bg-primary-400" : "bg-slate-50")}></div>
+                      <div key={i} className={cn("rounded-md transition-colors", v ? "bg-amber-400 shadow-sm" : "bg-slate-50")}></div>
                     ))}
                  </div>
               </div>
               
               {distraction.type === 'matching' && distraction.grid2 && (
-                <div className="bg-white p-4 rounded-xl border border-slate-200">
-                   <div className="w-32 h-32 grid grid-cols-4 gap-1">
+                <div className="bg-white p-5 rounded-2xl shadow-lg border border-slate-100">
+                   <div className="w-32 h-32 sm:w-40 sm:h-40 grid grid-cols-4 gap-1.5">
                       {distraction.grid2.map((v, i) => (
-                        <div key={i} className={cn("rounded-sm", v ? "bg-primary-400" : "bg-slate-50")}></div>
+                        <div key={i} className={cn("rounded-md transition-colors", v ? "bg-amber-400 shadow-sm" : "bg-slate-50")}></div>
                       ))}
                    </div>
                 </div>
@@ -158,7 +158,7 @@ export const GridChallenge: React.FC = () => {
         {phase === 'recreate' && (
           <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
             <h2 className="text-2xl font-bold text-emerald-500 mb-2">Recall the positions</h2>
-            <p className="text-slate-500 text-sm mb-10">Select the {dotsCount} cells in the exact order they appeared.</p>
+            <p className="text-slate-500 text-sm mb-10">Select the <span className="font-bold text-slate-700">{dotsCount}</span> cells that were previously highlighted.</p>
 
             {distractionPassed === false && (
               <div className="absolute top-6 bg-error/20 text-error px-4 py-2 rounded-lg border border-error/50 flex items-center gap-2">
@@ -175,8 +175,8 @@ export const GridChallenge: React.FC = () => {
                       key={i} 
                       onClick={() => handleCellClick(i)}
                       className={cn(
-                        "flex items-center justify-center rounded-xl shadow-inner border border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500",
-                        isSelected ? "bg-primary-600 border-primary-500" : "bg-slate-50 hover:bg-neutral-700"
+                        "flex items-center justify-center rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 transition-all focus:outline-none hover:scale-[1.02]",
+                        isSelected ? "bg-emerald-500 shadow-[0_4px_12px_rgba(16,185,129,0.3)] scale-105 border-emerald-400" : "bg-white hover:bg-slate-50"
                       )}
                     />
                   );

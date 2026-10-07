@@ -45,9 +45,10 @@ export function toggleCell(state: GridState, index: number): GridState {
 
   // Auto-submit if we reached the dot count
   if (newSelection.length === state.puzzle.dotsCount) {
+    // Check if the sets match regardless of order
     let isCorrect = true;
-    for (let i = 0; i < newSelection.length; i++) {
-      if (newSelection[i] !== state.puzzle.sequence[i]) {
+    for (const val of state.puzzle.sequence) {
+      if (!newSelection.includes(val)) {
         isCorrect = false;
         break;
       }
