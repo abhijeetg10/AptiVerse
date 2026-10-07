@@ -6,6 +6,7 @@ create table profiles (
   college text,
   avatar_url text,
   role text default 'user',
+  is_blocked boolean default false,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 

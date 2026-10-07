@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Edit3, Trophy, Target, Gamepad2, Flame, LogOut } from 'lucide-react';
+import { Edit3, Trophy, Target, Gamepad2, Flame, LogOut, AlertTriangle } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
 
@@ -13,6 +13,8 @@ const Profile = () => {
   const [college, setCollege] = useState(user?.college || '');
   
   const [isSaved, setIsSaved] = useState(false);
+  const [existingColleges, setExistingColleges] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [stats, setStats] = useState({
     totalScore: 0,
     gamesPlayed: 0,
@@ -39,6 +41,15 @@ const Profile = () => {
       }
     };
     fetchStats();
+
+    const fetchColleges = async () => {
+      const { data } = await supabase.from('profiles').select('college');
+      if (data) {
+        const unique = [...new Set(data.map(d => d.college).filter(c => c && c !== '-'))];
+        setExistingColleges(unique.sort());
+      }
+    };
+    fetchColleges();
   }, [user]);
 
   const handleSave = (e: React.FormEvent) => {
@@ -78,6 +89,13 @@ const Profile = () => {
           {!isProfileComplete && (
             <div className="mt-4 inline-block bg-orange-100 text-orange-700 px-4 py-2 rounded-lg text-sm font-bold border border-orange-200">
               ⚠️ Please complete your profile to access games and tracking.
+            </div>
+          )}
+
+          {user?.is_blocked && (
+            <div className="mt-4 bg-red-50 text-red-700 px-5 py-3 rounded-xl text-sm font-bold border border-red-200 flex items-center gap-3">
+              <AlertTriangle size={20} className="shrink-0" />
+              Your account has been restricted because your college name appears to be invalid or an abbreviation. Please enter your FULL college name below to continue playing.
             </div>
           )}
         </div>
@@ -200,17 +218,40 @@ const Profile = () => {
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 relative">
                   <label htmlFor="college" className="text-sm font-semibold text-neutral-700">College Name</label>
                   <input 
                     id="college"
                     type="text" 
                     value={college}
-                    onChange={(e) => setCollege(e.target.value)}
-                    placeholder="Enter your college name"
+                    onChange={(e) => {
+                      setCollege(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                    placeholder="Enter your full college name"
                     className="w-full px-4 py-3 bg-white border border-neutral-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                     required
                   />
+                  {showDropdown && existingColleges.length > 0 && (
+                    <div className="absolute z-10 w-full mt-20 bg-white border border-neutral-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      {existingColleges
+                        .filter(c => c.toLowerCase().includes(college.toLowerCase()))
+                        .map(c => (
+                          <div 
+                            key={c} 
+                            className="px-4 py-2 text-sm text-neutral-700 hover:bg-primary-50 cursor-pointer"
+                            onClick={() => {
+                              setCollege(c);
+                              setShowDropdown(false);
+                            }}
+                          >
+                            {c}
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </div>
 
                 <button 

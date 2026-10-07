@@ -42,14 +42,16 @@ const ProtectedRoute = () => {
   // If loading, just show a blank or spinner
   if (isLoading) return <div className="fixed inset-0 bg-[#121629] z-[9999]" />;
 
-  // If profile is complete and authUser exists, render the nested routes (the actual games)
-  if (authUser && isProfileComplete) {
+  const isBlocked = user?.is_blocked;
+
+  // If profile is complete and not blocked, render the nested routes (the actual games)
+  if (authUser && isProfileComplete && !isBlocked) {
     return <Outlet />;
   }
 
   // Determine actual mode based on state
   let currentMode = mode;
-  if (authUser && !isProfileComplete) {
+  if (authUser && (!isProfileComplete || isBlocked)) {
     currentMode = 'profile';
   }
 
@@ -100,7 +102,7 @@ const ProtectedRoute = () => {
            {currentMode === 'signin' ? 'Welcome Back' : currentMode === 'signup' ? 'Create Account' : 'Complete Profile'}
          </h2>
          <p className="text-center text-neutral-500 text-sm mb-6 leading-relaxed px-4">
-           {currentMode === 'profile' ? 'Just a few more details before you start playing.' : 'Verify your identity to play games, save progress, and prevent fake accounts.'}
+           {currentMode === 'profile' ? (isBlocked ? 'Your account has been restricted. Please update your college name with the correct full name to continue playing.' : 'Just a few more details before you start playing.') : 'Verify your identity to play games, save progress, and prevent fake accounts.'}
          </p>
 
          {errorMsg && (

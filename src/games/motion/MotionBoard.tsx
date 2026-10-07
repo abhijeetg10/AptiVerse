@@ -5,9 +5,11 @@ import { cn } from '../../utils/cn';
 interface MotionBoardProps {
   state: GameState;
   onMove: (entityId: string, direction: Direction, steps?: number) => boolean;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
-export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove }) => {
+export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove, onDragStart, onDragEnd }) => {
   const { rows, cols, ball, target, blocks, walls } = state;
   const boardRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +34,7 @@ export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove }) => {
     dragIdRef.current = id;
     dragOrientationRef.current = orientation;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
+    onDragStart?.();
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -75,6 +78,7 @@ export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove }) => {
     setDragId(null);
     dragIdRef.current = null;
     dragStartRef.current = null;
+    onDragEnd?.();
   };
 
   // Keyboard navigation for ball

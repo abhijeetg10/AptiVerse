@@ -9,6 +9,7 @@ export type UserProfile = {
   email?: string;
   avatar_url?: string;
   role?: string;
+  is_blocked?: boolean;
 };
 
 interface AuthContextType {
@@ -46,6 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: data.email,
         avatar_url: data.avatar_url,
         role: data.role || 'user',
+        is_blocked: data.is_blocked || false,
       });
     } else {
       // If profile doesn't exist yet, we still need to set user to something so they can complete it
@@ -144,7 +146,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Update existing
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ name, college, avatar_url, updated_at: new Date().toISOString() })
+        .update({ name, college, avatar_url, is_blocked: false, updated_at: new Date().toISOString() })
         .eq('id', currentUserId);
       error = updateError;
     } else {
@@ -161,7 +163,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         id: currentUserId,
         name,
         college,
-        avatar_url
+        avatar_url,
+        is_blocked: false
       } as UserProfile));
       return { error: null };
     } else {

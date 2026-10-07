@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug, Landmark, Mail } from 'lucide-react';
+import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug, Landmark, Mail, Edit3 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 
@@ -125,6 +125,33 @@ export const AdminDashboard = () => {
       setSessions(sessions.filter(s => s.user_id !== id));
     } catch (err) {
       alert('Error deleting user. Note: You may need to delete them from Supabase Auth dashboard directly as well.');
+      console.error(err);
+    }
+  };
+
+  const editUserCollege = async (id: string, currentCollege: string) => {
+    const newCollege = window.prompt("Enter new college name:", currentCollege);
+    if (newCollege === null || newCollege.trim() === currentCollege) return;
+    
+    try {
+      const { error } = await supabase.from('profiles').update({ college: newCollege.trim() }).eq('id', id);
+      if (error) throw error;
+      setUsers(users.map(u => u.id === id ? { ...u, college: newCollege.trim() } : u));
+    } catch (err) {
+      alert('Error updating college');
+      console.error(err);
+    }
+  };
+
+  const toggleBlockUser = async (id: string, isBlocked: boolean) => {
+    if (!window.confirm(`Are you sure you want to ${isBlocked ? 'unblock' : 'block'} this user?`)) return;
+    
+    try {
+      const { error } = await supabase.from('profiles').update({ is_blocked: !isBlocked }).eq('id', id);
+      if (error) throw error;
+      setUsers(users.map(u => u.id === id ? { ...u, is_blocked: !isBlocked } : u));
+    } catch (err) {
+      alert('Error blocking/unblocking user');
       console.error(err);
     }
   };
@@ -278,7 +305,8 @@ export const AdminDashboard = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                  <th className="p-4 pl-6">User</th>
+                  <th className="p-4 pl-6 w-16">Sr. No.</th>
+                  <th className="p-4">User</th>
                   <th className="p-4">Email</th>
                   <th className="p-4">College</th>
                   <th className="p-4">Role</th>
@@ -289,9 +317,10 @@ export const AdminDashboard = () => {
                 {filteredUsers.length === 0 && (
                   <tr><td colSpan={5} className="p-8 text-center text-neutral-500">No users found.</td></tr>
                 )}
-                {filteredUsers.map(user => (
+                {filteredUsers.map((user, i) => (
                   <tr key={user.id} className="hover:bg-neutral-50/50 transition-colors group">
-                    <td className="p-4 pl-6 font-bold text-neutral-900 flex items-center gap-3">
+                    <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
+                    <td className="p-4 font-bold text-neutral-900 flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs overflow-hidden shrink-0">
                         {user.avatar_url ? (
                           <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
@@ -310,13 +339,29 @@ export const AdminDashboard = () => {
                     </td>
                     <td className="p-4 pr-6 text-right">
                       {user.role !== 'admin' && (
-                        <button 
-                          onClick={() => deleteUser(user.id)}
-                          className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete User"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button 
+                            onClick={() => editUserCollege(user.id, user.college || '')}
+                            className="p-2 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit College"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => toggleBlockUser(user.id, user.is_blocked)}
+                            className={`p-2 rounded-lg transition-colors ${user.is_blocked ? 'text-orange-500 hover:bg-orange-50 bg-orange-50/50' : 'text-neutral-400 hover:text-orange-600 hover:bg-orange-50'}`}
+                            title={user.is_blocked ? "Unblock User" : "Block User"}
+                          >
+                            <AlertTriangle size={16} />
+                          </button>
+                          <button 
+                            onClick={() => deleteUser(user.id)}
+                            className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete User"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -374,7 +419,8 @@ export const AdminDashboard = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                  <th className="p-4 pl-6">User</th>
+                  <th className="p-4 pl-6 w-16">Sr. No.</th>
+                  <th className="p-4">User</th>
                   <th className="p-4">Rating</th>
                   <th className="p-4">Tag</th>
                   <th className="p-4">Comment</th>
@@ -386,9 +432,10 @@ export const AdminDashboard = () => {
                 {filteredReviews.length === 0 && (
                   <tr><td colSpan={6} className="p-8 text-center text-neutral-500">No reviews found.</td></tr>
                 )}
-                {filteredReviews.map(review => (
+                {filteredReviews.map((review, i) => (
                   <tr key={review.id} className="hover:bg-neutral-50/50 transition-colors group">
-                    <td className="p-4 pl-6 font-bold text-neutral-900 text-sm">
+                    <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
+                    <td className="p-4 font-bold text-neutral-900 text-sm">
                       {review.profiles?.name || 'Anonymous'}
                       <div className="text-xs text-neutral-500 font-normal">{review.profiles?.email || '-'}</div>
                     </td>
@@ -459,7 +506,8 @@ export const AdminDashboard = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                  <th className="p-4 pl-6">User</th>
+                  <th className="p-4 pl-6 w-16">Sr. No.</th>
+                  <th className="p-4">User</th>
                   <th className="p-4">Title</th>
                   <th className="p-4">Description</th>
                   <th className="p-4">Date</th>
@@ -470,9 +518,10 @@ export const AdminDashboard = () => {
                 {bugReports.length === 0 && (
                   <tr><td colSpan={5} className="p-8 text-center text-neutral-500">No reports found.</td></tr>
                 )}
-                {bugReports.map(report => (
+                {bugReports.map((report, i) => (
                   <tr key={report.id} className="hover:bg-neutral-50/50 transition-colors group">
-                    <td className="p-4 pl-6 font-bold text-neutral-900 text-sm">
+                    <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
+                    <td className="p-4 font-bold text-neutral-900 text-sm">
                       {report.profiles?.name || 'Anonymous'}
                       <div className="text-xs text-neutral-500 font-normal">{report.profiles?.email || '-'}</div>
                     </td>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { GameState, Direction } from './types';
 import { getLevel } from './levels';
 import { createInitialState, applyMove } from './engine';
@@ -53,12 +53,37 @@ export const MotionChallenge: React.FC = () => {
     }
   }, [state.status, levelIndex, timeLeft]);
 
+  const isDraggingRef = useRef(false);
+  const dragStartStateRef = useRef<GameState | null>(null);
+
+  const handleDragStart = useCallback(() => {
+    isDraggingRef.current = true;
+    dragStartStateRef.current = state;
+  }, [state]);
+
+  const handleDragEnd = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
+
   const handleMove = useCallback((entityId: string, direction: Direction, steps?: number) => {
     if (state.status !== 'playing' || timeLeft <= 0 || isSolving) return false;
     
+    const isDragMove = isDraggingRef.current;
     const newState = applyMove(state, entityId, direction, steps);
+    
     if (newState !== state && newState.moves > state.moves) {
-      setHistory(prev => [...prev, state]);
+      if (isDragMove && dragStartStateRef.current) {
+        newState.moves = dragStartStateRef.current.moves + 1;
+        
+        setHistory(prev => {
+          if (state === dragStartStateRef.current) {
+            return [...prev, state];
+          }
+          return prev;
+        });
+      } else {
+        setHistory(prev => [...prev, state]);
+      }
       setState(newState);
       return true;
     }
@@ -207,7 +232,12 @@ export const MotionChallenge: React.FC = () => {
           {/* Board Area */}
           <div className="flex-1 flex justify-center">
             <div className="relative w-full max-w-[500px]">
-              <MotionBoard state={state} onMove={handleMove} />
+              <MotionBoard 
+                state={state} 
+                onMove={handleMove} 
+                onDragStart={handleDragStart} 
+                onDragEnd={handleDragEnd} 
+              />
 
               {/* Completion Overlay */}
               {state.status === 'completed' && (
