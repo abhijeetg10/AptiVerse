@@ -150,11 +150,19 @@ export const AdminDashboard = () => {
     if (!window.confirm(`Are you sure you want to merge/rename all users from "${oldCollegeName}" to "${newCollege.trim()}"?`)) return;
 
     try {
-      const { error } = await supabase.from('profiles').update({ college: newCollege.trim() }).eq('college', oldCollegeName);
+      // Find all users that currently fall under this normalized college name
+      const userIdsToUpdate = users.filter(u => u.college === oldCollegeName).map(u => u.id);
+      
+      if (userIdsToUpdate.length === 0) return;
+
+      // Update by ID to avoid case/formatting mismatches with the raw database string
+      const { error } = await supabase.from('profiles').update({ college: newCollege.trim() }).in('id', userIdsToUpdate);
       if (error) throw error;
       
-      setUsers(users.map(u => u.college === oldCollegeName ? { ...u, college: newCollege.trim() } : u));
-      setLeaderboard(leaderboard.map(u => u.college === oldCollegeName ? { ...u, college: newCollege.trim() } : u));
+      // Update local state, passing the new name through normalizeCollege so it matches the expected format
+      const normalizedNewName = normalizeCollege(newCollege.trim());
+      setUsers(users.map(u => userIdsToUpdate.includes(u.id) ? { ...u, college: normalizedNewName } : u));
+      setLeaderboard(leaderboard.map(u => u.college === oldCollegeName ? { ...u, college: normalizedNewName } : u));
     } catch (err) {
       alert('Error renaming college for all users');
       console.error(err);
