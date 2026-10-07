@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Building2, CheckCircle2 } from 'lucide-react';
 import Fuse from 'fuse.js';
-import { collegeData, College } from '../../data/colleges';
+import { collegeData, type College } from '../../data/colleges';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
