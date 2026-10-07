@@ -148,7 +148,7 @@ export const MotionChallenge: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
+    <div className="game-container min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col fixed inset-0 z-[100] overflow-y-auto">
       <header className="h-16 border-b border-slate-200 px-6 flex items-center justify-between shrink-0 bg-white shadow-sm relative z-10">
         <div className="flex items-center gap-4">
           <Link to="/games" className="text-slate-400 hover:text-slate-700 transition-colors">
