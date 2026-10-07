@@ -156,8 +156,15 @@ export const AdminDashboard = () => {
       if (userIdsToUpdate.length === 0) return;
 
       // Update by ID to avoid case/formatting mismatches with the raw database string
-      const { error } = await supabase.from('profiles').update({ college: newCollege.trim() }).in('id', userIdsToUpdate);
+      const { data, error } = await supabase.from('profiles').update({ college: newCollege.trim() }).in('id', userIdsToUpdate).select();
+      
       if (error) throw error;
+
+      if (!data || data.length === 0) {
+        alert("Warning: The database reported 0 rows updated. This usually means Supabase Row Level Security (RLS) is blocking you from modifying other users' profiles.");
+      } else {
+        console.log(`Successfully updated ${data.length} profiles in Supabase.`);
+      }
       
       // Update local state, passing the new name through normalizeCollege so it matches the expected format
       const normalizedNewName = normalizeCollege(newCollege.trim());
