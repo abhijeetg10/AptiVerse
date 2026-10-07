@@ -143,6 +143,24 @@ export const AdminDashboard = () => {
     }
   };
 
+  const renameCollege = async (oldCollegeName: string) => {
+    const newCollege = window.prompt(`Rename all instances of "${oldCollegeName}" to:`, oldCollegeName);
+    if (newCollege === null || newCollege.trim() === oldCollegeName || newCollege.trim() === '') return;
+    
+    if (!window.confirm(`Are you sure you want to merge/rename all users from "${oldCollegeName}" to "${newCollege.trim()}"?`)) return;
+
+    try {
+      const { error } = await supabase.from('profiles').update({ college: newCollege.trim() }).eq('college', oldCollegeName);
+      if (error) throw error;
+      
+      setUsers(users.map(u => u.college === oldCollegeName ? { ...u, college: newCollege.trim() } : u));
+      setLeaderboard(leaderboard.map(u => u.college === oldCollegeName ? { ...u, college: newCollege.trim() } : u));
+    } catch (err) {
+      alert('Error renaming college for all users');
+      console.error(err);
+    }
+  };
+
   const toggleBlockUser = async (id: string, isBlocked: boolean) => {
     if (!window.confirm(`Are you sure you want to ${isBlocked ? 'unblock' : 'block'} this user?`)) return;
     
@@ -573,6 +591,7 @@ export const AdminDashboard = () => {
                   <th className="p-4 pl-6">Rank</th>
                   <th className="p-4">College Name</th>
                   <th className="p-4">Number of Students</th>
+                  <th className="p-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -584,6 +603,15 @@ export const AdminDashboard = () => {
                     <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
                     <td className="p-4 font-bold text-neutral-900 text-sm">{college.name}</td>
                     <td className="p-4 text-sm text-emerald-600 font-bold">{college.studentCount} Students</td>
+                    <td className="p-4 pr-6 text-right">
+                      <button 
+                        onClick={() => renameCollege(college.name)}
+                        className="p-2 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Rename / Merge College"
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
