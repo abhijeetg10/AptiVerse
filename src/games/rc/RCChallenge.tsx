@@ -11,8 +11,8 @@ import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 
 export const RCChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const [state, setState] = useState<RCState>(() => createInitialState(levels[0]));
+  const [levelIndex, setLevelIndex] = useState(() => Math.floor(Math.random() * levels.length));
+  const [state, setState] = useState<RCState>(() => createInitialState(levels[levelIndex]));
   const [activeTab, setActiveTab] = useState(0);
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins for RC
   // Fullscreen logic

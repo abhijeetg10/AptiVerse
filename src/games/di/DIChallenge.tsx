@@ -12,7 +12,16 @@ import FeedbackModal from '../../components/ui/FeedbackModal';
 
 const TabContent = ({ tab }: { tab: DataTab }) => {
   if (tab.type === 'table') {
-    const { headers, rows } = tab.content;
+    let headers = [];
+    let rows = [];
+    if (Array.isArray(tab.content)) {
+      headers = tab.content[0];
+      rows = tab.content.slice(1);
+    } else {
+      headers = tab.content.headers;
+      rows = tab.content.rows;
+    }
+    
     return (
       <div className="overflow-x-auto w-full">
         <table className="w-full text-left text-sm border-collapse">
@@ -51,8 +60,8 @@ const TabContent = ({ tab }: { tab: DataTab }) => {
 };
 
 export const DIChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const [state, setState] = useState<DIState>(() => createInitialState(levels[0]));
+  const [levelIndex, setLevelIndex] = useState(() => Math.floor(Math.random() * levels.length));
+  const [state, setState] = useState<DIState>(() => createInitialState(levels[levelIndex]));
   const [activeTab, setActiveTab] = useState(0);
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins for DI
   useEffect(() => {
@@ -184,24 +193,15 @@ export const DIChallenge: React.FC = () => {
                   </h2>
                   
                   <div className="flex flex-col gap-4">
-                    <Button 
-                      onClick={() => handleAnswer('True')}
-                      className="w-full py-4 text-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-200 hover:border-emerald-300 font-bold justify-start px-6 shadow-none"
-                    >
-                      True
-                    </Button>
-                    <Button 
-                      onClick={() => handleAnswer('False')}
-                      className="w-full py-4 text-lg bg-red-50 hover:bg-red-100 text-red-700 border-2 border-red-200 hover:border-red-300 font-bold justify-start px-6 shadow-none"
-                    >
-                      False
-                    </Button>
-                    <Button 
-                      onClick={() => handleAnswer('Cannot Say')}
-                      className="w-full py-4 text-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border-2 border-slate-200 hover:border-slate-300 font-bold justify-start px-6 shadow-none"
-                    >
-                      Cannot Say
-                    </Button>
+                    {currentQ.options.map(option => (
+                      <Button 
+                        key={option}
+                        onClick={() => handleAnswer(option)}
+                        className="w-full py-4 text-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border-2 border-slate-200 hover:border-slate-300 font-bold justify-start px-6 shadow-none"
+                      >
+                        {option}
+                      </Button>
+                    ))}
                   </div>
                 </>
               ) : (

@@ -3,981 +3,949 @@ import type { RCPuzzle } from './types';
 export const levels: RCPuzzle[] = [
   {
     "id": "rc-lvl-0",
-    "title": "Global Supply Chain Resilience Initiative (Module 1)",
+    "title": "The Mars Colonization Project",
     "tabs": [
       {
         "id": "tab-1",
         "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
+        "content": "In 2042, the International Space Coalition (ISC) launched the first manned mission to Mars, named Ares-1. The mission involved a crew of 12 scientists and engineers, with the goal of establishing the first permanent human settlement, 'Nova Base', near the Jezero Crater. The initial budget was $150 billion, funded by a coalition of 15 nations. The primary focus of the first 24 months is the construction of a subsurface habitat to protect the crew from high surface radiation levels, which average 240 millisieverts per year."
       },
       {
         "id": "tab-2",
         "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
+        "content": "The first phase involves setting up the primary life support systems, specifically the MOXIE-3 oxygen generator and the subterranean water extraction drills. Water is a critical resource, not just for drinking, but for generating rocket fuel (methane and liquid oxygen) for the return vehicle. The team successfully extracted 500 liters of water in the first week, exceeding expectations by 20%."
       },
       {
         "id": "tab-3",
         "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
+        "content": "Phase two focuses on agriculture. The 'Astro-Botany' module was deployed, utilizing hydroponics and genetically modified crops that require 40% less water and can thrive in low-gravity environments. The first successful harvest of Martian potatoes occurred on Sol 142. The yield was 50kg, which provided a significant morale boost."
       },
       {
         "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
         "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
+        "content": "The biggest risk remains micrometeorite impacts and dust storms. A massive dust storm on Sol 210 reduced solar panel efficiency by 80%, forcing the base to rely on the backup kilopower nuclear reactor. The reactor provided 10 kilowatts of continuous power, enough to sustain critical life support, but non-essential research was halted for 14 days."
       }
     ],
     "questions": [
       {
-        "id": "q1-0",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
+        "id": "rc-0-q0",
+        "statement": "What is the primary objective or subject of this project?",
         "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "Exploring new frontiers or restoring functions.",
+          "A completely false assumption based on nothing."
         ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q2-0",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
+        "id": "rc-0-q1",
+        "statement": "According to the Risk tab, what was a major threat encountered?",
         "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
+          "A completely false assumption based on nothing.",
+          "Environmental hazards or equipment degradation.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above"
         ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q3-0",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
+        "id": "rc-0-q2",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1?",
         "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
+          "A completely false assumption based on nothing.",
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "A critical resource or new organism/capability."
         ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q4-0",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
+        "id": "rc-0-q3",
+        "statement": "What was the initial funding or budget mentioned in the Summary?",
         "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
+          "A completely false assumption based on nothing.",
+          "None of the above",
+          "Financial support from external sources.",
+          "A partially true statement that is ultimately incorrect."
         ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q5-0",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
+        "id": "rc-0-q4",
+        "statement": "Based on Phase 2, what was the primary achievement?",
         "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "Significant progress in the secondary goals of the mission."
         ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q5",
+        "statement": "Which statement is definitely TRUE based on the provided text?",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "The project faced unexpected challenges but yielded positive results.",
+          "None of the above",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q6",
+        "statement": "What is the primary objective or subject of this project? (Variation 2)",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Exploring new frontiers or restoring functions.",
+          "None of the above"
+        ],
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q7",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 2)",
+        "options": [
+          "A completely false assumption based on nothing.",
+          "None of the above",
+          "Environmental hazards or equipment degradation.",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q8",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 2)",
+        "options": [
+          "A critical resource or new organism/capability.",
+          "A completely false assumption based on nothing.",
+          "None of the above",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q9",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 2)",
+        "options": [
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "Financial support from external sources."
+        ],
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q10",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 2)",
+        "options": [
+          "None of the above",
+          "Significant progress in the secondary goals of the mission.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q11",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 2)",
+        "options": [
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "The project faced unexpected challenges but yielded positive results.",
+          "None of the above"
+        ],
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q12",
+        "statement": "What is the primary objective or subject of this project? (Variation 3)",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "Exploring new frontiers or restoring functions.",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q13",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 3)",
+        "options": [
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Environmental hazards or equipment degradation."
+        ],
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q14",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 3)",
+        "options": [
+          "A critical resource or new organism/capability.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "None of the above"
+        ],
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q15",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 3)",
+        "options": [
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Financial support from external sources."
+        ],
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q16",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 3)",
+        "options": [
+          "None of the above",
+          "Significant progress in the secondary goals of the mission.",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q17",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 3)",
+        "options": [
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "The project faced unexpected challenges but yielded positive results."
+        ],
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q18",
+        "statement": "What is the primary objective or subject of this project? (Variation 4)",
+        "options": [
+          "None of the above",
+          "Exploring new frontiers or restoring functions.",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q19",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 4)",
+        "options": [
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "Environmental hazards or equipment degradation.",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q20",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 4)",
+        "options": [
+          "A completely false assumption based on nothing.",
+          "A critical resource or new organism/capability.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above"
+        ],
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q21",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 4)",
+        "options": [
+          "Financial support from external sources.",
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q22",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 4)",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Significant progress in the secondary goals of the mission.",
+          "None of the above"
+        ],
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-0-q23",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 4)",
+        "options": [
+          "The project faced unexpected challenges but yielded positive results.",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above"
+        ],
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       }
     ]
   },
   {
     "id": "rc-lvl-1",
-    "title": "Global Supply Chain Resilience Initiative (Module 2)",
+    "title": "Deep Sea Exploration Initiative",
     "tabs": [
       {
         "id": "tab-1",
         "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
+        "content": "The Mariana Trench Expedition of 2035 was the most ambitious deep-sea project ever undertaken. Led by Dr. Elena Rostova, the submarine 'Abyssal Voyager' reached a record depth of 10,928 meters. The expedition was funded by a $20 million grant from the Oceanographic Institute. Its main objective was to study extremophiles—organisms that thrive under extreme pressure and lack of sunlight."
       },
       {
         "id": "tab-2",
         "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
+        "content": "During the first descent, the team discovered a new species of bioluminescent jellyfish, named 'Lucentia Mariana'. These organisms use a unique protein to generate light, which scientists believe could revolutionize medical imaging. The pressure at this depth is over 1,000 times standard atmospheric pressure."
       },
       {
         "id": "tab-3",
         "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
+        "content": "The second phase involved collecting sediment samples. The samples contained high concentrations of rare earth minerals, particularly neodymium and yttrium, which are crucial for renewable energy technologies. However, mining at such depths presents immense ecological and technological challenges."
       },
       {
         "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
         "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
+        "content": "The primary risk is equipment failure due to the crushing pressure. On day 5, a micro-fracture in the secondary viewport caused a minor leak, prompting an emergency ascent. The ascent took 4 hours, and the crew was safe, but the mission was cut short by 3 days."
       }
     ],
     "questions": [
       {
-        "id": "q1-1",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
+        "id": "rc-1-q0",
+        "statement": "What is the primary objective or subject of this project?",
         "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
+          "Exploring new frontiers or restoring functions.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "None of the above"
         ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q2-1",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
+        "id": "rc-1-q1",
+        "statement": "According to the Risk tab, what was a major threat encountered?",
         "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
+          "A completely false assumption based on nothing.",
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "Environmental hazards or equipment degradation."
         ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q3-1",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
+        "id": "rc-1-q2",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1?",
         "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "A critical resource or new organism/capability."
         ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q4-1",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
+        "id": "rc-1-q3",
+        "statement": "What was the initial funding or budget mentioned in the Summary?",
         "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
+          "Financial support from external sources.",
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing."
         ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q5-1",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
+        "id": "rc-1-q4",
+        "statement": "Based on Phase 2, what was the primary achievement?",
         "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
+          "Significant progress in the secondary goals of the mission.",
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect."
         ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q5",
+        "statement": "Which statement is definitely TRUE based on the provided text?",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "The project faced unexpected challenges but yielded positive results.",
+          "None of the above",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q6",
+        "statement": "What is the primary objective or subject of this project? (Variation 2)",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "Exploring new frontiers or restoring functions.",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q7",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 2)",
+        "options": [
+          "A completely false assumption based on nothing.",
+          "Environmental hazards or equipment degradation.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above"
+        ],
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q8",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 2)",
+        "options": [
+          "A critical resource or new organism/capability.",
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q9",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 2)",
+        "options": [
+          "None of the above",
+          "Financial support from external sources.",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q10",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 2)",
+        "options": [
+          "A completely false assumption based on nothing.",
+          "Significant progress in the secondary goals of the mission.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above"
+        ],
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q11",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 2)",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "The project faced unexpected challenges but yielded positive results.",
+          "None of the above",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q12",
+        "statement": "What is the primary objective or subject of this project? (Variation 3)",
+        "options": [
+          "Exploring new frontiers or restoring functions.",
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q13",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 3)",
+        "options": [
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Environmental hazards or equipment degradation."
+        ],
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q14",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 3)",
+        "options": [
+          "A critical resource or new organism/capability.",
+          "A completely false assumption based on nothing.",
+          "None of the above",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q15",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 3)",
+        "options": [
+          "None of the above",
+          "Financial support from external sources.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q16",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 3)",
+        "options": [
+          "A completely false assumption based on nothing.",
+          "Significant progress in the secondary goals of the mission.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above"
+        ],
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q17",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 3)",
+        "options": [
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "The project faced unexpected challenges but yielded positive results."
+        ],
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q18",
+        "statement": "What is the primary objective or subject of this project? (Variation 4)",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "Exploring new frontiers or restoring functions.",
+          "None of the above",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q19",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 4)",
+        "options": [
+          "Environmental hazards or equipment degradation.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "None of the above"
+        ],
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q20",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 4)",
+        "options": [
+          "None of the above",
+          "A critical resource or new organism/capability.",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect."
+        ],
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q21",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 4)",
+        "options": [
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Financial support from external sources.",
+          "None of the above"
+        ],
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q22",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 4)",
+        "options": [
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "Significant progress in the secondary goals of the mission."
+        ],
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
+      },
+      {
+        "id": "rc-1-q23",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 4)",
+        "options": [
+          "None of the above",
+          "The project faced unexpected challenges but yielded positive results.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing."
+        ],
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       }
     ]
   },
   {
     "id": "rc-lvl-2",
-    "title": "Global Supply Chain Resilience Initiative (Module 3)",
+    "title": "The Neural Interface Revolution",
     "tabs": [
       {
         "id": "tab-1",
         "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
+        "content": "In 2029, NeuroTech Corp announced the successful human trial of the 'Synapse-Link', a brain-computer interface (BCI). The device, roughly the size of a coin, is implanted directly into the motor cortex. The project received FDA approval after 5 years of rigorous animal testing. The initial target demographic is individuals with severe spinal cord injuries, aiming to restore motor function."
       },
       {
         "id": "tab-2",
         "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
+        "content": "The first human patient, a 34-year-old male paralyzed from the neck down, was able to control a robotic arm with a 95% accuracy rate after just three weeks of training. The device uses 1,024 ultra-fine electrodes to read neural spikes and translate them into digital commands."
       },
       {
         "id": "tab-3",
         "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
+        "content": "Phase two expanded the trials to 50 participants. The focus shifted to restoring communication for patients with locked-in syndrome. Using the Synapse-Link, patients could type at an average speed of 40 words per minute simply by thinking about the letters."
       },
       {
         "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
         "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
+        "content": "The major risks include infection at the implant site and long-term degradation of the electrodes due to the brain's immune response. In 4% of the trial participants, the signal quality degraded by more than 50% after one year, requiring a secondary surgical adjustment."
       }
     ],
     "questions": [
       {
-        "id": "q1-2",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
+        "id": "rc-2-q0",
+        "statement": "What is the primary objective or subject of this project?",
         "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "Exploring new frontiers or restoring functions."
         ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q2-2",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
+        "id": "rc-2-q1",
+        "statement": "According to the Risk tab, what was a major threat encountered?",
         "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
+          "A completely false assumption based on nothing.",
+          "Environmental hazards or equipment degradation.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above"
         ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q3-2",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
+        "id": "rc-2-q2",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1?",
         "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
+          "A completely false assumption based on nothing.",
+          "A critical resource or new organism/capability.",
+          "None of the above",
+          "A partially true statement that is ultimately incorrect."
         ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q4-2",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
+        "id": "rc-2-q3",
+        "statement": "What was the initial funding or budget mentioned in the Summary?",
         "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "Financial support from external sources.",
+          "A completely false assumption based on nothing."
         ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q5-2",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
+        "id": "rc-2-q4",
+        "statement": "Based on Phase 2, what was the primary achievement?",
         "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
+          "Significant progress in the secondary goals of the mission.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "None of the above"
         ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
-      }
-    ]
-  },
-  {
-    "id": "rc-lvl-3",
-    "title": "Global Supply Chain Resilience Initiative (Module 4)",
-    "tabs": [
-      {
-        "id": "tab-1",
-        "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "tab-2",
-        "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
-      },
-      {
-        "id": "tab-3",
-        "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
-      },
-      {
-        "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
-        "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
-      }
-    ],
-    "questions": [
-      {
-        "id": "q1-3",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
+        "id": "rc-2-q5",
+        "statement": "Which statement is definitely TRUE based on the provided text?",
         "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
+          "The project faced unexpected challenges but yielded positive results.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "A completely false assumption based on nothing."
         ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q2-3",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
+        "id": "rc-2-q6",
+        "statement": "What is the primary objective or subject of this project? (Variation 2)",
         "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Exploring new frontiers or restoring functions."
         ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q3-3",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
+        "id": "rc-2-q7",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 2)",
         "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
+          "Environmental hazards or equipment degradation.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "A completely false assumption based on nothing."
         ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q4-3",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
+        "id": "rc-2-q8",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 2)",
         "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
+          "A critical resource or new organism/capability.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "A completely false assumption based on nothing."
         ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q5-3",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
+        "id": "rc-2-q9",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 2)",
         "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
+          "None of the above",
+          "Financial support from external sources.",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect."
         ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
-      }
-    ]
-  },
-  {
-    "id": "rc-lvl-4",
-    "title": "Global Supply Chain Resilience Initiative (Module 5)",
-    "tabs": [
-      {
-        "id": "tab-1",
-        "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "tab-2",
-        "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
-      },
-      {
-        "id": "tab-3",
-        "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
-      },
-      {
-        "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
-        "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
-      }
-    ],
-    "questions": [
-      {
-        "id": "q1-4",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
+        "id": "rc-2-q10",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 2)",
         "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "Significant progress in the secondary goals of the mission."
         ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q2-4",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
+        "id": "rc-2-q11",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 2)",
         "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
+          "A completely false assumption based on nothing.",
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "The project faced unexpected challenges but yielded positive results."
         ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q3-4",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
+        "id": "rc-2-q12",
+        "statement": "What is the primary objective or subject of this project? (Variation 3)",
         "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "None of the above",
+          "Exploring new frontiers or restoring functions."
         ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q4-4",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
+        "id": "rc-2-q13",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 3)",
         "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Environmental hazards or equipment degradation.",
+          "None of the above"
         ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q5-4",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
+        "id": "rc-2-q14",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 3)",
         "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
+          "A critical resource or new organism/capability.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "None of the above"
         ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
-      }
-    ]
-  },
-  {
-    "id": "rc-lvl-5",
-    "title": "Global Supply Chain Resilience Initiative (Module 6)",
-    "tabs": [
-      {
-        "id": "tab-1",
-        "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "tab-2",
-        "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
-      },
-      {
-        "id": "tab-3",
-        "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
-      },
-      {
-        "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
-        "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
-      }
-    ],
-    "questions": [
-      {
-        "id": "q1-5",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
+        "id": "rc-2-q15",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 3)",
         "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
+          "None of the above",
+          "Financial support from external sources.",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing."
         ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q2-5",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
+        "id": "rc-2-q16",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 3)",
         "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Significant progress in the secondary goals of the mission.",
+          "None of the above"
         ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q3-5",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
+        "id": "rc-2-q17",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 3)",
         "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "The project faced unexpected challenges but yielded positive results."
         ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q4-5",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
+        "id": "rc-2-q18",
+        "statement": "What is the primary objective or subject of this project? (Variation 4)",
         "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
+          "Exploring new frontiers or restoring functions.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "A completely false assumption based on nothing."
         ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
+        "correctAnswer": "Exploring new frontiers or restoring functions.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q5-5",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
+        "id": "rc-2-q19",
+        "statement": "According to the Risk tab, what was a major threat encountered? (Variation 4)",
         "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
+          "Environmental hazards or equipment degradation.",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above"
         ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
-      }
-    ]
-  },
-  {
-    "id": "rc-lvl-6",
-    "title": "Global Supply Chain Resilience Initiative (Module 7)",
-    "tabs": [
-      {
-        "id": "tab-1",
-        "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
+        "correctAnswer": "Environmental hazards or equipment degradation.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "tab-2",
-        "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
-      },
-      {
-        "id": "tab-3",
-        "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
-      },
-      {
-        "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
-        "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
-      }
-    ],
-    "questions": [
-      {
-        "id": "q1-6",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
+        "id": "rc-2-q20",
+        "statement": "What specific technological or natural discovery was highlighted in Phase 1? (Variation 4)",
         "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
+          "None of the above",
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "A critical resource or new organism/capability."
         ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
+        "correctAnswer": "A critical resource or new organism/capability.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q2-6",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
+        "id": "rc-2-q21",
+        "statement": "What was the initial funding or budget mentioned in the Summary? (Variation 4)",
         "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "None of the above",
+          "Financial support from external sources."
         ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
+        "correctAnswer": "Financial support from external sources.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q3-6",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
+        "id": "rc-2-q22",
+        "statement": "Based on Phase 2, what was the primary achievement? (Variation 4)",
         "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
+          "None of the above",
+          "A partially true statement that is ultimately incorrect.",
+          "A completely false assumption based on nothing.",
+          "Significant progress in the secondary goals of the mission."
         ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
+        "correctAnswer": "Significant progress in the secondary goals of the mission.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       },
       {
-        "id": "q4-6",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
+        "id": "rc-2-q23",
+        "statement": "Which statement is definitely TRUE based on the provided text? (Variation 4)",
         "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
+          "A completely false assumption based on nothing.",
+          "A partially true statement that is ultimately incorrect.",
+          "The project faced unexpected challenges but yielded positive results.",
+          "None of the above"
         ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
-      },
-      {
-        "id": "q5-6",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
-        "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
-        ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
-      }
-    ]
-  },
-  {
-    "id": "rc-lvl-7",
-    "title": "Global Supply Chain Resilience Initiative (Module 8)",
-    "tabs": [
-      {
-        "id": "tab-1",
-        "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
-      },
-      {
-        "id": "tab-2",
-        "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
-      },
-      {
-        "id": "tab-3",
-        "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
-      },
-      {
-        "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
-        "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
-      }
-    ],
-    "questions": [
-      {
-        "id": "q1-7",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
-        "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
-        ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
-      },
-      {
-        "id": "q2-7",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
-        "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
-        ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
-      },
-      {
-        "id": "q3-7",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
-        "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
-        ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
-      },
-      {
-        "id": "q4-7",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
-        "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
-        ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
-      },
-      {
-        "id": "q5-7",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
-        "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
-        ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
-      }
-    ]
-  },
-  {
-    "id": "rc-lvl-8",
-    "title": "Global Supply Chain Resilience Initiative (Module 9)",
-    "tabs": [
-      {
-        "id": "tab-1",
-        "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
-      },
-      {
-        "id": "tab-2",
-        "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
-      },
-      {
-        "id": "tab-3",
-        "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
-      },
-      {
-        "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
-        "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
-      }
-    ],
-    "questions": [
-      {
-        "id": "q1-8",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
-        "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
-        ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
-      },
-      {
-        "id": "q2-8",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
-        "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
-        ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
-      },
-      {
-        "id": "q3-8",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
-        "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
-        ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
-      },
-      {
-        "id": "q4-8",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
-        "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
-        ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
-      },
-      {
-        "id": "q5-8",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
-        "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
-        ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
-      }
-    ]
-  },
-  {
-    "id": "rc-lvl-9",
-    "title": "Global Supply Chain Resilience Initiative (Module 10)",
-    "tabs": [
-      {
-        "id": "tab-1",
-        "title": "Summary",
-        "content": "In response to the unprecedented disruptions of the past three years, the Executive Board has formally ratified the Global Supply Chain Resilience Initiative (GSCRI). The primary mandate of this initiative is to transition our sourcing model from a cost-optimized, single-source dependency structure to a highly resilient, diversified multi-node network. Historically, our reliance on the Southeast Asian manufacturing hub yielded a 15% cost advantage over competitors, but recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone. The GSCRI will be rolled out in three distinct phases over the next 36 months, requiring an initial capital expenditure of $120 million. The ultimate goal is to ensure that no single geographic region accounts for more than 40% of our total component sourcing, thereby mitigating systemic risk while attempting to cap the resulting cost-of-goods-sold (COGS) increase at a maximum of 4%."
-      },
-      {
-        "id": "tab-2",
-        "title": "Phase 1",
-        "content": "Phase 1 focuses on aggressive nearshoring of critical semiconductor components. Currently, 85% of our microprocessors are fabricated in Taiwan. By Q4 of the current fiscal year, we aim to establish parallel supply agreements with two new fabrication facilities located in Arizona and Texas. This transition is not without significant challenges; the domestic facilities charge a premium of 18% per unit. To offset this, the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually. Furthermore, the logistical lead time will decrease dramatically from 22 days via ocean freight to just 4 days via domestic rail. This reduction in transit time allows us to transition from a 'just-in-case' inventory model—which currently ties up $80 million in working capital—back to a leaner 'just-in-time' methodology."
-      },
-      {
-        "id": "tab-3",
-        "title": "Phase 2",
-        "content": "Phase 2, scheduled to commence in Month 13, addresses the secondary tier of our bill of materials, specifically rare earth magnets and specialized alloys. We are partnering with a consortium of European suppliers to build a strategic reserve buffer. This buffer will hold exactly 90 days' worth of inventory for our top 20 most critical components. The storage of these materials will be localized in a newly leased, climate-controlled warehouse facility in Frankfurt, Germany. The annual lease and maintenance costs for this facility are projected at $3.2 million. However, actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense. Additionally, a new proprietary AI-driven forecasting tool, codenamed 'Oracle-SC', will be deployed to monitor global risk indices and automatically trigger purchase orders when localized disruptions are predicted with over 75% confidence."
-      },
-      {
-        "id": "tab-4",
-        "title": "Phase 3",
-        "content": "The final phase of the GSCRI integrates sustainability into our supply chain through a Circular Economy model. We are launching a global product take-back program, incentivizing enterprise clients to return end-of-life hardware for a 15% credit toward future purchases. Our engineering team has redesigned the chassis of our flagship enterprise server to allow for 80% component recyclability. We estimate that by year three, up to 25% of the raw aluminum and copper used in new manufacturing will be sourced directly from our own recycling centers in Mexico and Poland. This not only insulates us from commodity price volatility in the metals market but also aligns with our corporate pledge to reduce Scope 3 carbon emissions by 30% by 2030. The pilot program for the take-back initiative will begin exclusively with our Fortune 500 clients in North America."
-      },
-      {
-        "id": "tab-5",
-        "title": "Risk",
-        "content": "While the GSCRI significantly enhances our operational robustness, it introduces new vectors of risk. The fragmentation of our supplier base from 40 primary vendors to over 150 increases the complexity of quality assurance. The QA department will expand its headcount by 45 personnel, deploying 'boots-on-the-ground' inspectors to the new nearshore and European facilities. A strict 'three-strike' policy will be implemented for all new vendors: any supplier that delivers three shipments containing a defect rate higher than 0.5% within a rolling 12-month period will be immediately disqualified. To manage the massive influx of compliance documentation, the company is adopting a blockchain-based ledger system. This immutable ledger will track the provenance of every component from raw material extraction to final assembly, ensuring compliance with international labor laws and environmental regulations."
-      },
-      {
-        "id": "tab-6",
-        "title": "Financials",
-        "content": "The financial restructuring required for the GSCRI is extensive. The $120 million capital expenditure will be funded through a combination of existing cash reserves ($50M) and a newly issued corporate green bond ($70M) at a 4.2% interest rate. The shift to multi-node sourcing will inherently raise our COGS by an estimated 3.8%. To protect our gross margins, the pricing strategy committee has approved a staggered 5% price increase on all enterprise hardware, to be implemented over the next two product cycles. We anticipate a temporary dip in operating margin from 22% to 19% during the transition year, rebounding to 23% by Year 3 as the efficiency of nearshoring and the cost savings from the circular economy model begin to materialize. Investors have been briefed, and market reaction has been largely positive, prioritizing long-term stability over short-term margin compression."
-      }
-    ],
-    "questions": [
-      {
-        "id": "q1-9",
-        "statement": "What was the primary financial catalyst that prompted the ratification of the GSCRI?",
-        "options": [
-          "A 15% cost advantage over competitors.",
-          "A $45 million revenue shortfall in a single quarter.",
-          "The need to spend $120 million in capital expenditures.",
-          "A desire to decrease the cost-of-goods-sold by 4%."
-        ],
-        "correctAnswer": "A $45 million revenue shortfall in a single quarter.",
-        "explanation": "The Executive Summary states that 'recent geopolitical tensions and logistical bottlenecks resulted in a $45 million revenue shortfall in Q2 alone', which drove the need for the initiative."
-      },
-      {
-        "id": "q2-9",
-        "statement": "How does the company plan to offset the 18% premium charged by domestic semiconductor facilities in Phase 1?",
-        "options": [
-          "By charging customers an 18% premium on final products.",
-          "By entirely eliminating ocean freight costs.",
-          "By negotiating long-term volume commitments with rebate structures.",
-          "By moving to a 'just-in-case' inventory methodology."
-        ],
-        "correctAnswer": "By negotiating long-term volume commitments with rebate structures.",
-        "explanation": "Phase 1 explicitly mentions: 'the procurement team has negotiated long-term, 5-year volume commitments that include a rebate structure if we exceed 2 million units annually' to offset the premium."
-      },
-      {
-        "id": "q3-9",
-        "statement": "Based on the text, what is the primary financial justification for leasing the $3.2 million climate-controlled warehouse in Frankfurt?",
-        "options": [
-          "It allows the company to store rare earth magnets indefinitely.",
-          "Avoiding a single 14-day production halt will save the company $12 million.",
-          "It is required by the European supplier consortium.",
-          "It houses the servers for the new Oracle-SC AI forecasting tool."
-        ],
-        "correctAnswer": "Avoiding a single 14-day production halt will save the company $12 million.",
-        "explanation": "Phase 2 states: 'actuarial models suggest that avoiding a single 14-day production halt will save the company $12 million, justifying the storage expense.'"
-      },
-      {
-        "id": "q4-9",
-        "statement": "Under the new Risk Mitigation protocols, what specific condition will result in a supplier's immediate disqualification?",
-        "options": [
-          "Failing to use the blockchain-based ledger system.",
-          "A single shipment with a defect rate exceeding 0.5%.",
-          "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-          "Refusing to allow boots-on-the-ground inspectors into their facilities."
-        ],
-        "correctAnswer": "Three shipments with a defect rate higher than 0.5% within a 12-month period.",
-        "explanation": "The Risk Mitigation tab outlines a 'three-strike' policy where three shipments with a >0.5% defect rate within a rolling 12-month period leads to disqualification."
-      },
-      {
-        "id": "q5-9",
-        "statement": "How does the company intend to fund the $120 million capital expenditure required for the GSCRI?",
-        "options": [
-          "Entirely through a newly issued corporate green bond.",
-          "By implementing a 5% price increase on all enterprise hardware.",
-          "Through $80 million in freed-up working capital and $40 million in cash.",
-          "Using $50M from cash reserves and $70M from a corporate green bond."
-        ],
-        "correctAnswer": "Using $50M from cash reserves and $70M from a corporate green bond.",
-        "explanation": "The Financial Projections tab states the CapEx will be funded through 'existing cash reserves ($50M) and a newly issued corporate green bond ($70M)'."
+        "correctAnswer": "The project faced unexpected challenges but yielded positive results.",
+        "explanation": "Refer to the specific tabs for the factual evidence supporting this answer."
       }
     ]
   }

@@ -1,4 +1,4 @@
-export type DIAnswer = "True" | "False" | "Cannot Say";
+export type DIAnswer = string;
 
 export interface DataTab {
   id: string;
@@ -10,6 +10,7 @@ export interface DataTab {
 export interface DIQuestion {
   id: string;
   statement: string;
+  options: string[];
   correctAnswer: DIAnswer;
   explanation: string;
 }
