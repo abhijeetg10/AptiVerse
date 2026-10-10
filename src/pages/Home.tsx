@@ -6,6 +6,7 @@ import { GameCard } from '../components/ui/GameCard';
 import { Link } from 'react-router-dom';
 import { cn } from '../utils/cn';
 import FeedbackModal from '../components/ui/FeedbackModal';
+import { AdBanner } from '../components/ui/AdBanner';
 
 const Home = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -146,6 +147,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Ad placement 1 */}
+      <AdBanner dataAdSlot="auto" />
 
       {/* Feature Strip */}
       <section className="bg-white border-y border-neutral-100 py-6">
@@ -355,6 +359,9 @@ const Home = () => {
           
         </div>
       </section>
+
+      {/* Ad placement 2 */}
+      <AdBanner dataAdSlot="auto" />
 
       {/* Why Aptiverse */}
       <section className="py-24 max-w-7xl mx-auto px-6 border-t border-neutral-100">

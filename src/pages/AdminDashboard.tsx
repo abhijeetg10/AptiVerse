@@ -228,6 +228,17 @@ export const AdminDashboard = () => {
     (r.comment?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
+  const filteredLeaderboard = leaderboard.filter(u => 
+    (u.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (u.college?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  );
+
+  const filteredBugs = bugReports.filter(b => 
+    (b.profiles?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (b.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (b.description?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  );
+
   const collegesMap = new Map<string, number>();
   users.forEach(u => {
     if (!u.college || u.college === '-') return;
@@ -515,13 +526,14 @@ export const AdminDashboard = () => {
                   <th className="p-4">Total Score</th>
                   <th className="p-4">Accuracy</th>
                   <th className="p-4">Games Played</th>
+                  <th className="p-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {leaderboard.length === 0 && (
-                  <tr><td colSpan={6} className="p-8 text-center text-neutral-500">No leaderboard data found.</td></tr>
+                {filteredLeaderboard.length === 0 && (
+                  <tr><td colSpan={7} className="p-8 text-center text-neutral-500">No leaderboard data found.</td></tr>
                 )}
-                {leaderboard.map((user, i) => (
+                {filteredLeaderboard.map((user, i) => (
                   <tr key={user.user_id} className="hover:bg-neutral-50/50 transition-colors group">
                     <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
                     <td className="p-4 font-bold text-neutral-900 text-sm">{user.name || 'Unknown'}</td>
@@ -529,6 +541,28 @@ export const AdminDashboard = () => {
                     <td className="p-4 font-bold text-emerald-600">{user.total_score}</td>
                     <td className="p-4 text-sm text-neutral-600">{user.avg_accuracy}%</td>
                     <td className="p-4 text-sm text-neutral-600">{user.total_games}</td>
+                    <td className="p-4 pr-6 text-right">
+                      {(() => {
+                        const userProfile = users.find(u => u.id === user.user_id);
+                        const userEmail = userProfile?.email;
+                        if (!userEmail) return null;
+                        
+                        const name = user.name || 'user';
+                        const subject = 'We Value Your Feedback! Help Us Improve Aptiverse';
+                        const body = `Hello ${name}!\n\nI hope you are enjoying the Aptiverse platform and finding it helpful for your aptitude preparation.\n\nWe would love to hear your valuable feedback, suggestions, and experiences with the platform. Your feedback will help us identify areas for improvement, introduce new features, and make Aptiverse even better for everyone.\n\nEvery suggestion matters and would be greatly appreciated!\n\nWebsite: https://aptiverse.in\n\nThank you for being a part of the Aptiverse journey!\n\nAbhijeet Gaikwad\nTeam Aptiverse\n7745877951\nargaikwad24@gmail.com`;
+                        const mailtoUrl = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                        
+                        return (
+                          <a
+                            href={mailtoUrl}
+                            className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex"
+                            title="Ask for Feedback"
+                          >
+                            <Mail size={16} />
+                          </a>
+                        );
+                      })()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -548,10 +582,10 @@ export const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {bugReports.length === 0 && (
+                {filteredBugs.length === 0 && (
                   <tr><td colSpan={5} className="p-8 text-center text-neutral-500">No reports found.</td></tr>
                 )}
-                {bugReports.map((report, i) => (
+                {filteredBugs.map((report, i) => (
                   <tr key={report.id} className="hover:bg-neutral-50/50 transition-colors group">
                     <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
                     <td className="p-4 font-bold text-neutral-900 text-sm">

@@ -3,6 +3,7 @@ import { Trophy, Gamepad2, Brain, Eye, Compass, Hash, BookOpen, Star, ShieldChec
 import { GameCard } from '../components/ui/GameCard';
 import { cn } from '../utils/cn';
 import { Link } from 'react-router-dom';
+import { AdBanner } from '../components/ui/AdBanner';
 
 const Games = () => {
   return (
@@ -77,6 +78,11 @@ const Games = () => {
              <span className="text-neutral-400 text-sm">⇊ Sort by</span>
              <span className="text-neutral-900 text-sm font-semibold flex items-center gap-1">Recommended <span>v</span></span>
           </div>
+        </div>
+
+        {/* Ad placement 3 */}
+        <div className="mb-8">
+          <AdBanner dataAdSlot="auto" />
         </div>
 
         {/* Games Grid (4 columns) */}
