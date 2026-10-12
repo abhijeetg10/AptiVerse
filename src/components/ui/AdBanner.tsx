@@ -22,7 +22,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
   }, []);
 
   return (
-    <div className="w-full flex justify-center my-8 overflow-hidden bg-neutral-50/50 py-4 rounded-xl border border-neutral-100 min-h-[100px]">
+    <div className="w-full flex justify-center my-3 overflow-hidden">
       <ins className="adsbygoogle"
            style={{ display: 'block', minWidth: '300px', width: '100%', textAlign: 'center' }}
            data-ad-client="ca-pub-1068718275969438"

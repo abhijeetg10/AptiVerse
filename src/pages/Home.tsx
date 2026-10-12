@@ -200,7 +200,7 @@ const Home = () => {
       </section>
 
       {/* Games Section */}
-      <section className="py-24 max-w-7xl mx-auto px-6">
+      <section className="pt-20 pb-10 max-w-7xl mx-auto px-6">
         <div className="flex flex-col items-center text-center mb-16">
           <div className="flex items-center gap-4 text-primary-600 font-bold text-sm tracking-wider uppercase mb-4">
              <div className="w-12 h-[2px] bg-primary-200"></div>
@@ -370,7 +370,7 @@ const Home = () => {
       <AdBanner dataAdSlot="auto" />
 
       {/* Why Aptiverse */}
-      <section className="py-24 max-w-7xl mx-auto px-6 border-t border-neutral-100">
+      <section className="pt-10 pb-20 max-w-7xl mx-auto px-6 border-t border-neutral-100">
         <div className="grid lg:grid-cols-3 gap-12 lg:gap-16">
           <div className="lg:col-span-1 flex flex-col">
             <div className="flex items-center gap-4 text-primary-600 font-bold text-sm tracking-wider uppercase mb-4">
