@@ -174,13 +174,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     if (department) payloadWithDept.department = department;
 
+    const isColumnMissingError = (err: any) => {
+      if (!err) return false;
+      const code = String(err.code || '');
+      const msg = String(err.message || '').toLowerCase();
+      return code === '42703' || code === 'PGRST204' || msg.includes('department') || msg.includes('schema cache');
+    };
+
     if (existingProfile) {
       payloadWithDept.is_blocked = false;
       const res = await supabase
         .from('profiles')
         .update(payloadWithDept)
         .eq('id', currentUserId);
-      if (res.error && (res.error as any).code === '42703') {
+      if (res.error && isColumnMissingError(res.error)) {
         const { department: _, ...payloadWithoutDept } = payloadWithDept;
         const fallbackRes = await supabase
           .from('profiles')
@@ -194,7 +201,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const res = await supabase
         .from('profiles')
         .insert({ id: currentUserId, ...payloadWithDept });
-      if (res.error && (res.error as any).code === '42703') {
+      if (res.error && isColumnMissingError(res.error)) {
         const { department: _, ...payloadWithoutDept } = payloadWithDept;
         const fallbackRes = await supabase
           .from('profiles')
