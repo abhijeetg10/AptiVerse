@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { cn } from '../utils/cn';
 import FeedbackModal from '../components/ui/FeedbackModal';
 import { AdBanner } from '../components/ui/AdBanner';
+import { RatingBadge } from '../components/ui/RatingBadge';
 
 const Home = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -49,6 +50,11 @@ const Home = () => {
               >
                 <MessageSquare size={16} className="text-indigo-500" /> Share Feedback
               </button>
+            </div>
+
+            {/* Platform Rating & Reviews Badge */}
+            <div className="pt-1">
+              <RatingBadge variant="pill" onFeedbackClick={() => setIsFeedbackOpen(true)} />
             </div>
           </div>
 
