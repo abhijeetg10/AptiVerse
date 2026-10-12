@@ -6,6 +6,7 @@ export type UserProfile = {
   id: string;
   name: string;
   college: string;
+  department?: string;
   email?: string;
   avatar_url?: string;
   role?: string;
@@ -21,7 +22,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  updateProfile: (name: string, college: string) => Promise<{ error: any }>;
+  updateProfile: (name: string, college: string, department?: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,28 +34,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Fetch user profile from Supabase
   const fetchProfile = async (userId: string) => {
+    const localDept = localStorage.getItem('aptiverse_user_department_' + userId) || '';
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle();
       
+    const { data: { session } } = await supabase.auth.getSession();
+    const metaDept = session?.user?.user_metadata?.department || localDept;
+    const metaName = session?.user?.user_metadata?.full_name || '';
+
     if (data && !error) {
       setUser({
         id: data.id,
-        name: data.name || '',
+        name: data.name || metaName || '',
         college: data.college || '',
-        email: data.email,
-        avatar_url: data.avatar_url,
+        department: (data as any).department || metaDept || '',
+        email: data.email || session?.user?.email,
+        avatar_url: data.avatar_url || session?.user?.user_metadata?.avatar_url,
         role: data.role || 'user',
         is_blocked: data.is_blocked || false,
       });
     } else {
-      // If profile doesn't exist yet, we still need to set user to something so they can complete it
+      // If profile doesn't exist yet, seed with auth user metadata
       setUser({
         id: userId,
-        name: '',
-        college: '',
+        name: metaName,
+        college: session?.user?.user_metadata?.college || '',
+        department: metaDept || '',
+        email: session?.user?.email,
+        avatar_url: session?.user?.user_metadata?.avatar_url,
         role: 'user',
       });
     }
@@ -126,11 +137,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
   };
 
-  const updateProfile = async (name: string, college: string) => {
+  const updateProfile = async (name: string, college: string, department?: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     const currentUserId = session?.user?.id || authUser?.id;
     
     if (!currentUserId) return { error: new Error('Not authenticated') };
+
+    if (department) {
+      localStorage.setItem('aptiverse_user_department_' + currentUserId, department);
+    }
+    
+    // Sync into auth user metadata so it stays persistent with OAuth session
+    await supabase.auth.updateUser({
+      data: {
+        full_name: name,
+        college,
+        department: department || ''
+      }
+    });
     
     // Check if profile exists
     const { data: existingProfile } = await supabase
@@ -139,22 +163,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .eq('id', currentUserId)
       .maybeSingle();
 
-    const avatar_url = authUser?.user_metadata?.avatar_url || null;
+    const avatar_url = authUser?.user_metadata?.avatar_url || user?.avatar_url || null;
 
-    let error;
+    let error: any = null;
+    const payloadWithDept: any = { 
+      name, 
+      college, 
+      avatar_url, 
+      updated_at: new Date().toISOString() 
+    };
+    if (department) payloadWithDept.department = department;
+
     if (existingProfile) {
-      // Update existing
-      const { error: updateError } = await supabase
+      payloadWithDept.is_blocked = false;
+      const res = await supabase
         .from('profiles')
-        .update({ name, college, avatar_url, is_blocked: false, updated_at: new Date().toISOString() })
+        .update(payloadWithDept)
         .eq('id', currentUserId);
-      error = updateError;
+      if (res.error && (res.error as any).code === '42703') {
+        const { department: _, ...payloadWithoutDept } = payloadWithDept;
+        const fallbackRes = await supabase
+          .from('profiles')
+          .update(payloadWithoutDept)
+          .eq('id', currentUserId);
+        error = fallbackRes.error;
+      } else {
+        error = res.error;
+      }
     } else {
-      // Insert new
-      const { error: insertError } = await supabase
+      const res = await supabase
         .from('profiles')
-        .insert({ id: currentUserId, name, college, avatar_url, updated_at: new Date().toISOString() });
-      error = insertError;
+        .insert({ id: currentUserId, ...payloadWithDept });
+      if (res.error && (res.error as any).code === '42703') {
+        const { department: _, ...payloadWithoutDept } = payloadWithDept;
+        const fallbackRes = await supabase
+          .from('profiles')
+          .insert({ id: currentUserId, ...payloadWithoutDept });
+        error = fallbackRes.error;
+      } else {
+        error = res.error;
+      }
     }
       
     if (!error) {
@@ -163,6 +211,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         id: currentUserId,
         name,
         college,
+        department: department || prev?.department || '',
         avatar_url,
         is_blocked: false
       } as UserProfile));
@@ -173,7 +222,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const isProfileComplete = !!(user?.name && user?.college);
+  const isProfileComplete = !!(user?.name && user?.college && user?.department);
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen bg-neutral-900 text-white">Loading...</div>;

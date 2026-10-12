@@ -4,11 +4,15 @@ create table profiles (
   email text,
   name text,
   college text,
+  department text,
   avatar_url text,
   role text default 'user',
   is_blocked boolean default false,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
+
+-- Optional migration for existing installations:
+-- alter table profiles add column if not exists department text;
 
 -- Create a table for game sessions
 create table game_sessions (
