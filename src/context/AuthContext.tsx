@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
+import UserWarningModal from '../components/UserWarningModal';
 
 export type UserProfile = {
   id: string;
@@ -11,6 +12,7 @@ export type UserProfile = {
   avatar_url?: string;
   role?: string;
   is_blocked?: boolean;
+  warning_message?: string | null;
 };
 
 interface AuthContextType {
@@ -23,6 +25,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (name: string, college: string, department?: string) => Promise<{ error: any }>;
+  dismissWarning: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         avatar_url: data.avatar_url || session?.user?.user_metadata?.avatar_url,
         role: data.role || 'user',
         is_blocked: data.is_blocked || false,
+        warning_message: (data as any)?.warning_message || null,
       });
     } else {
       // If profile doesn't exist yet, seed with auth user metadata
@@ -229,6 +233,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const dismissWarning = async () => {
+    if (!authUser) return;
+    try {
+      await supabase.from('profiles').update({ warning_message: null }).eq('id', authUser.id);
+    } catch (err) {
+      console.error('Error clearing warning message:', err);
+    }
+    setUser(prev => prev ? { ...prev, warning_message: null } : null);
+  };
+
   const isProfileComplete = !!(user?.name && user?.college && user?.department);
 
   if (isLoading) {
@@ -236,8 +250,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, authUser, isLoading, updateProfile, signIn, signInWithGoogle, signUp, signOut, isProfileComplete }}>
+    <AuthContext.Provider value={{ user, authUser, isLoading, updateProfile, signIn, signInWithGoogle, signUp, signOut, isProfileComplete, dismissWarning }}>
       {children}
+      {user?.warning_message && (
+        <UserWarningModal 
+          warningMessage={user.warning_message} 
+          onAcknowledge={dismissWarning} 
+        />
+      )}
     </AuthContext.Provider>
   );
 };

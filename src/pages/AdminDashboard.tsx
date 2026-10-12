@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug, Landmark, Mail, Edit3 } from 'lucide-react';
+import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug, Landmark, Mail, Edit3, ShieldAlert, BellRing, RotateCcw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 
@@ -185,6 +185,42 @@ export const AdminDashboard = () => {
       setUsers(users.map(u => u.id === id ? { ...u, is_blocked: !isBlocked } : u));
     } catch (err) {
       alert('Error blocking/unblocking user');
+      console.error(err);
+    }
+  };
+
+  const sendInAppWarning = async (userId: string, userName: string) => {
+    const defaultMsg = `⚠️ Fair Play Violation Notice:\n\nIrregular activity and artificial score inflation were detected on your account.\n\nUsing automated scripts or manipulating game submissions violates Aptiverse Fair Play policies. Please adhere to honest gameplay.\n\nContinued violations will result in permanent score removal and an immediate account ban.`;
+    const msg = window.prompt(`Enter warning message to display on ${userName}'s screen when they log in:`, defaultMsg);
+    if (!msg || msg.trim() === '') return;
+
+    try {
+      const { error } = await supabase.from('profiles').update({ warning_message: msg.trim() }).eq('id', userId);
+      if (error) {
+        if (error.code === 'PGRST204' || (error.message || '').includes('warning_message')) {
+          alert('Note: The "warning_message" column needs to be added to the profiles table in Supabase. Run SQL: ALTER TABLE profiles ADD COLUMN IF NOT EXISTS warning_message TEXT;');
+          return;
+        }
+        throw error;
+      }
+      alert(`In-app warning successfully sent to ${userName}! It will appear on their screen upon login.`);
+      setUsers(users.map(u => u.id === userId ? { ...u, warning_message: msg.trim() } : u));
+    } catch (err: any) {
+      alert(`Error sending in-app warning: ${err?.message || 'Unknown error'}`);
+      console.error(err);
+    }
+  };
+
+  const resetFraudulentScores = async (userId: string, userName: string) => {
+    if (!window.confirm(`Reset fraudulent bot scores for "${userName}"?\n\nThis will delete all sessions with Level > 50 (impossible levels created by scripts) and recalculate their leaderboard score.`)) return;
+
+    try {
+      const { error } = await supabase.from('game_sessions').delete().eq('user_id', userId).gt('level', 50);
+      if (error) throw error;
+      alert(`Fraudulent sessions removed for ${userName}! Refreshing leaderboard...`);
+      await fetchData();
+    } catch (err: any) {
+      alert(`Error resetting scores: ${err?.message || 'Unknown error'}`);
       console.error(err);
     }
   };
@@ -384,6 +420,22 @@ export const AdminDashboard = () => {
                     <td className="p-4 pr-6 text-right">
                       {user.role !== 'admin' && (
                         <div className="flex items-center justify-end gap-1">
+                          {user.email && (
+                            <a
+                              href={`mailto:${user.email}?subject=${encodeURIComponent('Official Notice: Fair Play Violation & Score Discrepancy on Aptiverse')}&body=${encodeURIComponent(`Dear ${user.name || 'Student'},\n\nOur automated security monitoring system detected irregular session submissions associated with your Aptiverse account (${user.email}).\n\nInjecting artificial scores via scripts, bots, or browser console automation violates our Fair Play policy.\n\nPlease consider this an official warning to discontinue using automation. Continued violations will result in permanent score removal and an account ban.\n\nRegards,\nAptiverse Administration\nhttps://aptiverse.in`)}`}
+                              className="p-2 text-neutral-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors inline-flex"
+                              title="Send Warning Email"
+                            >
+                              <ShieldAlert size={16} />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => sendInAppWarning(user.id, user.name || 'Student')}
+                            className="p-2 text-neutral-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                            title="Send In-App Warning"
+                          >
+                            <BellRing size={16} />
+                          </button>
                           <button 
                             onClick={() => editUserCollege(user.id, user.college || '')}
                             className="p-2 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -393,7 +445,7 @@ export const AdminDashboard = () => {
                           </button>
                           <button 
                             onClick={() => toggleBlockUser(user.id, user.is_blocked)}
-                            className={`p-2 rounded-lg transition-colors ${user.is_blocked ? 'text-orange-500 hover:bg-orange-50 bg-orange-50/50' : 'text-neutral-400 hover:text-orange-600 hover:bg-orange-50'}`}
+                            className={`p-2 rounded-lg transition-colors ${user.is_blocked ? 'text-red-600 bg-red-100 hover:bg-red-200' : 'text-neutral-400 hover:text-red-600 hover:bg-red-50'}`}
                             title={user.is_blocked ? "Unblock User" : "Block User"}
                           >
                             <AlertTriangle size={16} />
@@ -545,21 +597,70 @@ export const AdminDashboard = () => {
                       {(() => {
                         const userProfile = users.find(u => u.id === user.user_id);
                         const userEmail = userProfile?.email;
-                        if (!userEmail) return null;
-                        
-                        const name = user.name || 'user';
-                        const subject = 'We Value Your Feedback! Help Us Improve Aptiverse';
-                        const body = `Hello ${name}!\n\nI hope you are enjoying the Aptiverse platform and finding it helpful for your aptitude preparation.\n\nWe would love to hear your valuable feedback, suggestions, and experiences with the platform. Your feedback will help us identify areas for improvement, introduce new features, and make Aptiverse even better for everyone.\n\nEvery suggestion matters and would be greatly appreciated!\n\nWebsite: https://aptiverse.in\n\nThank you for being a part of the Aptiverse journey!\n\nAbhijeet Gaikwad\nTeam Aptiverse\n7745877951\nargaikwad24@gmail.com`;
-                        const mailtoUrl = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                        
+                        const isBlocked = !!userProfile?.is_blocked;
+                        const name = user.name || 'Student';
+
+                        // 1. Fair Play Warning Email
+                        const warningSubject = `Official Notice: Fair Play Violation & Score Discrepancy on Aptiverse`;
+                        const warningBody = `Dear ${name},\n\nOur automated security monitoring system detected irregular session submissions and artificial score inflation associated with your Aptiverse account (${userEmail || 'registered account'}).\n\nInjecting artificial scores via scripts, bots, or browser console automation violates our Fair Play policy and compromises competitive integrity.\n\nPlease consider this an official warning to discontinue using automation. If unnatural session activity continues:\n1. All your leaderboard scores will be permanently reset.\n2. Your account will be permanently blocked from Aptiverse.\n\nIf you believe this detection was in error, please reply directly to this email.\n\nRegards,\nAptiverse Administration\nhttps://aptiverse.in`;
+                        const warningMailtoUrl = userEmail ? `mailto:${userEmail}?subject=${encodeURIComponent(warningSubject)}&body=${encodeURIComponent(warningBody)}` : null;
+
+                        // 2. Feedback Email
+                        const feedbackSubject = 'We Value Your Feedback! Help Us Improve Aptiverse';
+                        const feedbackBody = `Hello ${name}!\n\nI hope you are enjoying the Aptiverse platform and finding it helpful for your aptitude preparation.\n\nWe would love to hear your valuable feedback, suggestions, and experiences with the platform.\n\nWebsite: https://aptiverse.in\n\nThank you for being a part of the Aptiverse journey!\n\nTeam Aptiverse\nargaikwad24@gmail.com`;
+                        const feedbackMailtoUrl = userEmail ? `mailto:${userEmail}?subject=${encodeURIComponent(feedbackSubject)}&body=${encodeURIComponent(feedbackBody)}` : null;
+
                         return (
-                          <a
-                            href={mailtoUrl}
-                            className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex"
-                            title="Ask for Feedback"
-                          >
-                            <Mail size={16} />
-                          </a>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Send Official Warning Email */}
+                            {warningMailtoUrl && (
+                              <a
+                                href={warningMailtoUrl}
+                                className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors inline-flex"
+                                title="Send Official Warning Email"
+                              >
+                                <ShieldAlert size={16} />
+                              </a>
+                            )}
+
+                            {/* Send In-App Warning Popup */}
+                            <button
+                              onClick={() => sendInAppWarning(user.user_id, name)}
+                              className="p-2 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors inline-flex"
+                              title="Send In-App Warning (Pops up on student screen upon login)"
+                            >
+                              <BellRing size={16} />
+                            </button>
+
+                            {/* Reset Bot / Scripted Scores */}
+                            <button
+                              onClick={() => resetFraudulentScores(user.user_id, name)}
+                              className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors inline-flex"
+                              title="Reset Bot Scores (Delete Level > 50 sessions)"
+                            >
+                              <RotateCcw size={16} />
+                            </button>
+
+                            {/* Instant Block / Unblock User */}
+                            <button
+                              onClick={() => toggleBlockUser(user.user_id, isBlocked)}
+                              className={`p-2 rounded-lg transition-colors inline-flex ${isBlocked ? 'text-red-600 bg-red-100 hover:bg-red-200' : 'text-neutral-400 hover:text-red-600 hover:bg-red-50'}`}
+                              title={isBlocked ? "User is Blocked (Click to Unblock)" : "Block User"}
+                            >
+                              <AlertTriangle size={16} />
+                            </button>
+
+                            {/* Ask for Feedback Email */}
+                            {feedbackMailtoUrl && (
+                              <a
+                                href={feedbackMailtoUrl}
+                                className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors inline-flex"
+                                title="Ask for Feedback Email"
+                              >
+                                <Mail size={16} />
+                              </a>
+                            )}
+                          </div>
                         );
                       })()}
                     </td>

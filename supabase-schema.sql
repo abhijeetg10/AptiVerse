@@ -8,11 +8,13 @@ create table profiles (
   avatar_url text,
   role text default 'user',
   is_blocked boolean default false,
+  warning_message text,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- Optional migration for existing installations:
+-- Migrations for existing installations:
 -- alter table profiles add column if not exists department text;
+-- alter table profiles add column if not exists warning_message text;
 
 -- Create a table for game sessions
 create table game_sessions (
