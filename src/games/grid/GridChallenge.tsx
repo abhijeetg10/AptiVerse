@@ -45,7 +45,8 @@ export const GridChallenge: React.FC = () => {
     setLevel(l => l + 1);
   };
 
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.phase === 'result' && state.result === 'won', loadNextLevel);
+  const isGameOver = (state.phase === 'result' && state.result === 'lost') || level >= 10;
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.phase === 'result' && state.result === 'won', loadNextLevel, 1500, isGameOver);
 
   const handleDistractionAnswer = (answer: boolean) => {
     setState(prev => submitDistraction(prev, answer));

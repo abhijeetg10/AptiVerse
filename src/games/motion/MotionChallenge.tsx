@@ -139,7 +139,7 @@ export const MotionChallenge: React.FC = () => {
     setHistory([]);
   };
 
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel);
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel, 1500, timeLeft <= 0);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);

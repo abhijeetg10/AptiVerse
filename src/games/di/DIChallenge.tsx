@@ -98,7 +98,8 @@ export const DIChallenge: React.FC = () => {
     setActiveTab(0);
   };
 
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', handleNextLevel);
+  const isGameOver = state.status === 'completed';
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(false, handleNextLevel, 1500, isGameOver);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);

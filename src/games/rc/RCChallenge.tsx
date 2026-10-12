@@ -61,7 +61,7 @@ export const RCChallenge: React.FC = () => {
     setActiveTab(0);
   };
 
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', handleNextLevel);
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', handleNextLevel, 1500, timeLeft <= 0);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);

@@ -66,6 +66,10 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmit
       
       if (error) throw error;
       
+      localStorage.setItem('aptiverse_has_feedback', 'true');
+      localStorage.setItem('aptiverse_feedback_submitted', 'true');
+      localStorage.setItem('aptiverse_feedback_prompted', 'true');
+
       setIsSuccess(true);
       onSubmit();
       

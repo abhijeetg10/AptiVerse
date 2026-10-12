@@ -54,7 +54,7 @@ export const InductiveChallenge: React.FC = () => {
     setState(createInitialState(getLevel(nextIdx)));
   };
 
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel);
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel, 1500, timeLeft <= 0);
 
   const handleReset = () => {
     setState(createInitialState(getLevel(levelIndex)));
