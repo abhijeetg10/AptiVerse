@@ -11,6 +11,13 @@ export const useGameSession = (gameId: string) => {
     
     // Prevent duplicate saves for the same level (e.g. from React Strict Mode)
     if (lastSavedLevel.current === level) return;
+    
+    // Anti-Cheat & Client-Side Sanity Bounds
+    if (level < 1 || level > 50) return;
+    if (score < 0 || score > 10) return;
+    if (accuracy < 0 || accuracy > 100) return;
+    if (timeSpent < 3) return; // Ignore impossible bot completions under 3 seconds
+
     lastSavedLevel.current = level;
     
     const { error } = await supabase.from('game_sessions').insert({

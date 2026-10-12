@@ -225,6 +225,54 @@ export const AdminDashboard = () => {
     }
   };
 
+  const wipeUserToZero = async (userId: string, userName: string) => {
+    if (!window.confirm(`STRICT ACTION: Completely wipe ALL scores of "${userName}" to 0 and apply probation warning to their profile?\n\nThis will DELETE ALL game sessions for this user so their score becomes 0, and show a strict Fair Play penalty warning on their profile.`)) return;
+
+    try {
+      // 1. Delete all game sessions for this user
+      const { error: delErr } = await supabase.from('game_sessions').delete().eq('user_id', userId);
+      if (delErr) throw delErr;
+
+      // 2. Set strict warning message on profile
+      const penaltyMsg = `⚠️ ACCOUNT PENALTY NOTICE:\n\nAll your leaderboard scores have been wiped to 0 due to detected automated bot scripting and fair play violations.\n\nYour account has been placed on strict administrative probation. Any further script execution or artificial data injection will result in an immediate, permanent ban.`;
+      await supabase.from('profiles').update({ warning_message: penaltyMsg }).eq('id', userId);
+
+      alert(`Scores for ${userName} wiped to 0 and probation warning applied!`);
+      await fetchData();
+    } catch (err: any) {
+      alert(`Error wiping scores: ${err?.message || 'Unknown error'}`);
+      console.error(err);
+    }
+  };
+
+  const purgeAllBotAccounts = async () => {
+    const threshold = 300;
+    const botUsers = leaderboard.filter(u => u.total_games >= threshold);
+    if (botUsers.length === 0) {
+      alert('No bot accounts found with >= 300 games.');
+      return;
+    }
+
+    if (!window.confirm(`STRICT BULK PURGE: Detected ${botUsers.length} suspected bot accounts with >= ${threshold} games (e.g. ${botUsers.slice(0, 3).map(u => u.name).join(', ')}...).\n\nWipe ALL their scores to 0 and issue probation warnings on all their profiles?`)) return;
+
+    try {
+      let count = 0;
+      for (const bot of botUsers) {
+        await supabase.from('game_sessions').delete().eq('user_id', bot.user_id);
+        await supabase.from('profiles').update({
+          warning_message: `⚠️ FAIR PLAY PENALTY:\n\nAll your scores were wiped to 0 due to detected bot scripting. Continued violations will result in permanent ban.`
+        }).eq('id', bot.user_id);
+        count++;
+      }
+
+      alert(`Successfully wiped scores to 0 for all ${count} bot accounts! Refreshing leaderboard...`);
+      await fetchData();
+    } catch (err: any) {
+      alert(`Error in bulk purge: ${err?.message || 'Unknown error'}`);
+      console.error(err);
+    }
+  };
+
   const deleteBugReport = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this bug report?')) return;
     try {
@@ -568,7 +616,26 @@ export const AdminDashboard = () => {
             </table>
           </div>
         ) : activeTab === 'leaderboard' ? (
-          <div className="overflow-x-auto">
+          <div>
+            {/* Fair Play & Anti-Cheat Moderation Panel */}
+            <div className="p-4 bg-slate-50 border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-neutral-600 uppercase tracking-wider">
+                  Fair Play Integrity
+                </span>
+                <span className="text-xs px-2.5 py-0.5 bg-red-100 text-red-700 font-bold rounded-full">
+                  {leaderboard.filter(u => u.total_games >= 300).length} Suspected Bot Accounts (&gt;= 300 games)
+                </span>
+              </div>
+              <button
+                onClick={purgeAllBotAccounts}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+              >
+                <Trash2 size={14} />
+                <span>Wipe All Bot Accounts to 0 ({leaderboard.filter(u => u.total_games >= 300).length} Accounts)</span>
+              </button>
+            </div>
+            <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
@@ -641,6 +708,15 @@ export const AdminDashboard = () => {
                               <RotateCcw size={16} />
                             </button>
 
+                            {/* Strict Action: Wipe All Scores to 0 and Apply Warning */}
+                            <button
+                              onClick={() => wipeUserToZero(user.user_id, name)}
+                              className="p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors inline-flex"
+                              title="STRICT: Wipe All Scores to 0 & Issue Warning on Profile"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+
                             {/* Instant Block / Unblock User */}
                             <button
                               onClick={() => toggleBlockUser(user.user_id, isBlocked)}
@@ -668,6 +744,7 @@ export const AdminDashboard = () => {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         ) : activeTab === 'bugs' ? (
           <div className="overflow-x-auto">

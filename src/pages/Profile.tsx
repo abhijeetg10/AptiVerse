@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Edit3, Trophy, Target, Gamepad2, Flame, LogOut, AlertTriangle, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Edit3, Trophy, Target, Gamepad2, Flame, LogOut, AlertTriangle, ShieldCheck, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
 import { CollegeDepartmentSelect } from '../components/auth/CollegeDepartmentSelect';
@@ -153,6 +153,26 @@ const Profile = () => {
             <div className="mt-4 bg-red-50 text-red-700 px-5 py-3 rounded-xl text-sm font-bold border border-red-200 flex items-center gap-3">
               <AlertTriangle size={20} className="shrink-0" />
               Your account has been restricted because your college name was invalid. Please select your official college below to continue playing.
+            </div>
+          )}
+
+          {user?.warning_message && (
+            <div className="mt-4 bg-gradient-to-r from-red-50 via-amber-50 to-red-50 text-red-900 p-5 rounded-2xl border-2 border-red-300 shadow-sm animate-in fade-in duration-200">
+              <div className="flex items-start gap-3.5">
+                <ShieldAlert size={26} className="text-red-600 shrink-0 mt-0.5" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="font-extrabold text-xs uppercase tracking-wider text-red-700 flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-red-200/80 rounded-md font-black">Official Penalty</span>
+                    <span>Fair Play Violation & Active Probation</span>
+                  </div>
+                  <p className="text-sm text-red-900 whitespace-pre-line leading-relaxed font-semibold">
+                    {user.warning_message}
+                  </p>
+                  <p className="text-xs text-red-600 pt-1 font-medium">
+                    Automated activity monitoring is active on this account. Play verified levels legitimately to rebuild your standing.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
