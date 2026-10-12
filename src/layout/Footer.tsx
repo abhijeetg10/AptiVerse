@@ -40,7 +40,7 @@ const Footer = () => {
                   </div>
                   <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-purple-50/90 border border-purple-200/90 text-purple-950 font-extrabold text-base sm:text-lg shadow-2xs">
                     <Building2 size={22} className="text-purple-600 shrink-0 stroke-[2.3]" />
-                    <span>Rajarambapu Institute of Technology</span>
+                    <span>Rajarambapu Institute of Technology, Sangli, Maharashtra, India</span>
                   </div>
                 </div>
               </div>
