@@ -79,14 +79,13 @@ const Footer = () => {
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs text-slate-600 mt-0.5">
-                  <span className="inline-flex items-center gap-1.5 font-medium text-slate-700">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mt-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-200/80 text-indigo-900 font-semibold text-xs sm:text-sm shadow-2xs">
                     <GraduationCap size={15} className="text-indigo-600 shrink-0" />
                     Department of Information Technology
                   </span>
-                  <span className="hidden sm:inline text-slate-300">•</span>
-                  <span className="inline-flex items-center gap-1.5 font-medium text-slate-700">
-                    <Building2 size={15} className="text-indigo-600 shrink-0" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 border border-purple-200/80 text-purple-900 font-semibold text-xs sm:text-sm shadow-2xs">
+                    <Building2 size={15} className="text-purple-600 shrink-0" />
                     Rajarambapu Institute of Technology
                   </span>
                 </div>
@@ -100,7 +99,7 @@ const Footer = () => {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:text-indigo-600 hover:border-indigo-300 hover:shadow-xs transition-all"
               >
                 <Mail size={14} className="text-indigo-600" />
-                <span>Email Abhijeet</span>
+                <span>Contact Us</span>
               </a>
               <a
                 href="https://wa.me/917745877951"
@@ -117,12 +116,8 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-slate-200/80 flex flex-col md:flex-row items-center justify-between gap-4 text-xs sm:text-sm">
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 font-medium text-slate-500">
-            <span>© {new Date().getFullYear()} AptiVerse. All rights reserved.</span>
-            <span className="hidden sm:inline text-slate-300">|</span>
-            <span className="inline-flex flex-wrap items-center gap-1 text-slate-600 font-normal">
-              Developed by <strong className="font-semibold text-slate-800">Abhijeet Ravindra Gaikwad</strong>, Department of Information Technology, Rajarambapu Institute of Technology
-            </span>
+          <div className="font-medium text-slate-500">
+            © {new Date().getFullYear()} AptiVerse. All rights reserved.
           </div>
 
           <div className="flex items-center gap-6 font-medium text-slate-400">
