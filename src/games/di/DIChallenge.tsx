@@ -59,8 +59,31 @@ const TabContent = ({ tab }: { tab: DataTab }) => {
   return null;
 };
 
+const DI_DECK_KEY = 'aptiverse_di_unplayed_deck';
+
+const getNextDIIndex = (): number => {
+  let deck: number[] = [];
+  try {
+    const stored = localStorage.getItem(DI_DECK_KEY);
+    if (stored) deck = JSON.parse(stored);
+  } catch {
+    deck = [];
+  }
+
+  if (!Array.isArray(deck) || deck.length === 0) {
+    deck = Array.from({ length: levels.length }, (_, i) => i)
+      .sort(() => Math.random() - 0.5);
+  }
+
+  const chosen = deck.pop() ?? 0;
+  try {
+    localStorage.setItem(DI_DECK_KEY, JSON.stringify(deck));
+  } catch {}
+  return chosen;
+};
+
 export const DIChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(() => Math.floor(Math.random() * levels.length));
+  const [levelIndex, setLevelIndex] = useState(() => getNextDIIndex());
   const [state, setState] = useState<DIState>(() => createInitialState(levels[levelIndex]));
   const [activeTab, setActiveTab] = useState(0);
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins for DI
@@ -92,7 +115,7 @@ export const DIChallenge: React.FC = () => {
   };
 
   const handleNextLevel = () => {
-    const nextIdx = (levelIndex + 1) % levels.length;
+    const nextIdx = getNextDIIndex();
     setLevelIndex(nextIdx);
     setState(createInitialState(levels[nextIdx]));
     setActiveTab(0);

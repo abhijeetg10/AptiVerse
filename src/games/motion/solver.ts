@@ -28,11 +28,12 @@ export const solveBoard = (state: GameState): Move[] | null => {
   visited.add(serializeState(state.blocks, state.ball));
 
   let iterations = 0;
-  const maxIterations = 50000;
+  const maxIterations = 15000;
+  let head = 0;
 
-  while (queue.length > 0 && iterations < maxIterations) {
+  while (head < queue.length && iterations < maxIterations) {
     iterations++;
-    const current = queue.shift()!;
+    const current = queue[head++];
 
     if (current.ball.row === state.target.row && current.ball.col === state.target.col) {
       return current.path;

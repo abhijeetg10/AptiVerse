@@ -28,7 +28,11 @@ export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove, onDragS
 
   const handlePointerDown = (id: string, orientation: "horizontal" | "vertical" | "any", e: React.PointerEvent) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignored if pointer capture not supported
+    }
     
     setDragId(id);
     dragIdRef.current = id;
@@ -38,13 +42,13 @@ export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove, onDragS
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragStartRef.current || dragIdRef.current !== e.currentTarget.getAttribute('data-id')) return;
+    if (!dragStartRef.current || !dragIdRef.current) return;
 
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
     
     const cellSize = getCellSize();
-    const threshold = cellSize * 0.45; // 45% of a cell to trigger snap
+    const threshold = Math.max(15, cellSize * 0.35); // Responsive drag threshold
 
     let moveX = 0;
     let moveY = 0;
@@ -62,24 +66,59 @@ export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove, onDragS
       if (Math.abs(dx) > Math.abs(dy) || orient === "horizontal") {
         if (moveX !== 0) {
           const moved = onMove(dragIdRef.current, moveX > 0 ? 'RIGHT' : 'LEFT', 1);
-          if (moved) dragStartRef.current.x += moveX * cellSize;
+          if (moved) {
+            dragStartRef.current.x += moveX * cellSize;
+          } else {
+            // Unclamp reference so reverse drag responds immediately without getting stuck
+            dragStartRef.current.x = e.clientX;
+          }
         }
       } else {
         if (moveY !== 0) {
           const moved = onMove(dragIdRef.current, moveY > 0 ? 'DOWN' : 'UP', 1);
-          if (moved) dragStartRef.current.y += moveY * cellSize;
+          if (moved) {
+            dragStartRef.current.y += moveY * cellSize;
+          } else {
+            // Unclamp reference on collision
+            dragStartRef.current.y = e.clientY;
+          }
         }
       }
     }
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
-    e.currentTarget.releasePointerCapture(e.pointerId);
+  const handlePointerUp = (e?: React.PointerEvent) => {
+    if (e) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // Ignored
+      }
+    }
     setDragId(null);
     dragIdRef.current = null;
     dragStartRef.current = null;
     onDragEnd?.();
   };
+
+  // Window-level safety release: ensures game NEVER gets stuck if finger/mouse lifts outside
+  useEffect(() => {
+    const handleGlobalPointerUp = () => {
+      if (dragIdRef.current) {
+        setDragId(null);
+        dragIdRef.current = null;
+        dragStartRef.current = null;
+        onDragEnd?.();
+      }
+    };
+
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+    window.addEventListener('pointercancel', handleGlobalPointerUp);
+    return () => {
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('pointercancel', handleGlobalPointerUp);
+    };
+  }, [onDragEnd]);
 
   // Keyboard navigation for ball
   useEffect(() => {

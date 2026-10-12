@@ -10,8 +10,31 @@ import { useGameSession } from '../../hooks/useGameSession';
 import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 
+const RC_DECK_KEY = 'aptiverse_rc_unplayed_deck';
+
+const getNextRCIndex = (): number => {
+  let deck: number[] = [];
+  try {
+    const stored = localStorage.getItem(RC_DECK_KEY);
+    if (stored) deck = JSON.parse(stored);
+  } catch {
+    deck = [];
+  }
+
+  if (!Array.isArray(deck) || deck.length === 0) {
+    deck = Array.from({ length: levels.length }, (_, i) => i)
+      .sort(() => Math.random() - 0.5);
+  }
+
+  const chosen = deck.pop() ?? 0;
+  try {
+    localStorage.setItem(RC_DECK_KEY, JSON.stringify(deck));
+  } catch {}
+  return chosen;
+};
+
 export const RCChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(() => Math.floor(Math.random() * levels.length));
+  const [levelIndex, setLevelIndex] = useState(() => getNextRCIndex());
   const [state, setState] = useState<RCState>(() => createInitialState(levels[levelIndex]));
   const [activeTab, setActiveTab] = useState(0);
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins for RC
@@ -55,7 +78,7 @@ export const RCChallenge: React.FC = () => {
   };
 
   const handleNextLevel = () => {
-    const nextIdx = (levelIndex + 1) % levels.length;
+    const nextIdx = getNextRCIndex();
     setLevelIndex(nextIdx);
     setState(createInitialState(levels[nextIdx]));
     setActiveTab(0);
