@@ -108,5 +108,20 @@ BEFORE INSERT ON game_sessions
 FOR EACH ROW
 EXECUTE FUNCTION secure_validate_game_session();
 
+-- STEP 4: RESET FAKE / ABBREVIATED COLLEGE NAMES AND REQUIRE RE-SELECTION
+-- Resets fake colleges ('CIT', 'tki', 'aps', 'j', 'San', 'abc', etc.) and clears invalid departments
+-- so students are required to select their verified college & department from the dropdown before playing.
+UPDATE profiles
+SET college = NULL, department = NULL
+WHERE college IS NULL
+   OR LENGTH(TRIM(college)) < 5
+   OR LOWER(TRIM(college)) IN (
+     'abc', 'xyz', 'test', 'demo', 'fake', 'none', 'na', 'n/a', 'asdf', 'qwerty',
+     '...', '---', 'other', 'unknown', 'invalid', 'dummy', 'null', 'nil', 'college',
+     'cit', 'tki', 'aps', 'vsb', 'iitk', 'ycce', 'gla', 'iem', 'uem', 'siom', 'sfax', 'j', 'san'
+   )
+   OR department IS NULL;
+
 -- Reload schema cache
 NOTIFY pgrst, 'reload schema';
+

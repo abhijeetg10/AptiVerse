@@ -92,15 +92,22 @@ export const POPULAR_COLLEGES = [
 ] as const;
 
 // Helper to validate custom college input against spam/abbreviations
-export const isValidCollegeName = (name: string): { valid: boolean; reason?: string } => {
+export const isValidCollegeName = (name: string | null | undefined): { valid: boolean; reason?: string } => {
+  if (!name || typeof name !== 'string') {
+    return { valid: false, reason: 'College name is required.' };
+  }
   const trimmed = name.trim();
   if (trimmed.length < 5) {
     return { valid: false, reason: 'College name must be at least 5 characters long.' };
   }
   const lower = trimmed.toLowerCase();
-  const bannedKeywords = ['abc', 'xyz', 'test', 'demo', 'fake', 'none', 'na', 'n/a', 'asdf', 'qwerty', '...', '---'];
+  const bannedKeywords = [
+    'abc', 'xyz', 'test', 'demo', 'fake', 'none', 'na', 'n/a', 'asdf', 'qwerty', 
+    '...', '---', 'other', 'unknown', 'invalid', 'dummy', 'null', 'nil', 'college',
+    'cit', 'tki', 'aps', 'vsb', 'iitk', 'ycce', 'gla', 'iem', 'uem', 'siom', 'sfax'
+  ];
   if (bannedKeywords.includes(lower) || /^[.\-_/\s]+$/.test(trimmed)) {
-    return { valid: false, reason: 'Please enter a valid, legitimate college name.' };
+    return { valid: false, reason: 'Please select a valid, full college name from the official dropdown list.' };
   }
   return { valid: true };
 };

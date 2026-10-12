@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import UserWarningModal from '../components/UserWarningModal';
+import { isValidCollegeName } from '../constants/institutions';
 
 export type UserProfile = {
   id: string;
@@ -243,7 +244,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(prev => prev ? { ...prev, warning_message: null } : null);
   };
 
-  const isProfileComplete = !!(user?.name && user?.college && user?.department);
+  const isProfileComplete = !!(
+    user?.name?.trim() && 
+    user?.college?.trim() && 
+    isValidCollegeName(user?.college).valid && 
+    user?.department?.trim()
+  );
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen bg-neutral-900 text-white">Loading...</div>;

@@ -1,7 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug, Landmark, Mail, Edit3, ShieldAlert, BellRing, RotateCcw } from 'lucide-react';
+import { Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, Star, Bug, Landmark, Mail, Edit3, ShieldAlert, BellRing, RotateCcw, Copy, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
+import { isValidCollegeName } from '../constants/institutions';
+
+const SQL_CLEANUP_QUERY = `-- Reset fake/abbreviated college names & require dropdown re-selection
+UPDATE profiles
+SET college = NULL, department = NULL
+WHERE college IS NULL
+   OR LENGTH(TRIM(college)) < 5
+   OR LOWER(TRIM(college)) IN (
+     'abc', 'xyz', 'test', 'demo', 'fake', 'none', 'na', 'n/a', 'asdf', 'qwerty',
+     '...', '---', 'other', 'unknown', 'invalid', 'dummy', 'null', 'nil', 'college',
+     'cit', 'tki', 'aps', 'vsb', 'iitk', 'ycce', 'gla', 'iem', 'uem', 'siom', 'sfax', 'j', 'san'
+   )
+   OR department IS NULL;`;
 
 const normalizeCollege = (name: string | null | undefined) => {
   if (!name || name.trim() === '') return '-';
@@ -21,6 +34,7 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'users' | 'sessions' | 'reviews' | 'leaderboard' | 'bugs' | 'colleges'>('users');
   const [searchTerm, setSearchTerm] = useState('');
+  const [copiedSql, setCopiedSql] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -36,7 +50,7 @@ export const AdminDashboard = () => {
         .order('updated_at', { ascending: false });
 
       if (usersError) throw usersError;
-      setUsers(usersData ? usersData.map(u => ({ ...u, college: normalizeCollege(u.college) })) : []);
+      setUsers(usersData ? usersData.map(u => ({ ...u, raw_college: u.college, college: normalizeCollege(u.college) })) : []);
 
       // Fetch sessions with user details
       const { data: sessionsData, error: sessionsError } = await supabase
@@ -189,6 +203,64 @@ export const AdminDashboard = () => {
     }
   };
 
+  const copySqlCleanup = () => {
+    navigator.clipboard.writeText(SQL_CLEANUP_QUERY);
+    setCopiedSql(true);
+    setTimeout(() => setCopiedSql(false), 2500);
+    alert('SQL Cleanup Query copied to clipboard!\n\nYou can run it in Supabase Dashboard -> SQL Editor to clean all profiles at once.');
+  };
+
+  const resetUserCollegeAndDept = async (userId: string, userName: string) => {
+    if (!window.confirm(`Reset college and department for "${userName}"?\n\nThis will clear their college and department so they are prompted with the official dropdown to re-select when they next enter a game.`)) return;
+
+    try {
+      const { error } = await supabase.from('profiles').update({ college: null, department: null }).eq('id', userId);
+      if (error) throw error;
+      alert(`Reset completed for ${userName}. They must re-select from the dropdown.`);
+      await fetchData();
+    } catch (err: any) {
+      alert(`Error resetting profile: ${err?.message || 'Unknown error'}`);
+      console.error(err);
+    }
+  };
+
+  const purgeAllFakeColleges = async () => {
+    const invalidUsers = users.filter(u => {
+      const col = u.raw_college || u.college;
+      return !col || col === '-' || !isValidCollegeName(col).valid || !u.department;
+    });
+
+    if (invalidUsers.length === 0) {
+      alert('All registered users currently have valid verified colleges and departments!');
+      return;
+    }
+
+    if (!window.confirm(`RESET FAKE/INCOMPLETE COLLEGES:\n\nDetected ${invalidUsers.length} users with missing, abbreviated, or unverified college/department data.\n\nClear their college & department so they must re-select from the official dropdown before playing games?`)) {
+      return;
+    }
+
+    try {
+      const ids = invalidUsers.map(u => u.id);
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ college: null, department: null })
+        .in('id', ids)
+        .select();
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        alert(`Note: The database returned 0 updated rows due to Supabase Row Level Security (RLS) on client requests.\n\nPlease copy and run the provided SQL query in Supabase Dashboard -> SQL Editor to update all ${invalidUsers.length} profiles with full admin privileges.`);
+      } else {
+        alert(`Successfully reset ${data.length} profiles! Affected users will now see the selection dropdown.`);
+      }
+      await fetchData();
+    } catch (err: any) {
+      alert(`Error in reset: ${err?.message || 'Unknown error'}.\n\nPlease run the SQL query directly in Supabase SQL Editor.`);
+      console.error(err);
+    }
+  };
+
   const sendInAppWarning = async (userId: string, userName: string) => {
     const defaultMsg = `⚠️ Fair Play Violation Notice:\n\nIrregular activity and artificial score inflation were detected on your account.\n\nUsing automated scripts or manipulating game submissions violates Aptiverse Fair Play policies. Please adhere to honest gameplay.\n\nContinued violations will result in permanent score removal and an immediate account ban.`;
     const msg = window.prompt(`Enter warning message to display on ${userName}'s screen when they log in:`, defaultMsg);
@@ -334,6 +406,11 @@ export const AdminDashboard = () => {
   
   const filteredColleges = collegesList.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
+  const invalidUsersCount = users.filter(u => {
+    const col = u.raw_college || u.college;
+    return !col || col === '-' || !isValidCollegeName(col).valid || !u.department;
+  }).length;
+
   return (
     <div className="flex flex-col gap-8 pb-12 max-w-6xl mx-auto w-full">
       {/* Header */}
@@ -437,13 +514,14 @@ export const AdminDashboard = () => {
                   <th className="p-4">User</th>
                   <th className="p-4">Email</th>
                   <th className="p-4">College</th>
+                  <th className="p-4">Department</th>
                   <th className="p-4">Role</th>
                   <th className="p-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {filteredUsers.length === 0 && (
-                  <tr><td colSpan={5} className="p-8 text-center text-neutral-500">No users found.</td></tr>
+                  <tr><td colSpan={7} className="p-8 text-center text-neutral-500">No users found.</td></tr>
                 )}
                 {filteredUsers.map((user, i) => (
                   <tr key={user.id} className="hover:bg-neutral-50/50 transition-colors group">
@@ -459,7 +537,23 @@ export const AdminDashboard = () => {
                       {user.name || 'Unknown'}
                     </td>
                     <td className="p-4 text-sm text-neutral-600">{user.email || '-'}</td>
-                    <td className="p-4 text-sm text-neutral-600">{user.college || '-'}</td>
+                    <td className="p-4 text-sm text-neutral-600">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium text-slate-800">{user.college || '-'}</span>
+                        {(!user.college || user.college === '-' || !isValidCollegeName(user.raw_college || user.college).valid) && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded w-fit">
+                            <AlertCircle size={10} /> Needs Selection
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-sm text-neutral-600">
+                      {user.department ? (
+                        <span className="font-semibold text-slate-700 text-xs">{user.department}</span>
+                      ) : (
+                        <span className="text-neutral-400 italic text-xs">Missing</span>
+                      )}
+                    </td>
                     <td className="p-4 text-sm">
                       <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${user.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                         {user.role || 'user'}
@@ -483,6 +577,13 @@ export const AdminDashboard = () => {
                             title="Send In-App Warning"
                           >
                             <BellRing size={16} />
+                          </button>
+                          <button 
+                            onClick={() => resetUserCollegeAndDept(user.id, user.name || 'Student')}
+                            className="p-2 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                            title="Reset College & Dept (Forces user to re-select from dropdown)"
+                          >
+                            <RotateCcw size={16} />
                           </button>
                           <button 
                             onClick={() => editUserCollege(user.id, user.college || '')}
@@ -811,38 +912,117 @@ export const AdminDashboard = () => {
             </table>
           </div>
         ) : activeTab === 'colleges' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                  <th className="p-4 pl-6">Rank</th>
-                  <th className="p-4">College Name</th>
-                  <th className="p-4">Number of Students</th>
-                  <th className="p-4 text-right pr-6">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {filteredColleges.length === 0 && (
-                  <tr><td colSpan={3} className="p-8 text-center text-neutral-500">No colleges found.</td></tr>
-                )}
-                {filteredColleges.map((college, i) => (
-                  <tr key={college.name} className="hover:bg-neutral-50/50 transition-colors group">
-                    <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
-                    <td className="p-4 font-bold text-neutral-900 text-sm">{college.name}</td>
-                    <td className="p-4 text-sm text-emerald-600 font-bold">{college.studentCount} Students</td>
-                    <td className="p-4 pr-6 text-right">
-                      <button 
-                        onClick={() => renameCollege(college.name)}
-                        className="p-2 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Rename / Merge College"
-                      >
-                        <Edit3 size={16} />
-                      </button>
-                    </td>
+          <div className="flex flex-col">
+            {/* Top Standardization Banner */}
+            <div className="p-6 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent border-b border-neutral-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-sm mt-0.5 shrink-0">
+                  <Landmark size={22} />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    College & Department Standardization
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                      Anti-Spam
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-0.5 max-w-xl leading-relaxed">
+                    Clear old fake, abbreviated, or missing college & department records. When cleared, affected students must select their verified college and department from the official dropdown before entering games.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-2.5 text-xs font-bold">
+                    <span className="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-lg">
+                      {invalidUsersCount} Students need re-selection
+                    </span>
+                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg">
+                      {users.length - invalidUsersCount} Verified profiles
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
+                <Button
+                  onClick={copySqlCleanup}
+                  variant="secondary"
+                  className="text-xs font-bold flex items-center gap-1.5 border-amber-300 hover:bg-amber-100 text-amber-900 bg-white"
+                >
+                  {copiedSql ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                  <span>{copiedSql ? 'Copied SQL' : 'Copy Supabase SQL'}</span>
+                </Button>
+                <Button
+                  onClick={purgeAllFakeColleges}
+                  className="text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 shadow-sm"
+                >
+                  <RotateCcw size={14} />
+                  <span>Reset All Fake Records</span>
+                </Button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                    <th className="p-4 pl-6">Rank</th>
+                    <th className="p-4">College Name</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Number of Students</th>
+                    <th className="p-4 text-right pr-6">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {filteredColleges.length === 0 && (
+                    <tr><td colSpan={5} className="p-8 text-center text-neutral-500">No colleges found.</td></tr>
+                  )}
+                  {filteredColleges.map((college, i) => {
+                    const isColValid = isValidCollegeName(college.name).valid;
+                    return (
+                      <tr key={college.name} className="hover:bg-neutral-50/50 transition-colors group">
+                        <td className="p-4 pl-6 font-bold text-neutral-900">{i + 1}</td>
+                        <td className="p-4 font-bold text-neutral-900 text-sm">{college.name}</td>
+                        <td className="p-4 text-xs font-semibold">
+                          {isColValid ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <Check size={12} /> Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                              <AlertCircle size={12} /> Abbreviation / Unverified
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-4 text-sm text-emerald-600 font-bold">{college.studentCount} Students</td>
+                        <td className="p-4 pr-6 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button 
+                              onClick={() => renameCollege(college.name)}
+                              className="p-2 text-neutral-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Rename / Merge College"
+                            >
+                              <Edit3 size={16} />
+                            </button>
+                            {!isColValid && (
+                              <button
+                                onClick={async () => {
+                                  if (!window.confirm(`Wipe "${college.name}" for all ${college.studentCount} students so they must re-select from the official list?`)) return;
+                                  const userIds = users.filter(u => u.college === college.name || u.raw_college === college.name).map(u => u.id);
+                                  await supabase.from('profiles').update({ college: null, department: null }).in('id', userIds);
+                                  await fetchData();
+                                }}
+                                className="p-2 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                title="Wipe this unverified college and force re-selection"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : null}
       </div>

@@ -5,13 +5,16 @@ import { Edit3, Trophy, Target, Gamepad2, Flame, LogOut, AlertTriangle, ShieldCh
 import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
 import { CollegeDepartmentSelect } from '../components/auth/CollegeDepartmentSelect';
+import { isValidCollegeName } from '../constants/institutions';
 
 const Profile = () => {
   const { user, authUser, signInWithGoogle, updateProfile, isProfileComplete, signOut } = useAuth();
   const navigate = useNavigate();
   
   const [name, setName] = useState(user?.name || authUser?.user_metadata?.full_name || '');
-  const [college, setCollege] = useState(user?.college || '');
+  const [college, setCollege] = useState(
+    user?.college && isValidCollegeName(user.college).valid ? user.college : ''
+  );
   const [department, setDepartment] = useState(user?.department || '');
   
   const [isSaved, setIsSaved] = useState(false);
@@ -27,7 +30,11 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       if (user.name && !name) setName(user.name);
-      if (user.college && !college) setCollege(user.college);
+      if (user.college && isValidCollegeName(user.college).valid && !college) {
+        setCollege(user.college);
+      } else if (user.college && !isValidCollegeName(user.college).valid) {
+        setCollege('');
+      }
       if (user.department && !department) setDepartment(user.department);
     }
   }, [user]);

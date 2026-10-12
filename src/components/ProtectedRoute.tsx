@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowRight, User, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 import { CollegeDepartmentSelect } from './auth/CollegeDepartmentSelect';
+import { isValidCollegeName } from '../constants/institutions';
 
 const ProtectedRoute = () => {
   const { user, authUser, isLoading, signInWithGoogle, updateProfile, isProfileComplete } = useAuth();
@@ -20,8 +21,12 @@ const ProtectedRoute = () => {
       const authName = authUser.user_metadata?.full_name || user?.name || '';
       if (authName && !name) setName(authName);
       
-      const userCol = user?.college || authUser.user_metadata?.college || '';
-      if (userCol && !college) setCollege(userCol);
+      const rawCol = user?.college || authUser.user_metadata?.college || '';
+      if (rawCol && isValidCollegeName(rawCol).valid && !college) {
+        setCollege(rawCol);
+      } else if (!isValidCollegeName(rawCol).valid) {
+        setCollege('');
+      }
 
       const userDept = user?.department || authUser.user_metadata?.department || '';
       if (userDept && !department) setDepartment(userDept);

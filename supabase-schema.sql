@@ -138,3 +138,15 @@ create policy "Bug reports are viewable by everyone."
 create policy "Anyone can insert bug reports."
   on bug_reports for insert
   with check ( true );
+
+-- Reset fake/abbreviated colleges & enforce dropdown re-selection:
+-- UPDATE profiles
+-- SET college = NULL, department = NULL
+-- WHERE college IS NULL
+--    OR LENGTH(TRIM(college)) < 5
+--    OR LOWER(TRIM(college)) IN (
+--      'abc', 'xyz', 'test', 'demo', 'fake', 'none', 'na', 'n/a', 'asdf', 'qwerty',
+--      '...', '---', 'other', 'unknown', 'invalid', 'dummy', 'null', 'nil', 'college',
+--      'cit', 'tki', 'aps', 'vsb', 'iitk', 'ycce', 'gla', 'iem', 'uem', 'siom', 'sfax', 'j', 'san'
+--    )
+--    OR department IS NULL;
