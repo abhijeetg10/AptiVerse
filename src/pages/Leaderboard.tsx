@@ -94,53 +94,86 @@ const Leaderboard = () => {
             setLeaderboard(normalizedData);
           }
         } else {
-          // Specific game or weekly: query game_sessions
-          let query = supabase
-            .from('game_sessions')
-            .select('user_id, score, accuracy, created_at, profiles:user_id(id, name, college, avatar_url)');
+          // Specific game or weekly
+          let loadedFromView = false;
 
-          if (isSpecificGame && activeGameOption?.matchIds?.length) {
-            query = query.in('game_id', activeGameOption.matchIds);
+          // If specific game all-time, attempt querying database view game_leaderboard first
+          if (isSpecificGame && !isWeekly && activeGameOption?.matchIds?.length) {
+            try {
+              const { data: viewData, error: viewError } = await supabase
+                .from('game_leaderboard')
+                .select('*')
+                .in('game_id', activeGameOption.matchIds)
+                .order('total_score', { ascending: false });
+
+              if (viewData && !viewError && !isCancelled && viewData.length > 0) {
+                const normalizedData = viewData
+                  .filter(u => (u.total_games || 0) < 300)
+                  .map(u => ({
+                    ...u,
+                    college: normalizeCollege(u.college),
+                  }))
+                  .sort((a, b) => b.total_score - a.total_score);
+
+                setLeaderboard(normalizedData);
+                loadedFromView = true;
+              }
+            } catch {
+              // View not created yet, proceed to fallback
+            }
           }
 
-          if (isWeekly) {
-            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-            query = query.gte('created_at', sevenDaysAgo);
-          }
+          if (!loadedFromView) {
+            // Query game_sessions ordered by created_at DESC so recent real players are fetched
+            let query = supabase
+              .from('game_sessions')
+              .select('user_id, score, accuracy, created_at, profiles:user_id(id, name, college, avatar_url)');
 
-          const { data, error } = await query.limit(1000);
+            if (isSpecificGame && activeGameOption?.matchIds?.length) {
+              query = query.in('game_id', activeGameOption.matchIds);
+            }
 
-          if (data && !error && !isCancelled) {
-            const userMap = new Map<string, any>();
+            if (isWeekly) {
+              const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+              query = query.gte('created_at', sevenDaysAgo);
+            }
 
-            data.forEach((row: any) => {
-              if (!row.profiles) return;
-              const uid = row.user_id;
-              const existing = userMap.get(uid) || {
-                user_id: uid,
-                name: row.profiles.name || 'Anonymous',
-                college: normalizeCollege(row.profiles.college),
-                avatar_url: row.profiles.avatar_url,
-                total_score: 0,
-                accuracy_sum: 0,
-                total_games: 0,
-              };
+            const { data, error } = await query
+              .order('created_at', { ascending: false })
+              .limit(5000);
 
-              existing.total_score += (row.score || 0);
-              existing.accuracy_sum += (row.accuracy || 0);
-              existing.total_games += 1;
-              userMap.set(uid, existing);
-            });
+            if (data && !error && !isCancelled) {
+              const userMap = new Map<string, any>();
 
-            const aggregated = Array.from(userMap.values())
-              .filter(u => (u.total_games || 0) < 300) // Exclude accounts with >= 300 bot-scripted games
-              .map(u => ({
-                ...u,
-                avg_accuracy: Math.round(u.accuracy_sum / u.total_games),
-              }))
-              .sort((a, b) => b.total_score - a.total_score);
+              data.forEach((row: any) => {
+                if (!row.profiles) return;
+                const uid = row.user_id;
+                const existing = userMap.get(uid) || {
+                  user_id: uid,
+                  name: row.profiles.name || 'Anonymous',
+                  college: normalizeCollege(row.profiles.college),
+                  avatar_url: row.profiles.avatar_url,
+                  total_score: 0,
+                  accuracy_sum: 0,
+                  total_games: 0,
+                };
 
-            setLeaderboard(aggregated);
+                existing.total_score += (row.score || 0);
+                existing.accuracy_sum += (row.accuracy || 0);
+                existing.total_games += 1;
+                userMap.set(uid, existing);
+              });
+
+              const aggregated = Array.from(userMap.values())
+                .filter(u => (u.total_games || 0) < 300) // Exclude accounts with >= 300 bot-scripted games
+                .map(u => ({
+                  ...u,
+                  avg_accuracy: Math.round(u.accuracy_sum / u.total_games),
+                }))
+                .sort((a, b) => b.total_score - a.total_score);
+
+              setLeaderboard(aggregated);
+            }
           }
         }
       } catch (err) {

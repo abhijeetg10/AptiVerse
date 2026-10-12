@@ -70,6 +70,22 @@ from profiles p
 join game_sessions gs on p.id = gs.user_id
 group by p.id, p.name, p.college, p.avatar_url;
 
+-- Create a view for specific game leaderboards
+create or replace view game_leaderboard as
+select 
+  gs.game_id,
+  p.id as user_id,
+  p.name,
+  p.college,
+  p.avatar_url,
+  sum(gs.score) as total_score,
+  round(avg(gs.accuracy)) as avg_accuracy,
+  count(gs.id) as total_games,
+  sum(gs.time_spent) as total_time
+from profiles p
+join game_sessions gs on p.id = gs.user_id
+group by gs.game_id, p.id, p.name, p.college, p.avatar_url;
+
 -- Setup triggers to automatically create a profile when a new user signs up
 create function public.handle_new_user()
 returns trigger as $$
