@@ -35,6 +35,11 @@ export const useAutoAdvance = (
     checkDbFeedback();
   }, [user?.id]);
 
+  const loadNextLevelRef = useRef(loadNextLevel);
+  useEffect(() => {
+    loadNextLevelRef.current = loadNextLevel;
+  });
+
   // Handle Level Completion: ALWAYS auto-advance smoothly without popping up in the middle of gameplay
   useEffect(() => {
     if (isCompleted) {
@@ -44,12 +49,12 @@ export const useAutoAdvance = (
       localStorage.setItem('aptiverse_games_played', gamesPlayed.toString());
 
       const timer = setTimeout(() => {
-        loadNextLevel();
+        loadNextLevelRef.current();
       }, delay);
 
       return () => clearTimeout(timer);
     }
-  }, [isCompleted, loadNextLevel, delay]);
+  }, [isCompleted, delay]);
 
   // Handle End of Game: ONLY prompted once after 20-25 games played, never if already given feedback
   useEffect(() => {

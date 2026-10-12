@@ -101,10 +101,29 @@ export const SwitchChallenge: React.FC = () => {
 
             {/* Overlays */}
             {state.status === 'completed' && (
-              <div className="absolute inset-0 z-50 bg-slate-50/60 backdrop-blur-sm rounded-xl flex items-center justify-center animate-in fade-in duration-300">
-                <div className="bg-slate-50 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-200">
-                  <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Correct Code!</h2>
-                  <p className="text-emerald-500 font-bold mb-6">Great job!</p>
+              <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm rounded-xl flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="bg-white p-7 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-100">
+                  <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-emerald-100">
+                    <Play size={28} className="fill-emerald-600 ml-1" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 mb-1">Correct Code!</h2>
+                  <p className="text-emerald-600 font-bold text-sm mb-5">Level {levelIndex + 1} Solved!</p>
+                  
+                  <div className="flex flex-col gap-2.5">
+                    <button 
+                      onClick={loadNextLevel}
+                      className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+                    >
+                      <span>Next Level</span>
+                      <Play size={16} className="fill-white ml-0.5" />
+                    </button>
+                    <Link
+                      to="/games"
+                      className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      All Games
+                    </Link>
+                  </div>
                 </div>
               </div>
             )}

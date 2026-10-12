@@ -122,7 +122,7 @@ export const DIChallenge: React.FC = () => {
   };
 
   const isGameOver = state.status === 'completed';
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(false, handleNextLevel, 1500, isGameOver);
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(isGameOver, handleNextLevel, 1500, isGameOver);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -254,6 +254,20 @@ export const DIChallenge: React.FC = () => {
                     })}
                   </div>
 
+                  <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
+                    <button
+                      onClick={handleNextLevel}
+                      className="flex-1 py-3.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      Next Challenge →
+                    </button>
+                    <Link
+                      to="/games"
+                      className="py-3.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-center transition-colors"
+                    >
+                      All Games
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

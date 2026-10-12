@@ -221,6 +221,20 @@ export const RCChallenge: React.FC = () => {
                     })}
                   </div>
 
+                  <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
+                    <button
+                      onClick={handleNextLevel}
+                      className="flex-1 py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      Next Passage →
+                    </button>
+                    <Link
+                      to="/games"
+                      className="py-3.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-center transition-colors"
+                    >
+                      All Games
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

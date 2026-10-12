@@ -196,13 +196,26 @@ export const GridChallenge: React.FC = () => {
                  <p className="text-slate-500 mb-2">You successfully remembered all {dotsCount} dots.</p>
                  {distractionPassed === false && <p className="text-error text-sm mb-6">However, you failed the distraction task.</p>}
                  {distractionPassed === true && <p className="text-emerald-400 text-sm mb-6">Perfect focus! Distraction task passed.</p>}
+                 <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
+                   <Button onClick={loadNextLevel} size="lg" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg">
+                     Next Level →
+                   </Button>
+                   <Link to="/games" className="py-3.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-center transition-colors flex items-center justify-center">
+                     All Games
+                   </Link>
+                 </div>
                </>
              ) : (
                <>
                  <XCircle size={64} className="text-error mb-4" />
                  <h2 className="text-3xl font-bold text-slate-800 mb-2">Wrong Positions</h2>
                  <p className="text-slate-500 mb-6">You selected an incorrect coordinate.</p>
-                 <Button onClick={() => setState(createInitialState(puzzle))} size="lg" variant="secondary" className="px-10 bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200">Try Again</Button>
+                 <div className="flex flex-col sm:flex-row gap-3 w-full">
+                   <Button onClick={() => setState(createInitialState(puzzle))} size="lg" variant="secondary" className="flex-1 px-8 bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200">Try Again</Button>
+                   <Link to="/games" className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-center transition-colors flex items-center justify-center">
+                     All Games
+                   </Link>
+                 </div>
                </>
              )}
           </div>

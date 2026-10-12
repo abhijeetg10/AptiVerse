@@ -121,9 +121,23 @@ export const InductiveChallenge: React.FC = () => {
 
         {/* Result Overlay */}
         {state.status === 'completed' && (
-          <div className="mt-8 bg-emerald-50 text-emerald-800 p-6 rounded-2xl border border-emerald-200 text-center animate-in fade-in slide-in-from-bottom-4 shadow-lg shadow-emerald-500/10">
+          <div className="mt-8 bg-emerald-50 text-emerald-800 p-6 rounded-2xl border border-emerald-200 text-center animate-in fade-in slide-in-from-bottom-4 shadow-lg shadow-emerald-500/10 max-w-md mx-auto w-full">
             <h2 className="text-2xl font-extrabold mb-2">Correct!</h2>
             <p className="font-medium text-emerald-700 mb-6">The rule was: {state.puzzle.ruleName}</p>
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <button
+                onClick={loadNextLevel}
+                className="flex-1 py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Next Level →
+              </button>
+              <Link
+                to="/games"
+                className="py-3 px-5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold rounded-xl text-center transition-colors flex items-center justify-center"
+              >
+                All Games
+              </Link>
+            </div>
           </div>
         )}
 
