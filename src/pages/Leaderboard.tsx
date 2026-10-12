@@ -84,6 +84,7 @@ const Leaderboard = () => {
 
           if (data && !error && !isCancelled) {
             const normalizedData = data
+              .filter(u => (u.total_games || 0) < 300) // Exclude accounts with >= 300 bot-scripted games
               .map(u => ({
                 ...u,
                 college: normalizeCollege(u.college),
@@ -132,6 +133,7 @@ const Leaderboard = () => {
             });
 
             const aggregated = Array.from(userMap.values())
+              .filter(u => (u.total_games || 0) < 300) // Exclude accounts with >= 300 bot-scripted games
               .map(u => ({
                 ...u,
                 avg_accuracy: Math.round(u.accuracy_sum / u.total_games),
