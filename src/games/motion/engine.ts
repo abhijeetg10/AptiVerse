@@ -43,11 +43,13 @@ export function getOccupiedCellsBlock(block: MovableBlock): Cell[] {
 }
 
 export function calculateNewPosition(cell: Cell, direction: Direction): Cell {
-  switch (direction) {
+  const dir = String(direction).toUpperCase();
+  switch (dir) {
     case "UP": return { row: cell.row - 1, col: cell.col };
     case "DOWN": return { row: cell.row + 1, col: cell.col };
     case "LEFT": return { row: cell.row, col: cell.col - 1 };
     case "RIGHT": return { row: cell.row, col: cell.col + 1 };
+    default: return { row: cell.row, col: cell.col };
   }
 }
 

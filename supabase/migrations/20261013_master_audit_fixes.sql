@@ -32,26 +32,35 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 -- Ordinary users can ONLY update their personal details: name, college, department, avatar_url
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- 2A. Trigger-based enforcement: Immune to RLS recursion, compares OLD and NEW in memory
+CREATE OR REPLACE FUNCTION public.protect_profile_privileged_fields()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If role, is_blocked, or warning_message are being altered by a non-admin, abort immediately
+  IF (OLD.role IS DISTINCT FROM NEW.role) OR
+     (OLD.is_blocked IS DISTINCT FROM NEW.is_blocked) OR
+     (OLD.warning_message IS DISTINCT FROM NEW.warning_message) THEN
+    IF NOT public.is_admin() THEN
+      RAISE EXCEPTION 'Security Violation: Unauthorized modification of privileged profile fields (role, is_blocked, warning_message)';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_protect_profile_privileged_fields ON public.profiles;
+CREATE TRIGGER trg_protect_profile_privileged_fields
+BEFORE UPDATE ON public.profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.protect_profile_privileged_fields();
+
+-- 2B. RLS Policies: Simple ownership check without recursive subqueries
 DROP POLICY IF EXISTS "Users can update own profile." ON public.profiles;
 CREATE POLICY "Users can update own profile."
   ON public.profiles FOR UPDATE
   TO authenticated
   USING ( auth.uid() = id )
-  WITH CHECK (
-    auth.uid() = id
-    AND (
-      (role IS NOT DISTINCT FROM public.get_user_role(auth.uid()))
-      OR public.is_admin()
-    )
-    AND (
-      (is_blocked IS NOT DISTINCT FROM public.get_user_is_blocked(auth.uid()))
-      OR public.is_admin()
-    )
-    AND (
-      (warning_message IS NOT DISTINCT FROM public.get_user_warning_message(auth.uid()))
-      OR public.is_admin()
-    )
-  );
+  WITH CHECK ( auth.uid() = id );
 
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.profiles;
 CREATE POLICY "Public profiles are viewable by everyone."
