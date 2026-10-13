@@ -1000,3 +1000,14 @@ export const levels: DIPuzzle[] = [
     ]
   }
 ];
+
+export const getLevelPuzzle = (assessmentIdx: number): DIPuzzle => {
+  const tableIdx = Math.abs(assessmentIdx) % levels.length;
+  const basePuzzle = levels[tableIdx];
+  return {
+    ...basePuzzle,
+    id: `${basePuzzle.id}-assess-${assessmentIdx + 1}`,
+    title: basePuzzle.title,
+    questions: basePuzzle.questions
+  };
+};

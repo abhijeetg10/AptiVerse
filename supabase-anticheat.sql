@@ -1,69 +1,222 @@
 -- ====================================================================
--- APTIVERSE ANTI-CHEAT & DATABASE SECURITY SUITE
--- Run this in Supabase Dashboard -> SQL Editor to:
--- 1. Wipe all bot/scripted accounts to 0 points immediately.
--- 2. Issue probation warning on all their profiles.
--- 3. Install strict anti-cheat rate limiting so no one can inject fake data again.
+-- APTIVERSE MASTER DATABASE SECURITY & LEADERBOARD SYNC SUITE
+-- Run this in Supabase Dashboard -> SQL Editor (with Admin / postgres role)
 -- ====================================================================
 
--- STEP 1: Add columns to profiles if not already added
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS department TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS warning_message TEXT;
+-- 1. Helper function to check if caller has 'admin' role (prevents RLS recursion)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- STEP 2: Flag and wipe all suspected bot accounts (>= 300 games or Level > 50)
--- A. Set warning message on their profiles
-UPDATE profiles
-SET warning_message = '⚠️ ACCOUNT FLAGGED FOR FAIR PLAY VIOLATIONS: All artificial scores have been wiped to 0 due to detected automated bot scripting. Any further automation or unauthorized data injection will result in an immediate, permanent ban.'
-WHERE id IN (
-  SELECT user_id 
-  FROM game_sessions 
-  GROUP BY user_id 
-  HAVING count(*) >= 300 OR max(level) > 50
-);
+-- 2. PROFILE SECURITY: Prevent ordinary users from altering role or is_blocked
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- B. Delete all game sessions for these bot accounts (resets total score to 0)
-DELETE FROM game_sessions 
-WHERE user_id IN (
-  SELECT user_id 
-  FROM game_sessions 
-  GROUP BY user_id 
-  HAVING count(*) >= 300 OR max(level) > 50
-);
+DROP POLICY IF EXISTS "Users can update own profile." ON public.profiles;
+CREATE POLICY "Users can update own profile."
+  ON public.profiles FOR UPDATE
+  TO authenticated
+  USING ( auth.uid() = id )
+  WITH CHECK (
+    auth.uid() = id
+    AND (
+      (role IS NOT DISTINCT FROM (SELECT p.role FROM public.profiles p WHERE p.id = auth.uid()))
+      OR is_admin()
+    )
+    AND (
+      (is_blocked IS NOT DISTINCT FROM (SELECT p.is_blocked FROM public.profiles p WHERE p.id = auth.uid()))
+      OR is_admin()
+    )
+  );
 
--- Delete any remaining rogue sessions with impossible levels
-DELETE FROM game_sessions WHERE level > 50;
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.profiles;
+CREATE POLICY "Public profiles are viewable by everyone."
+  ON public.profiles FOR SELECT
+  USING ( true );
 
--- STEP 3: BULLETPROOF ANTI-CHEAT SECURITY TRIGGER
--- This executes inside PostgreSQL on EVERY insert, making it impossible
--- to inject fake data even via browser console (F12), curl, or scripts.
+DROP POLICY IF EXISTS "Admins have full access to profiles" ON public.profiles;
+CREATE POLICY "Admins have full access to profiles"
+  ON public.profiles FOR ALL
+  TO authenticated
+  USING ( is_admin() )
+  WITH CHECK ( is_admin() );
 
-CREATE OR REPLACE FUNCTION secure_validate_game_session()
+DROP POLICY IF EXISTS "Admins have full access to game_sessions" ON public.game_sessions;
+CREATE POLICY "Admins have full access to game_sessions"
+  ON public.game_sessions FOR ALL
+  TO authenticated
+  USING ( is_admin() )
+  WITH CHECK ( is_admin() );
+
+DROP POLICY IF EXISTS "Admins have full access to bug_reports" ON public.bug_reports;
+CREATE POLICY "Admins have full access to bug_reports"
+  ON public.bug_reports FOR ALL
+  TO authenticated
+  USING ( is_admin() );
+
+DROP POLICY IF EXISTS "Admins have full access to feedback" ON public.feedback;
+CREATE POLICY "Admins have full access to feedback"
+  ON public.feedback FOR ALL
+  TO authenticated
+  USING ( is_admin() );
+
+-- 3. Add columns to profiles and game_sessions if missing
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS department TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS warning_message TEXT;
+ALTER TABLE public.game_sessions ADD COLUMN IF NOT EXISTS attempt_id UUID;
+
+-- 4. Recreate global_leaderboard view with DISTINCT LEVEL SCORING & geo_sudoku merged
+DROP VIEW IF EXISTS public.global_leaderboard CASCADE;
+CREATE VIEW public.global_leaderboard AS
+WITH distinct_level_scores AS (
+  SELECT 
+    user_id,
+    CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END AS game_id,
+    level,
+    MAX(score) AS best_score,
+    ROUND(AVG(accuracy)) AS level_acc,
+    MIN(time_spent) AS best_time
+  FROM public.game_sessions
+  GROUP BY user_id, CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END, level
+)
+SELECT 
+  p.id AS user_id,
+  p.name,
+  p.college,
+  p.avatar_url,
+  COALESCE(SUM(dls.best_score), 0) AS total_score,
+  COALESCE(ROUND(AVG(dls.level_acc)), 0) AS avg_accuracy,
+  COUNT(dls.level)::integer AS total_games,
+  COALESCE(SUM(dls.best_time), 0)::integer AS total_time
+FROM public.profiles p
+JOIN distinct_level_scores dls ON p.id = dls.user_id
+WHERE (p.is_blocked IS NOT TRUE)
+GROUP BY p.id, p.name, p.college, p.avatar_url;
+
+-- 5. Recreate game_leaderboard view
+DROP VIEW IF EXISTS public.game_leaderboard CASCADE;
+CREATE VIEW public.game_leaderboard AS
+WITH distinct_level_scores AS (
+  SELECT 
+    user_id,
+    CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END AS game_id,
+    level,
+    MAX(score) AS best_score,
+    ROUND(AVG(accuracy)) AS level_acc,
+    MIN(time_spent) AS best_time
+  FROM public.game_sessions
+  GROUP BY user_id, CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END, level
+)
+SELECT 
+  dls.game_id,
+  p.id AS user_id,
+  p.name,
+  p.college,
+  p.avatar_url,
+  COALESCE(SUM(dls.best_score), 0) AS total_score,
+  COALESCE(ROUND(AVG(dls.level_acc)), 0) AS avg_accuracy,
+  COUNT(dls.level)::integer AS total_games,
+  COALESCE(SUM(dls.best_time), 0)::integer AS total_time
+FROM public.profiles p
+JOIN distinct_level_scores dls ON p.id = dls.user_id
+WHERE (p.is_blocked IS NOT TRUE)
+GROUP BY dls.game_id, p.id, p.name, p.college, p.avatar_url;
+
+-- 6. Weekly leaderboard view
+DROP VIEW IF EXISTS public.weekly_leaderboard CASCADE;
+CREATE VIEW public.weekly_leaderboard AS
+WITH weekly_distinct_scores AS (
+  SELECT 
+    user_id,
+    CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END AS game_id,
+    level,
+    MAX(score) AS best_score,
+    ROUND(AVG(accuracy)) AS level_acc,
+    MIN(time_spent) AS best_time
+  FROM public.game_sessions
+  WHERE created_at >= (NOW() - INTERVAL '7 days')
+  GROUP BY user_id, CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END, level
+)
+SELECT 
+  p.id AS user_id,
+  p.name,
+  p.college,
+  p.avatar_url,
+  COALESCE(SUM(wds.best_score), 0) AS total_score,
+  COALESCE(ROUND(AVG(wds.level_acc)), 0) AS avg_accuracy,
+  COUNT(wds.level)::integer AS total_games,
+  COALESCE(SUM(wds.best_time), 0)::integer AS total_time
+FROM public.profiles p
+JOIN weekly_distinct_scores wds ON p.id = wds.user_id
+WHERE (p.is_blocked IS NOT TRUE)
+GROUP BY p.id, p.name, p.college, p.avatar_url;
+
+-- 7. College leaderboard view
+DROP VIEW IF EXISTS public.college_leaderboard CASCADE;
+CREATE VIEW public.college_leaderboard AS
+WITH distinct_level_scores AS (
+  SELECT 
+    user_id,
+    CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END AS game_id,
+    level,
+    MAX(score) AS best_score,
+    ROUND(AVG(accuracy)) AS level_acc
+  FROM public.game_sessions
+  GROUP BY user_id, CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END, level
+),
+user_totals AS (
+  SELECT 
+    p.id AS user_id,
+    p.college,
+    COALESCE(SUM(dls.best_score), 0) AS user_score,
+    COALESCE(ROUND(AVG(dls.level_acc)), 0) AS user_acc
+  FROM public.profiles p
+  JOIN distinct_level_scores dls ON p.id = dls.user_id
+  WHERE (p.is_blocked IS NOT TRUE)
+    AND p.college IS NOT NULL 
+    AND LENGTH(TRIM(p.college)) > 0 
+    AND p.college <> '-'
+  GROUP BY p.id, p.college
+)
+SELECT 
+  college AS name,
+  COUNT(DISTINCT user_id)::integer AS students,
+  COALESCE(SUM(user_score), 0)::numeric AS total_score,
+  COALESCE(ROUND(AVG(user_acc)), 0)::integer AS avg_accuracy
+FROM user_totals
+GROUP BY college;
+
+-- 8. ANTI-CHEAT VALIDATION TRIGGER (Proportionate protection, no arbitrary level 50 ceiling)
+CREATE OR REPLACE FUNCTION public.secure_validate_game_session()
 RETURNS TRIGGER AS $$
 DECLARE
   v_last_session_time TIMESTAMP WITH TIME ZONE;
   v_recent_count INT;
 BEGIN
-  -- 1. Authentication check: Caller must be authenticated
   IF auth.uid() IS NULL OR auth.uid() != NEW.user_id THEN
     RAISE EXCEPTION 'Security Violation: Unauthorized session submission';
   END IF;
 
-  -- 2. Blocked status check: Suspended users cannot submit games
-  IF EXISTS (SELECT 1 FROM profiles WHERE id = NEW.user_id AND is_blocked = true) THEN
+  IF EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.user_id AND is_blocked = true) THEN
     RAISE EXCEPTION 'Security Violation: Account is suspended';
   END IF;
 
-  -- 3. Whitelisted Game ID check
-  IF NEW.game_id NOT IN ('motion', 'sudoku', 'geo_sudoku', 'grid', 'switch', 'inductive', 'di', 'rc') THEN
+  IF NEW.game_id = 'geo_sudoku' THEN
+    NEW.game_id := 'sudoku';
+  END IF;
+
+  IF NEW.game_id NOT IN ('motion', 'sudoku', 'grid', 'switch', 'inductive', 'di', 'rc') THEN
     RAISE EXCEPTION 'Security Violation: Unknown game identifier';
   END IF;
 
-  -- 4. Level boundaries: Max level is 50
-  IF NEW.level < 1 OR NEW.level > 50 THEN
-    RAISE EXCEPTION 'Security Violation: Level % is out of bounds', NEW.level;
+  IF NEW.level < 1 THEN
+    RAISE EXCEPTION 'Security Violation: Invalid level %', NEW.level;
   END IF;
 
-  -- 5. Score & Accuracy boundaries
   IF NEW.score < 0 OR NEW.score > 10 THEN
     RAISE EXCEPTION 'Security Violation: Score must be between 0 and 10';
   END IF;
@@ -71,29 +224,26 @@ BEGIN
     RAISE EXCEPTION 'Security Violation: Accuracy must be between 0 and 100';
   END IF;
 
-  -- 6. Human Speed Barrier: A human cannot legitimately finish a level in under 3 seconds
-  IF NEW.time_spent < 3 THEN
-    RAISE EXCEPTION 'Anti-Cheat: Impossible completion time detected';
+  IF NEW.time_spent < 2 THEN
+    RAISE EXCEPTION 'Anti-Cheat: Completion time too low';
   END IF;
 
-  -- 7. Rate Limit Defense: Minimum 4 seconds between consecutive submissions
   SELECT created_at INTO v_last_session_time
-  FROM game_sessions
+  FROM public.game_sessions
   WHERE user_id = NEW.user_id
   ORDER BY created_at DESC
   LIMIT 1;
 
-  IF v_last_session_time IS NOT NULL AND (NOW() - v_last_session_time) < INTERVAL '4 seconds' THEN
+  IF v_last_session_time IS NOT NULL AND (NOW() - v_last_session_time) < INTERVAL '2 seconds' THEN
     RAISE EXCEPTION 'Anti-Cheat: Submissions too fast. Please play normally.';
   END IF;
 
-  -- 8. Hourly Flood Cap: Maximum 60 sessions per user per hour
   SELECT count(*) INTO v_recent_count
-  FROM game_sessions
+  FROM public.game_sessions
   WHERE user_id = NEW.user_id
     AND created_at > (NOW() - INTERVAL '1 hour');
 
-  IF v_recent_count >= 60 THEN
+  IF v_recent_count >= 120 THEN
     RAISE EXCEPTION 'Anti-Cheat: Hourly game quota reached. Please take a break.';
   END IF;
 
@@ -101,27 +251,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Attach trigger to game_sessions table
-DROP TRIGGER IF EXISTS trg_secure_game_session ON game_sessions;
+DROP TRIGGER IF EXISTS trg_secure_game_session ON public.game_sessions;
 CREATE TRIGGER trg_secure_game_session
-BEFORE INSERT ON game_sessions
+BEFORE INSERT ON public.game_sessions
 FOR EACH ROW
-EXECUTE FUNCTION secure_validate_game_session();
+EXECUTE FUNCTION public.secure_validate_game_session();
 
--- STEP 4: RESET FAKE / ABBREVIATED COLLEGE NAMES AND REQUIRE RE-SELECTION
--- Resets fake colleges ('CIT', 'tki', 'aps', 'j', 'San', 'abc', etc.) and clears invalid departments
--- so students are required to select their verified college & department from the dropdown before playing.
-UPDATE profiles
-SET college = NULL, department = NULL
-WHERE college IS NULL
-   OR LENGTH(TRIM(college)) < 5
-   OR LOWER(TRIM(college)) IN (
-     'abc', 'xyz', 'test', 'demo', 'fake', 'none', 'na', 'n/a', 'asdf', 'qwerty',
-     '...', '---', 'other', 'unknown', 'invalid', 'dummy', 'null', 'nil', 'college',
-     'cit', 'tki', 'aps', 'vsb', 'iitk', 'ycce', 'gla', 'iem', 'uem', 'siom', 'sfax', 'j', 'san'
-   )
-   OR department IS NULL;
-
--- Reload schema cache
 NOTIFY pgrst, 'reload schema';
-

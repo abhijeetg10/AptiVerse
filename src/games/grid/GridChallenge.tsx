@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, RefreshCw, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -9,27 +9,59 @@ import { generateGridLevel } from './generator';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
+import { createAttemptId, getFreshVariantSeed } from '../../utils/puzzlePool';
+import { useAuth } from '../../context/AuthContext';
+
+const GRID_LEVEL_KEY = 'aptiverse_grid_level';
 
 export const GridChallenge: React.FC = () => {
-  const [level, setLevel] = useState(1);
+  const { user } = useAuth();
+  const [level, setLevel] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(GRID_LEVEL_KEY);
+      return saved ? Math.max(1, parseInt(saved, 10)) : 1;
+    } catch {
+      return 1;
+    }
+  });
+
+  const [attemptId, setAttemptId] = useState<string>(() => createAttemptId());
+  const [variantSeed, setVariantSeed] = useState<number>(() => getFreshVariantSeed('grid', user?.id, level, 30));
+  const startTimeRef = useRef<number>(Date.now());
+  const hasSavedResultRef = useRef(false);
+
   const dotsCount = Math.min(2 + level, 12);
   
-  // Generate memory pattern ONCE per level
-  const puzzle = useMemo(() => generateGridLevel(`grid-${level}`, dotsCount), [level, dotsCount]);
+  // Stable memory pattern during attempt
+  const puzzle = useMemo(() => generateGridLevel(`grid-${level}-s${variantSeed}`, dotsCount), [level, dotsCount, variantSeed]);
   
   const [state, setState] = useState<GridState>(() => createInitialState(puzzle));
-  const { saveSession } = useGameSession('grid');
+  const { saveSession, status: saveStatus } = useGameSession('grid');
+
   // Reset state when puzzle changes
   useEffect(() => {
     setState(createInitialState(puzzle));
+    startTimeRef.current = Date.now();
+    hasSavedResultRef.current = false;
   }, [puzzle]);
 
-  // Save session when won
+  // Save session when won with accurate distraction penalty
   useEffect(() => {
-    if (state.phase === 'result' && state.result === 'won') {
-      saveSession(level, Math.min(10, level), 100, 30, state.distractionPassed ?? true);
+    if (state.phase === 'result' && state.result === 'won' && !hasSavedResultRef.current) {
+      hasSavedResultRef.current = true;
+      const elapsedSeconds = Math.max(3, Math.round((Date.now() - startTimeRef.current) / 1000));
+      
+      // Calculate score and accuracy aligning with displayed distraction rule:
+      // If distraction passed: full level score (up to 10) and 100% accuracy.
+      // If distraction failed: -3 penalty on score (min 1) and 70% accuracy penalty.
+      const distractionPassed = state.distractionPassed ?? true;
+      const baseScore = Math.min(10, level);
+      const finalScore = distractionPassed ? baseScore : Math.max(1, baseScore - 3);
+      const finalAccuracy = distractionPassed ? 100 : 70;
+
+      saveSession(level, finalScore, finalAccuracy, elapsedSeconds, true, attemptId);
     }
-  }, [state.phase, state.result, level, state.distractionPassed]);
+  }, [state.phase, state.result, level, state.distractionPassed, attemptId, saveSession]);
 
   // Countdown timer
   useEffect(() => {
@@ -42,11 +74,22 @@ export const GridChallenge: React.FC = () => {
   }, [state.phase, state.countdown]);
 
   const loadNextLevel = () => {
-    setLevel(l => l + 1);
+    const nextLevel = level + 1;
+    setLevel(nextLevel);
+    setVariantSeed(getFreshVariantSeed('grid', user?.id, nextLevel, 30));
+    setAttemptId(createAttemptId());
+    try {
+      localStorage.setItem(GRID_LEVEL_KEY, String(nextLevel));
+    } catch {}
   };
 
-  const isGameOver = (state.phase === 'result' && state.result === 'lost') || level >= 10;
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.phase === 'result' && state.result === 'won', loadNextLevel, 1500, isGameOver);
+  const isGameOver = state.phase === 'result' && state.result === 'lost';
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit, advanceNow } = useAutoAdvance(
+    state.phase === 'result' && state.result === 'won', 
+    loadNextLevel, 
+    2000, 
+    isGameOver
+  );
 
   const handleDistractionAnswer = (answer: boolean) => {
     setState(prev => submitDistraction(prev, answer));
@@ -54,6 +97,12 @@ export const GridChallenge: React.FC = () => {
 
   const handleCellClick = (index: number) => {
     setState(prev => toggleCell(prev, index));
+  };
+
+  // Reset clears current attempt moves without re-rolling the puzzle pattern or granting duplicate scores
+  const handleReset = () => {
+    setState(createInitialState(puzzle));
+    startTimeRef.current = Date.now();
   };
 
   const { phase, countdown, distractionPassed, userSelection, result } = state;
@@ -87,7 +136,7 @@ export const GridChallenge: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => setState(createInitialState(puzzle))} className="w-10 h-10 rounded-lg bg-white hover:bg-neutral-700 flex items-center justify-center text-neutral-300 transition-colors">
+          <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-white hover:bg-neutral-200 flex items-center justify-center text-neutral-600 transition-colors" title="Restart Level">
             <RefreshCw size={18} />
           </button>
         </div>
@@ -99,7 +148,7 @@ export const GridChallenge: React.FC = () => {
           <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Memorize the sequence</h2>
             <div className="text-slate-500 text-sm mb-10 flex items-center gap-2">
-               Time remaining: <span className="font-mono text-primary-400 font-bold text-lg">{countdown}s</span>
+               Time remaining: <span className="font-mono text-primary-600 font-bold text-lg">{countdown}s</span>
             </div>
 
             <div className="bg-white/80 p-6 rounded-3xl shadow-2xl border border-slate-200/50 backdrop-blur-sm relative">
@@ -121,7 +170,7 @@ export const GridChallenge: React.FC = () => {
 
         {phase === 'distract' && distraction && (
           <div className="flex flex-col items-center animate-in slide-in-from-right duration-500">
-            <div className="bg-amber-500/10 text-amber-500 px-4 py-1.5 rounded-full text-sm font-bold mb-4 flex items-center gap-2 border border-amber-500/20">
+            <div className="bg-amber-500/10 text-amber-600 px-4 py-1.5 rounded-full text-sm font-bold mb-4 flex items-center gap-2 border border-amber-500/20">
                <ShieldAlert size={16} /> DISTRACTION TASK
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-2 text-center max-w-md">
@@ -150,20 +199,20 @@ export const GridChallenge: React.FC = () => {
             </div>
 
             <div className="flex gap-4">
-              <Button onClick={() => handleDistractionAnswer(true)} className="w-32 h-12 bg-emerald-600 hover:bg-emerald-500 text-white border-0">YES</Button>
-              <Button onClick={() => handleDistractionAnswer(false)} className="w-32 h-12 bg-error hover:bg-red-500 text-white border-0">NO</Button>
+              <Button onClick={() => handleDistractionAnswer(true)} className="w-32 h-12 bg-emerald-600 hover:bg-emerald-500 text-white border-0 font-bold">YES</Button>
+              <Button onClick={() => handleDistractionAnswer(false)} className="w-32 h-12 bg-rose-600 hover:bg-rose-500 text-white border-0 font-bold">NO</Button>
             </div>
           </div>
         )}
 
         {phase === 'recreate' && (
           <div className="flex flex-col items-center animate-in fade-in zoom-in duration-300">
-            <h2 className="text-2xl font-bold text-emerald-500 mb-2">Recall the positions</h2>
+            <h2 className="text-2xl font-bold text-emerald-600 mb-2">Recall the positions</h2>
             <p className="text-slate-500 text-sm mb-10">Select the <span className="font-bold text-slate-700">{dotsCount}</span> cells that were previously highlighted.</p>
 
             {distractionPassed === false && (
-              <div className="absolute top-6 bg-error/20 text-error px-4 py-2 rounded-lg border border-error/50 flex items-center gap-2">
-                 <XCircle size={18} /> Distraction task failed. Penalty applied.
+              <div className="absolute top-6 bg-rose-50 text-rose-600 px-4 py-2 rounded-lg border border-rose-200 flex items-center gap-2 text-xs font-bold">
+                 <XCircle size={16} /> Distraction task failed. Penalty applied (-3 pts, 70% acc).
               </div>
             )}
 
@@ -176,7 +225,7 @@ export const GridChallenge: React.FC = () => {
                       key={i} 
                       onClick={() => handleCellClick(i)}
                       className={cn(
-                        "flex items-center justify-center rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 transition-all focus:outline-none hover:scale-[1.02]",
+                        "flex items-center justify-center rounded-xl shadow-[inset_0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 transition-all focus:outline-none hover:scale-[1.02] cursor-pointer",
                         isSelected ? "bg-emerald-500 shadow-[0_4px_12px_rgba(16,185,129,0.3)] scale-105 border-emerald-400" : "bg-white hover:bg-slate-50"
                       )}
                     />
@@ -188,16 +237,22 @@ export const GridChallenge: React.FC = () => {
         )}
 
         {phase === 'result' && (
-          <div className="flex flex-col items-center bg-slate-50/90 p-8 rounded-3xl border border-slate-200 shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="flex flex-col items-center bg-white p-8 rounded-3xl border border-slate-200 shadow-2xl animate-in zoom-in-95 duration-300 max-w-sm w-full text-center">
              {result === 'won' ? (
                <>
                  <CheckCircle2 size={64} className="text-emerald-500 mb-4" />
                  <h2 className="text-3xl font-bold text-slate-800 mb-2">Positions Recalled!</h2>
-                 <p className="text-slate-500 mb-2">You successfully remembered all {dotsCount} dots.</p>
-                 {distractionPassed === false && <p className="text-error text-sm mb-6">However, you failed the distraction task.</p>}
-                 {distractionPassed === true && <p className="text-emerald-400 text-sm mb-6">Perfect focus! Distraction task passed.</p>}
-                 <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
-                   <Button onClick={loadNextLevel} size="lg" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg">
+                 <p className="text-slate-500 mb-2 text-sm">You remembered all {dotsCount} dots.</p>
+                 {distractionPassed === false && (
+                   <div className="bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg border border-amber-200 text-xs font-semibold mb-6">
+                     Distraction task missed. Applied 3 point penalty.
+                   </div>
+                 )}
+                 {distractionPassed === true && (
+                   <p className="text-emerald-600 text-xs font-semibold mb-6">Perfect focus! Full points awarded.</p>
+                 )}
+                 <div className="flex flex-col sm:flex-row gap-3 w-full mt-2">
+                   <Button onClick={advanceNow} size="lg" className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg">
                      Next Level →
                    </Button>
                    <Link to="/games" className="py-3.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-center transition-colors flex items-center justify-center">
@@ -207,11 +262,11 @@ export const GridChallenge: React.FC = () => {
                </>
              ) : (
                <>
-                 <XCircle size={64} className="text-error mb-4" />
+                 <XCircle size={64} className="text-rose-500 mb-4" />
                  <h2 className="text-3xl font-bold text-slate-800 mb-2">Wrong Positions</h2>
-                 <p className="text-slate-500 mb-6">You selected an incorrect coordinate.</p>
+                 <p className="text-slate-500 mb-6 text-sm">You selected an incorrect coordinate.</p>
                  <div className="flex flex-col sm:flex-row gap-3 w-full">
-                   <Button onClick={() => setState(createInitialState(puzzle))} size="lg" variant="secondary" className="flex-1 px-8 bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200">Try Again</Button>
+                   <Button onClick={handleReset} size="lg" variant="secondary" className="flex-1 px-8 bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200 font-semibold">Try Again</Button>
                    <Link to="/games" className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-center transition-colors flex items-center justify-center">
                      All Games
                    </Link>

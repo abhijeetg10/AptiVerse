@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import type { GameState, Direction, MovableBlock } from './types';
 import { cn } from '../../utils/cn';
 
-interface MotionBoardProps {
+export interface MotionBoardProps {
   state: GameState;
   onMove: (entityId: string, direction: Direction, steps?: number) => boolean;
   onDragStart?: () => void;

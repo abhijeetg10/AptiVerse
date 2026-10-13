@@ -31,6 +31,19 @@ const normalizeCollege = (name: string | null | undefined) => {
   return name.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 };
 
+export const sortLeaderboardEntries = (a: any, b: any) => {
+  if ((b.total_score || 0) !== (a.total_score || 0)) {
+    return (b.total_score || 0) - (a.total_score || 0);
+  }
+  if ((b.avg_accuracy || 0) !== (a.avg_accuracy || 0)) {
+    return (b.avg_accuracy || 0) - (a.avg_accuracy || 0);
+  }
+  if ((a.total_time || 0) !== (b.total_time || 0)) {
+    return (a.total_time || 0) - (b.total_time || 0);
+  }
+  return (a.user_id || '').localeCompare(b.user_id || '');
+};
+
 const Leaderboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'all-time' | 'this-week' | 'college'>('all-time');
@@ -45,6 +58,7 @@ const Leaderboard = () => {
 
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const gameDropdownRef = useRef<HTMLDivElement>(null);
   const settingsDropdownRef = useRef<HTMLDivElement>(null);
@@ -69,35 +83,107 @@ const Leaderboard = () => {
 
     const fetchLeaderboard = async () => {
       setLoading(true);
+      setFetchError(null);
 
       const activeGameOption = GAME_OPTIONS.find(g => g.id === selectedGame);
       const isSpecificGame = selectedGame !== 'all';
       const isWeekly = activeTab === 'this-week';
 
       try {
+        // Fetch blocked user IDs to ensure 100% parity with Admin Dashboard
+        const { data: blockedUsers } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('is_blocked', true);
+        const blockedSet = new Set(blockedUsers?.map(b => b.id) || []);
+
         if (!isSpecificGame && !isWeekly) {
           // All-time all games: fast global_leaderboard view
           const { data, error } = await supabase
             .from('global_leaderboard')
             .select('*')
-            .order('total_score', { ascending: false });
+            .order('total_score', { ascending: false })
+            .order('avg_accuracy', { ascending: false })
+            .order('total_time', { ascending: true })
+            .limit(1000);
 
-          if (data && !error && !isCancelled) {
+          if (error) throw error;
+
+          if (data && !isCancelled) {
             const normalizedData = data
-              .filter(u => (u.total_games || 0) < 300) // Exclude accounts with >= 300 bot-scripted games
+              .filter(u => !blockedSet.has(u.user_id))
               .map(u => ({
                 ...u,
                 college: normalizeCollege(u.college),
               }))
-              .sort((a, b) => b.total_score - a.total_score);
+              .sort(sortLeaderboardEntries);
 
             setLeaderboard(normalizedData);
           }
-        } else {
-          // Specific game or weekly
-          let loadedFromView = false;
+        } else if (isWeekly && !isSpecificGame) {
+          // Weekly all games view
+          try {
+            const { data: weekData, error: weekErr } = await supabase
+              .from('weekly_leaderboard')
+              .select('*')
+              .order('total_score', { ascending: false })
+              .limit(1000);
 
-          // If specific game all-time, attempt querying database view game_leaderboard first
+            if (!weekErr && weekData && weekData.length > 0 && !isCancelled) {
+              setLeaderboard(
+                weekData
+                  .filter(u => !blockedSet.has(u.user_id))
+                  .map(u => ({ ...u, college: normalizeCollege(u.college) }))
+                  .sort(sortLeaderboardEntries)
+              );
+              return;
+            }
+          } catch {}
+
+          // Fallback to time-windowed game_sessions aggregation
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          const { data, error } = await supabase
+            .from('game_sessions')
+            .select('user_id, score, accuracy, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)')
+            .gte('created_at', sevenDaysAgo)
+            .order('created_at', { ascending: false })
+            .limit(5000);
+
+          if (error) throw error;
+          if (data && !isCancelled) {
+            const userMap = new Map<string, any>();
+            data.forEach((row: any) => {
+              if (!row.profiles || row.profiles.is_blocked) return;
+              const uid = row.user_id;
+              const existing = userMap.get(uid) || {
+                user_id: uid,
+                name: row.profiles.name || 'Anonymous',
+                college: normalizeCollege(row.profiles.college),
+                avatar_url: row.profiles.avatar_url,
+                total_score: 0,
+                accuracy_sum: 0,
+                total_games: 0,
+                total_time: 0,
+              };
+              existing.total_score += (row.score || 0);
+              existing.accuracy_sum += (row.accuracy || 0);
+              existing.total_games += 1;
+              userMap.set(uid, existing);
+            });
+
+            const aggregated = Array.from(userMap.values())
+              .filter(u => !blockedSet.has(u.user_id))
+              .map(u => ({
+                ...u,
+                avg_accuracy: Math.round(u.accuracy_sum / u.total_games),
+              }))
+              .sort(sortLeaderboardEntries);
+
+            setLeaderboard(aggregated);
+          }
+        } else {
+          // Specific game
+          let loadedFromView = false;
           if (isSpecificGame && !isWeekly && activeGameOption?.matchIds?.length) {
             try {
               const { data: viewData, error: viewError } = await supabase
@@ -108,31 +194,27 @@ const Leaderboard = () => {
 
               if (viewData && !viewError && !isCancelled && viewData.length > 0) {
                 const normalizedData = viewData
-                  .filter(u => (u.total_games || 0) < 300)
+                  .filter(u => !blockedSet.has(u.user_id))
                   .map(u => ({
                     ...u,
                     college: normalizeCollege(u.college),
                   }))
-                  .sort((a, b) => b.total_score - a.total_score);
+                  .sort(sortLeaderboardEntries);
 
                 setLeaderboard(normalizedData);
                 loadedFromView = true;
               }
-            } catch {
-              // View not created yet, proceed to fallback
-            }
+            } catch {}
           }
 
           if (!loadedFromView) {
-            // Query game_sessions ordered by created_at DESC so recent real players are fetched
             let query = supabase
               .from('game_sessions')
-              .select('user_id, score, accuracy, created_at, profiles:user_id(id, name, college, avatar_url)');
+              .select('user_id, score, accuracy, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)');
 
             if (isSpecificGame && activeGameOption?.matchIds?.length) {
               query = query.in('game_id', activeGameOption.matchIds);
             }
-
             if (isWeekly) {
               const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
               query = query.gte('created_at', sevenDaysAgo);
@@ -142,11 +224,11 @@ const Leaderboard = () => {
               .order('created_at', { ascending: false })
               .limit(5000);
 
-            if (data && !error && !isCancelled) {
+            if (error) throw error;
+            if (data && !isCancelled) {
               const userMap = new Map<string, any>();
-
               data.forEach((row: any) => {
-                if (!row.profiles) return;
+                if (!row.profiles || row.profiles.is_blocked) return;
                 const uid = row.user_id;
                 const existing = userMap.get(uid) || {
                   user_id: uid,
@@ -156,8 +238,8 @@ const Leaderboard = () => {
                   total_score: 0,
                   accuracy_sum: 0,
                   total_games: 0,
+                  total_time: 0,
                 };
-
                 existing.total_score += (row.score || 0);
                 existing.accuracy_sum += (row.accuracy || 0);
                 existing.total_games += 1;
@@ -165,19 +247,22 @@ const Leaderboard = () => {
               });
 
               const aggregated = Array.from(userMap.values())
-                .filter(u => (u.total_games || 0) < 300) // Exclude accounts with >= 300 bot-scripted games
+                .filter(u => !blockedSet.has(u.user_id))
                 .map(u => ({
                   ...u,
                   avg_accuracy: Math.round(u.accuracy_sum / u.total_games),
                 }))
-                .sort((a, b) => b.total_score - a.total_score);
+                .sort(sortLeaderboardEntries);
 
               setLeaderboard(aggregated);
             }
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching leaderboard:', err);
+        if (!isCancelled) {
+          setFetchError(err.message || 'Unable to connect to rankings service');
+        }
       } finally {
         if (!isCancelled) setLoading(false);
       }
@@ -199,7 +284,7 @@ const Leaderboard = () => {
     if (sortBy === 'games') {
       return list.sort((a, b) => (b.total_games || 0) - (a.total_games || 0));
     }
-    return list.sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
+    return list.sort(sortLeaderboardEntries);
   }, [leaderboard, sortBy]);
 
   // College Aggregation
@@ -233,16 +318,21 @@ const Leaderboard = () => {
       .sort((a, b) => b.score - a.score);
   }, [leaderboard]);
 
-  // Search Filtering
+  // Top 100 players for the public leaderboard
+  const top100Users = useMemo(() => {
+    return sortedLeaderboard.slice(0, 100);
+  }, [sortedLeaderboard]);
+
+  // Search Filtering within the Top 100
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return sortedLeaderboard;
+    if (!query) return top100Users;
 
-    return sortedLeaderboard.filter(u => 
+    return top100Users.filter(u => 
       (u.name && u.name.toLowerCase().includes(query)) ||
       (u.college && u.college.toLowerCase().includes(query))
     );
-  }, [sortedLeaderboard, searchQuery]);
+  }, [top100Users, searchQuery]);
 
   const filteredColleges = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -632,7 +722,12 @@ const Leaderboard = () => {
 
                  {loading ? (
                    <div className="p-12 text-center text-neutral-500 font-medium">Loading Leaderboard data...</div>
-                 ) : tableData.length === 0 ? (
+                 ) : fetchError ? (
+                    <div className="p-12 flex flex-col items-center justify-center text-center gap-3">
+                      <p className="font-bold text-rose-600 text-base">Unable to load rankings</p>
+                      <p className="text-neutral-500 text-xs max-w-sm">{fetchError}</p>
+                    </div>
+                  ) : tableData.length === 0 ? (
                    <div className="p-12 flex flex-col items-center justify-center text-center gap-3">
                      <Search size={32} className="text-neutral-300" />
                      <p className="font-bold text-neutral-700 text-base">No results found</p>
@@ -701,15 +796,33 @@ const Leaderboard = () => {
                       {user && !isCollegeView && !tableData.some((u: any) => u.id === user.id) && (
                       <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-primary-50 items-center border-t border-primary-100 relative">
                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500"></div>
-                         <div className="col-span-1 text-sm font-bold text-primary-600">#{userRank}</div>
+                         <div className="col-span-1 text-xs font-bold text-primary-700">
+                           {userRankIndex >= 0 ? `#${userRank}` : 'Unranked'}
+                         </div>
                          <div className="col-span-3 flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-xs">{getInitial(user.name)}</div>
                             <span className="font-bold text-primary-700 text-sm truncate">{user.name} (You)</span>
                          </div>
                          <div className="col-span-3 text-sm font-semibold text-primary-600 truncate">{user.college || '-'}</div>
-                         <div className="col-span-2 text-sm font-bold text-primary-700 text-right">{userStats.total_score || 0}</div>
-                         <div className="col-span-2 text-sm font-bold text-primary-600 text-right">{userStats.avg_accuracy || 0}%</div>
-                         <div className="col-span-1 text-sm font-bold text-primary-600 text-center">{userStats.total_games || 0}</div>
+                         {userRankIndex >= 0 ? (
+                           <>
+                             <div className="col-span-2 text-sm font-bold text-primary-700 text-right">{userStats.total_score || 0}</div>
+                             <div className="col-span-2 text-sm font-bold text-primary-600 text-right">{userStats.avg_accuracy || 0}%</div>
+                             <div className="col-span-1 text-sm font-bold text-primary-600 text-center">{userStats.total_games || 0}</div>
+                           </>
+                         ) : (
+                           <div className="col-span-5 flex items-center justify-end gap-3">
+                             <span className="text-xs text-primary-600 font-medium">
+                               {activeTab === 'this-week' ? 'No games played this week yet' : 'Play games to get ranked'}
+                             </span>
+                             <Link
+                               to="/games"
+                               className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-lg shadow-sm"
+                             >
+                               Play Now →
+                             </Link>
+                           </div>
+                         )}
                       </div>
                       )}
                    </div>
@@ -721,10 +834,10 @@ const Leaderboard = () => {
                 {!loading && (isCollegeView ? filteredColleges.length : filteredUsers.length) > visibleCount && (
                   <div className="p-4 border-t border-neutral-100 flex justify-center bg-neutral-50/30">
                     <button
-                      onClick={() => setVisibleCount(prev => prev + 25)}
+                      onClick={() => setVisibleCount(prev => Math.min(100, prev + 25))}
                       className="px-6 py-2 rounded-xl bg-white border border-neutral-200 text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 shadow-2xs transition-all cursor-pointer"
                     >
-                      Show More Rankings ({visibleCount} of {isCollegeView ? filteredColleges.length : filteredUsers.length})
+                      Show More Rankings ({Math.min(visibleCount, isCollegeView ? filteredColleges.length : filteredUsers.length)} of {isCollegeView ? filteredColleges.length : filteredUsers.length})
                     </button>
                   </div>
                 )}
@@ -748,18 +861,33 @@ const Leaderboard = () => {
                  
                  <div className="flex items-end justify-between mb-2">
                     <div className="flex items-end gap-3">
-                       <span className="text-5xl font-extrabold text-[#121629]">#{userRank}</span>
-                       {userRankIndex >= 0 && (
-                       <div className="flex items-center gap-1 bg-emerald-100 text-emerald-600 px-2 py-1 rounded font-bold text-xs mb-1">
-                          <ArrowUp size={12} strokeWidth={3} />
-                       </div>
+                       {userRankIndex >= 0 ? (
+                         <>
+                           <span className="text-5xl font-extrabold text-[#121629]">#{userRank}</span>
+                           <div className="flex items-center gap-1 bg-emerald-100 text-emerald-600 px-2 py-1 rounded font-bold text-xs mb-1">
+                              <ArrowUp size={12} strokeWidth={3} />
+                           </div>
+                         </>
+                       ) : (
+                         <div className="flex flex-col">
+                           <span className="text-2xl font-extrabold text-neutral-600">Unranked</span>
+                           <span className="text-[11px] font-semibold text-primary-600 mt-0.5">
+                             {activeTab === 'this-week' ? 'No games played this week' : 'No games played yet'}
+                           </span>
+                         </div>
                        )}
                     </div>
                     <div className="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
                        {getInitial(user?.name || '')}
                     </div>
                  </div>
-                 <p className="text-sm text-neutral-500 font-medium mb-6">You're doing great! Keep practicing to climb higher.</p>
+                 <p className="text-sm text-neutral-500 font-medium mb-6">
+                   {userRankIndex >= 0 
+                     ? "You're doing great! Keep practicing to climb higher." 
+                     : (activeTab === 'this-week' 
+                         ? "Play any level this week to get your weekly placement!" 
+                         : "Play games to climb the rankings and get placement ready.")}
+                 </p>
                  
                  <div className="grid grid-cols-3 gap-3">
                     <div className="bg-neutral-50 rounded-xl p-3 flex flex-col items-center gap-2 border border-neutral-100 text-center">
@@ -775,6 +903,15 @@ const Leaderboard = () => {
                        <div className="flex flex-col"><span className="font-bold text-neutral-900 text-sm leading-tight">{userStats.total_games || 0}</span><span className="text-[10px] text-neutral-500 uppercase font-medium">Games</span></div>
                     </div>
                  </div>
+
+                 {userRankIndex < 0 && (
+                   <Link
+                     to="/games"
+                     className="mt-4 w-full py-2.5 px-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl text-xs text-center flex items-center justify-center gap-2 shadow-sm transition-all"
+                   >
+                     <Gamepad2 size={15} /> Play a Game to Get Ranked
+                   </Link>
+                 )}
               </div>
 
               {/* Top Colleges Card */}

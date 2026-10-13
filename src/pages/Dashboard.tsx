@@ -13,6 +13,19 @@ const Dashboard = () => {
     score: 0,
   });
 
+  const [lastGame, setLastGame] = useState<{ id: string; name: string; path: string; level: number } | null>(null);
+
+  const GAME_INFO: Record<string, { name: string; path: string }> = {
+    motion: { name: 'Motion Challenge', path: '/games/motion' },
+    sudoku: { name: 'Geo Sudoku', path: '/games/sudoku' },
+    geo_sudoku: { name: 'Geo Sudoku', path: '/games/sudoku' },
+    inductive: { name: 'Inductive Challenge', path: '/games/inductive' },
+    grid: { name: 'Grid Challenge', path: '/games/grid' },
+    switch: { name: 'Switch Challenge', path: '/games/switch' },
+    di: { name: 'Tab Based DI', path: '/games/di' },
+    rc: { name: 'Tab Based RC', path: '/games/rc' },
+  };
+
   useEffect(() => {
     if (!user) return;
     const fetchStats = async () => {
@@ -29,6 +42,25 @@ const Dashboard = () => {
           score: data.total_score || 0,
         });
       }
+
+      // Fetch user's actual most recently played game
+      const { data: latestSession } = await supabase
+        .from('game_sessions')
+        .select('game_id, level')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (latestSession && GAME_INFO[latestSession.game_id]) {
+        const info = GAME_INFO[latestSession.game_id];
+        setLastGame({
+          id: latestSession.game_id,
+          name: info.name,
+          path: info.path,
+          level: latestSession.level || 1,
+        });
+      }
     };
     
     fetchStats();
@@ -40,6 +72,10 @@ const Dashboard = () => {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   };
+
+  const activeGameName = lastGame?.name || 'Motion Challenge';
+  const activeGamePath = lastGame?.path || '/games/motion';
+  const activeGameLevel = lastGame ? lastGame.level : Math.max(1, Math.floor(stats.games / 3) + 1);
 
   return (
     <div className="flex flex-col gap-8 pb-12">
@@ -59,11 +95,15 @@ const Dashboard = () => {
           
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-4">
-              <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">RESUME</span>
-              <span className="text-primary-100 text-sm">Last played: Today</span>
+              <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+                {lastGame ? 'RESUME' : 'RECOMMENDED'}
+              </span>
+              <span className="text-primary-100 text-sm">
+                {lastGame ? 'Last played: Recently' : 'Start practicing'}
+              </span>
             </div>
-            <h2 className="text-3xl font-bold mb-2">Motion Challenge</h2>
-            <div className="text-primary-200 font-medium">Level {Math.max(1, Math.floor(stats.games / 3) + 1)}</div>
+            <h2 className="text-3xl font-bold mb-2">{activeGameName}</h2>
+            <div className="text-primary-200 font-medium">Level {activeGameLevel}</div>
           </div>
 
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6 mt-8">
@@ -77,7 +117,7 @@ const Dashboard = () => {
               </div>
             </div>
             
-            <Link to="/games/motion">
+            <Link to={activeGamePath}>
               <Button className="w-full sm:w-auto bg-white text-primary-900 hover:bg-neutral-100 px-8 h-12 text-base rounded-xl gap-2 font-bold shadow-lg">
                 <Play size={18} fill="currentColor" /> Continue
               </Button>

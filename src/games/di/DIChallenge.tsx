@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, RefreshCw, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, RefreshCw, CheckCircle, XCircle, HelpCircle, Clock, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import type { DIState, DIAnswer, DataTab } from './types';
-import { levels } from './levels';
+import { levels, getLevelPuzzle } from './levels';
 import { createInitialState, submitAnswer } from './engine';
 import { cn } from '../../utils/cn';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
+import { getNextUnseenAssessmentIndex, createAttemptId } from '../../utils/puzzlePool';
+import { useAuth } from '../../context/AuthContext';
 
 const TabContent = ({ tab }: { tab: DataTab }) => {
   if (tab.type === 'table') {
@@ -59,70 +61,84 @@ const TabContent = ({ tab }: { tab: DataTab }) => {
   return null;
 };
 
-const DI_DECK_KEY = 'aptiverse_di_unplayed_deck';
-
-const getNextDIIndex = (): number => {
-  let deck: number[] = [];
-  try {
-    const stored = localStorage.getItem(DI_DECK_KEY);
-    if (stored) deck = JSON.parse(stored);
-  } catch {
-    deck = [];
-  }
-
-  if (!Array.isArray(deck) || deck.length === 0) {
-    deck = Array.from({ length: levels.length }, (_, i) => i)
-      .sort(() => Math.random() - 0.5);
-  }
-
-  const chosen = deck.pop() ?? 0;
-  try {
-    localStorage.setItem(DI_DECK_KEY, JSON.stringify(deck));
-  } catch {}
-  return chosen;
-};
+const DI_LEVEL_KEY = 'aptiverse_di_level';
 
 export const DIChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(() => getNextDIIndex());
-  const [state, setState] = useState<DIState>(() => createInitialState(levels[levelIndex]));
+  const { user } = useAuth();
+  const [levelIndex, setLevelIndex] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(DI_LEVEL_KEY);
+      if (saved) return Math.max(0, parseInt(saved, 10));
+    } catch {}
+    return getNextUnseenAssessmentIndex('di', user?.id, 0, levels.length);
+  });
+
+  const [attemptId, setAttemptId] = useState<string>(() => createAttemptId());
+  const [state, setState] = useState<DIState>(() => createInitialState(getLevelPuzzle(levelIndex)));
   const [activeTab, setActiveTab] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(360); // 6 mins for DI
+  const [timeLeft, setTimeLeft] = useState(360); // 6 mins for DI assessment
+  const hasSavedTimeoutRef = useRef(false);
+
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0 || state.status === 'completed') return;
     const timer = setInterval(() => {
       setTimeLeft(s => s - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, state.status]);
 
   const { saveSession } = useGameSession('di');
+
+  // Handle timeout session save
+  useEffect(() => {
+    if (timeLeft <= 0 && state.status === 'playing' && !hasSavedTimeoutRef.current) {
+      hasSavedTimeoutRef.current = true;
+      const qCount = state.puzzle.questions.length || 24;
+      const score = Math.round(((state.score / qCount) * 10) * 100) / 100;
+      const answeredCount = Object.keys(state.answers).length;
+      const accuracy = answeredCount > 0 ? Math.round((state.score / answeredCount) * 100) : 0;
+      saveSession(levelIndex + 1, score, accuracy, 360, false, attemptId);
+    }
+  }, [timeLeft, state, levelIndex, attemptId, saveSession]);
 
   const handleAnswer = (answer: DIAnswer) => {
     if (state.status !== 'playing' || timeLeft <= 0) return;
     const newState = submitAnswer(state, answer);
     setState(newState);
     
-    // Check if the game just completed
     if (newState.status === 'completed') {
-      const accuracy = Math.round((newState.score / newState.puzzle.questions.length) * 100);
-      saveSession(levelIndex + 1, Math.min(10, newState.score * 2), accuracy, 360 - timeLeft, true);
+      const qCount = newState.puzzle.questions.length || 24;
+      // Normalized score to 0-10: (correct / totalQuestions) * 10
+      const score = Math.round(((newState.score / qCount) * 10) * 100) / 100;
+      const accuracy = Math.round((newState.score / qCount) * 100);
+      saveSession(levelIndex + 1, score, accuracy, 360 - timeLeft, true, attemptId);
     }
   };
 
   const handleReset = () => {
-    setState(createInitialState(levels[levelIndex]));
+    setState(createInitialState(getLevelPuzzle(levelIndex)));
     setActiveTab(0);
   };
 
   const handleNextLevel = () => {
-    const nextIdx = getNextDIIndex();
+    const nextIdx = getNextUnseenAssessmentIndex('di', user?.id, 0, levels.length);
     setLevelIndex(nextIdx);
-    setState(createInitialState(levels[nextIdx]));
+    setAttemptId(createAttemptId());
+    setTimeLeft(360);
+    hasSavedTimeoutRef.current = false;
+    try {
+      localStorage.setItem(DI_LEVEL_KEY, String(nextIdx));
+    } catch {}
+    setState(createInitialState(getLevelPuzzle(nextIdx)));
     setActiveTab(0);
   };
 
-  const isGameOver = state.status === 'completed';
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(isGameOver, handleNextLevel, 1500, isGameOver);
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit, advanceNow } = useAutoAdvance(
+    state.status === 'completed', 
+    handleNextLevel, 
+    8000, 
+    timeLeft <= 0
+  );
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -131,6 +147,8 @@ export const DIChallenge: React.FC = () => {
   };
 
   const currentQ = state.puzzle.questions[state.currentQuestionIndex];
+  const qCount = state.puzzle.questions.length;
+  const normalizedScore = Math.round(((state.score / qCount) * 10) * 100) / 100;
 
   return (
     <div className="game-container min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col fixed inset-0 z-[100]">
@@ -141,7 +159,7 @@ export const DIChallenge: React.FC = () => {
           </Link>
           <div className="h-6 w-px bg-slate-200"></div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-sm font-bold shadow-md shadow-blue-600/20 text-slate-900">
+            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-sm font-bold shadow-md shadow-blue-600/20 text-white">
               DI
             </div>
             <div>
@@ -159,18 +177,17 @@ export const DIChallenge: React.FC = () => {
             </span>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors">
+            <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors" title="Restart Attempt">
               <RefreshCw size={18} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col md:flex-row p-6 gap-6 relative overflow-hidden bg-slate-100">
+      <main className="flex-1 flex flex-col md:flex-row p-2 md:p-4 gap-4 relative overflow-hidden bg-slate-100">
         
         {/* Left Panel: Data Tabs */}
         <div className="flex-[3] bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden h-full">
-          {/* Tabs */}
           <div className="flex border-b border-slate-200 bg-slate-50 shrink-0">
             {state.puzzle.tabs.map((tab, i) => (
               <button
@@ -188,40 +205,84 @@ export const DIChallenge: React.FC = () => {
             ))}
           </div>
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-6 bg-white">
+          <div className="flex-1 overflow-y-auto p-8 bg-white flex flex-col justify-center">
             <TabContent tab={state.puzzle.tabs[activeTab]} />
           </div>
         </div>
 
         {/* Right Panel: Question */}
         <div className="flex-[2] flex flex-col h-full gap-6">
-          
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col flex-1">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col flex-1 relative">
             <div className="flex justify-between items-center mb-6">
               <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                Question {state.currentQuestionIndex + 1} of {state.puzzle.questions.length}
+                Question {state.currentQuestionIndex + 1} of {qCount}
               </span>
               {state.status === 'completed' && (
                 <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
-                  Score: {state.score}/{state.puzzle.questions.length}
+                  Score: {normalizedScore} / 10 pts
                 </span>
               )}
             </div>
 
-            <div className="flex-1">
-              {state.status === 'playing' ? (
+            <div className="flex-1 flex flex-col">
+              {timeLeft <= 0 ? (
+                // Explicit Assessment-Ended Timeout Recovery Screen
+                <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                  <div className="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+                    <Clock size={32} />
+                  </div>
+                  <h2 className="text-2xl font-extrabold text-slate-800 mb-2">Time Expired</h2>
+                  <p className="text-slate-500 text-sm mb-6 max-w-xs">
+                    The 6-minute assessment period has ended. Your completed answers have been recorded.
+                  </p>
+
+                  <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center mb-6">
+                    <div>
+                      <span className="text-xs text-slate-400 font-semibold block">Answered</span>
+                      <span className="text-lg font-bold text-slate-800">{Object.keys(state.answers).length} / {qCount}</span>
+                    </div>
+                    <div className="border-x border-slate-200">
+                      <span className="text-xs text-slate-400 font-semibold block">Correct</span>
+                      <span className="text-lg font-bold text-emerald-600">{state.score}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-slate-400 font-semibold block">Score</span>
+                      <span className="text-lg font-bold text-indigo-600">{normalizedScore} pts</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 w-full">
+                    <Button 
+                      onClick={handleNextLevel}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3"
+                    >
+                      New Assessment
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setTimeLeft(360);
+                        hasSavedTimeoutRef.current = false;
+                        handleReset();
+                      }}
+                      variant="secondary"
+                      className="flex-1 border-slate-200"
+                    >
+                      <RotateCcw size={14} className="mr-1" /> Retry
+                    </Button>
+                  </div>
+                </div>
+              ) : state.status === 'playing' ? (
                 <>
                   <h2 className="text-2xl font-semibold text-slate-800 leading-snug mb-10">
-                    "{currentQ.statement}"
+                    "{currentQ?.statement}"
                   </h2>
                   
                   <div className="flex flex-col gap-4">
-                    {currentQ.options.map(option => (
+                    {currentQ?.options?.map((option, idx) => (
                       <Button 
-                        key={option}
+                        key={idx}
                         onClick={() => handleAnswer(option)}
-                        className="w-full py-4 text-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border-2 border-slate-200 hover:border-slate-300 font-bold justify-start px-6 shadow-none"
+                        className="w-full h-auto min-h-[4rem] py-4 text-left whitespace-normal leading-tight text-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border-2 border-slate-200 hover:border-slate-300 font-bold justify-start px-6 shadow-none"
                       >
                         {option}
                       </Button>
@@ -230,11 +291,13 @@ export const DIChallenge: React.FC = () => {
                 </>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center">
-                  <h2 className="text-3xl font-extrabold text-slate-800 mb-4">Assessment Complete!</h2>
-                  <p className="text-slate-500 mb-8">You scored {state.score} out of {state.puzzle.questions.length}.</p>
+                  <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Assessment Complete!</h2>
+                  <p className="text-slate-500 mb-6">
+                    You scored {state.score} of {qCount} correct ({normalizedScore} / 10 pts).
+                  </p>
                   
-                  <div className="w-full space-y-4 text-left overflow-y-auto max-h-[400px] pr-2 mb-6">
-                    {state.puzzle.questions.map((q, idx) => {
+                  <div className="w-full space-y-4 text-left overflow-y-auto max-h-[350px] pr-2 mb-6">
+                    {state.puzzle.questions.map((q) => {
                       const ans = state.answers[q.id];
                       const isCorrect = ans === q.correctAnswer;
                       return (
@@ -243,7 +306,7 @@ export const DIChallenge: React.FC = () => {
                             {isCorrect ? <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={18} /> : <XCircle className="text-red-500 shrink-0 mt-0.5" size={18} />}
                             <div>
                               <p className="text-sm font-semibold text-slate-800 mb-1">"{q.statement}"</p>
-                              <p className="text-xs text-slate-600 mb-2">You answered: <strong>{ans}</strong> | Correct: <strong>{q.correctAnswer}</strong></p>
+                              <p className="text-xs text-slate-600 mb-1">You answered: <strong>{ans || 'Skipped'}</strong> | Correct: <strong>{q.correctAnswer}</strong></p>
                               {!isCorrect && (
                                 <p className="text-xs text-slate-500 bg-white/50 p-2 rounded border border-slate-200/50">{q.explanation}</p>
                               )}
@@ -254,10 +317,10 @@ export const DIChallenge: React.FC = () => {
                     })}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full mt-2">
                     <button
-                      onClick={handleNextLevel}
-                      className="flex-1 py-3.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      onClick={advanceNow}
+                      className="flex-1 py-3.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       Next Challenge →
                     </button>
@@ -271,11 +334,10 @@ export const DIChallenge: React.FC = () => {
                 </div>
               )}
             </div>
-
           </div>
 
           {/* Info Card */}
-          <div className="bg-slate-800 rounded-2xl p-6 text-slate-900 shrink-0 shadow-lg">
+          <div className="bg-slate-800 rounded-2xl p-6 text-white shrink-0 shadow-lg">
              <div className="flex items-start gap-3">
                <HelpCircle className="text-blue-400 shrink-0" size={24} />
                <div>
@@ -283,14 +345,12 @@ export const DIChallenge: React.FC = () => {
                  <ul className="text-sm text-slate-300 space-y-2 leading-relaxed">
                    <li><strong>True:</strong> The statement logically follows from the information provided.</li>
                    <li><strong>False:</strong> The statement is logically false based on the information.</li>
-                   <li><strong>Cannot Say:</strong> It is impossible to determine whether the statement is true or false without further information.</li>
+                   <li><strong>Cannot Say:</strong> It is impossible to determine without further information.</li>
                  </ul>
                </div>
              </div>
           </div>
-          
         </div>
-
       </main>
 
       <FeedbackModal 

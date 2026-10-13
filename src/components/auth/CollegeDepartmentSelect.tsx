@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { School, GraduationCap, Search, Check, ChevronDown, AlertCircle, Database } from 'lucide-react';
-import { POPULAR_COLLEGES, DEPARTMENTS, isValidCollegeName } from '../../constants/institutions';
+import { School, GraduationCap, Search, Check, ChevronDown, AlertCircle, Database, PlusCircle, ArrowLeft } from 'lucide-react';
+import { POPULAR_COLLEGES, DEPARTMENTS, isValidCollegeName, isValidDepartmentName } from '../../constants/institutions';
 import { supabase } from '../../lib/supabase';
 
 interface CollegeDepartmentSelectProps {
@@ -53,9 +53,16 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
   const [isLoadingAll, setIsLoadingAll] = useState(!globalAllCollegesCache);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCollegeDropdownOpen, setIsCollegeDropdownOpen] = useState(false);
+  
+  // Custom College State
   const [isOtherSelected, setIsOtherSelected] = useState(false);
   const [customCollege, setCustomCollege] = useState('');
   const [customError, setCustomError] = useState('');
+
+  // Custom Department State
+  const [isOtherDeptSelected, setIsOtherDeptSelected] = useState(false);
+  const [customDepartment, setCustomDepartment] = useState('');
+  const [customDeptError, setCustomDeptError] = useState('');
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -75,11 +82,11 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
         if (res.ok) {
           const allColleges: string[] = await res.json();
           
-          // Fetch existing active colleges from profiles
+          // Fetch existing active colleges from profiles (only include verified valid names)
           const { data } = await supabase.from('profiles').select('college');
           const existingInDb = (data || [])
             .map((d: any) => d.college?.trim())
-            .filter((c: any) => c && c !== '-' && c.length >= 6 && !['abc', 'xyz', '...', 'test'].includes(c.toLowerCase()));
+            .filter((c: any) => c && isValidCollegeName(c).valid);
 
           const unified = Array.from(new Set([
             'Rajarambapu Institute of Technology, Sangli, Maharashtra, India',
@@ -120,6 +127,19 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
       }
     }
   }, [college, collegesList]);
+
+  // Initialize custom department if current department is not in predefined list or is 'Other Department'
+  useEffect(() => {
+    if (department) {
+      const isKnownDept = (DEPARTMENTS as readonly string[]).includes(department as any);
+      if (!isKnownDept) {
+        setIsOtherDeptSelected(true);
+        setCustomDepartment(department);
+      } else if (department === 'Other Department') {
+        setIsOtherDeptSelected(true);
+      }
+    }
+  }, [department]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -168,8 +188,17 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
   const handleSelectCollege = (col: string) => {
     if (col === 'OTHER') {
       setIsOtherSelected(true);
-      setCollege('');
       setIsCollegeDropdownOpen(false);
+      if (customCollege.trim()) {
+        const { valid, reason } = isValidCollegeName(customCollege);
+        if (valid) setCollege(customCollege.trim());
+        else {
+          setCustomError(reason || '');
+          setCollege('');
+        }
+      } else {
+        setCollege('');
+      }
     } else {
       setIsOtherSelected(false);
       setCustomCollege('');
@@ -189,6 +218,44 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
     } else {
       setCustomError('');
       setCollege(val.trim());
+      if (setErrorMsg) setErrorMsg('');
+    }
+  };
+
+  const handleDepartmentSelectChange = (val: string) => {
+    if (val === 'Other Department') {
+      setIsOtherDeptSelected(true);
+      if (customDepartment.trim()) {
+        const { valid, reason } = isValidDepartmentName(customDepartment);
+        if (valid) {
+          setCustomDeptError('');
+          setDepartment(customDepartment.trim());
+        } else {
+          setCustomDeptError(reason || '');
+          setDepartment('');
+        }
+      } else {
+        setDepartment('');
+      }
+    } else {
+      setIsOtherDeptSelected(false);
+      setCustomDepartment('');
+      setCustomDeptError('');
+      setDepartment(val);
+      if (setErrorMsg) setErrorMsg('');
+    }
+  };
+
+  const handleCustomDepartmentChange = (val: string) => {
+    setCustomDepartment(val);
+    const { valid, reason } = isValidDepartmentName(val);
+    if (!valid && reason) {
+      setCustomDeptError(reason);
+      setDepartment('');
+    } else {
+      setCustomDeptError('');
+      setDepartment(val.trim());
+      if (setErrorMsg) setErrorMsg('');
     }
   };
 
@@ -210,11 +277,11 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
         <button
           type="button"
           onClick={() => setIsCollegeDropdownOpen(prev => !prev)}
-          className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 hover:border-indigo-300 rounded-xl text-sm font-medium flex items-center justify-between text-left transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 hover:border-indigo-300 rounded-xl text-sm font-medium flex items-center justify-between text-left transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
         >
           <span className={college || isOtherSelected ? 'text-slate-900 font-semibold truncate pr-2' : 'text-neutral-400 truncate pr-2'}>
             {isOtherSelected
-              ? (customCollege ? `Other: ${customCollege}` : 'Other (Enter custom college)')
+              ? (customCollege ? `Other: ${customCollege}` : 'Other (Enter custom college name)')
               : (college || 'Search or select your college from across India')}
           </span>
           <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform duration-200 ${isCollegeDropdownOpen ? 'rotate-180' : ''}`} />
@@ -238,7 +305,13 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
               </div>
               <div className="flex items-center justify-between px-1 mt-1.5 text-[10px] text-slate-500">
                 <span>{isLoadingAll ? 'Loading directory...' : `${totalMatches.toLocaleString()} colleges available`}</span>
-                <span>Showing top {filteredColleges.length} matches</span>
+                <button
+                  type="button"
+                  onClick={() => handleSelectCollege('OTHER')}
+                  className="font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+                >
+                  + Add Custom College
+                </button>
               </div>
             </div>
 
@@ -252,7 +325,7 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
                       key={c}
                       type="button"
                       onClick={() => handleSelectCollege(c)}
-                      className={`w-full px-3.5 py-2.5 text-xs text-left flex items-center justify-between rounded-lg transition-colors ${
+                      className={`w-full px-3.5 py-2.5 text-xs text-left flex items-center justify-between rounded-lg transition-colors cursor-pointer ${
                         isSelected 
                           ? 'bg-indigo-50 text-indigo-900 font-bold' 
                           : 'text-slate-700 hover:bg-slate-100/80 font-medium'
@@ -264,8 +337,21 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
                   );
                 })
               ) : (
-                <div className="p-4 text-center text-xs text-slate-400">
-                  No matching colleges found for &quot;{searchQuery}&quot;. Choose &quot;Other&quot; below to enter it.
+                <div className="p-4 text-center flex flex-col items-center gap-2">
+                  <p className="text-xs text-slate-500">
+                    No matching colleges found for &quot;{searchQuery}&quot;.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSelectCollege('OTHER');
+                      if (searchQuery.trim()) handleCustomCollegeChange(searchQuery.trim());
+                    }}
+                    className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                  >
+                    <PlusCircle size={13} />
+                    <span>Add &quot;{searchQuery || 'College'}&quot; as Custom College</span>
+                  </button>
                 </div>
               )}
 
@@ -273,13 +359,16 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
               <button
                 type="button"
                 onClick={() => handleSelectCollege('OTHER')}
-                className={`w-full px-3.5 py-2.5 text-xs text-left flex items-center justify-between rounded-lg border-t border-slate-100 transition-colors ${
+                className={`w-full px-3.5 py-2.5 text-xs text-left flex items-center justify-between rounded-lg border-t border-slate-100 transition-colors cursor-pointer ${
                   isOtherSelected 
                     ? 'bg-indigo-50 text-indigo-900 font-bold' 
                     : 'text-indigo-600 hover:bg-indigo-50/50 font-bold'
                 }`}
               >
-                <span>+ Other (Enter College Name If Not Listed)</span>
+                <span className="flex items-center gap-1.5">
+                  <PlusCircle size={14} />
+                  <span>+ Other (College Not Listed? Click To Enter Manually)</span>
+                </span>
                 {isOtherSelected && <Check size={14} className="text-indigo-600 shrink-0" />}
               </button>
             </div>
@@ -288,10 +377,26 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
 
         {/* Custom College Input if 'Other' selected */}
         {isOtherSelected && (
-          <div className="mt-2 flex flex-col gap-1.5 animate-in fade-in duration-200">
+          <div className="mt-2 flex flex-col gap-1.5 p-3 rounded-xl bg-indigo-50/40 border border-indigo-100 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-indigo-900 flex items-center gap-1">
+                <School size={13} className="text-indigo-600" />
+                Custom College Name <span className="text-red-500">*</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOtherSelected(false);
+                  setIsCollegeDropdownOpen(true);
+                }}
+                className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+              >
+                <ArrowLeft size={11} /> Select from 38,000+ list
+              </button>
+            </div>
             <input
               type="text"
-              placeholder="Enter your full official college name"
+              placeholder="Enter your full official college name (e.g. Government Engineering College, ...)"
               value={customCollege}
               onChange={e => handleCustomCollegeChange(e.target.value)}
               required
@@ -302,8 +407,8 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
                 <AlertCircle size={12} /> {customError}
               </p>
             ) : (
-              <p className="text-[11px] text-slate-400">
-                Please enter full name (no fake abbreviations like &quot;ABC&quot; or &quot;xyz&quot;).
+              <p className="text-[11px] text-slate-500">
+                Please enter full official institution name (no abbreviations like &quot;ABC&quot; or &quot;xyz&quot;).
               </p>
             )}
           </div>
@@ -322,20 +427,62 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
 
         <div className="relative">
           <select
-            value={department}
-            onChange={e => setDepartment(e.target.value)}
+            value={isOtherDeptSelected ? 'Other Department' : department}
+            onChange={e => handleDepartmentSelectChange(e.target.value)}
             required
             className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 hover:border-purple-300 rounded-xl text-sm font-semibold text-slate-800 appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all cursor-pointer"
           >
             <option value="" disabled>Select your department</option>
             {DEPARTMENTS.map(dept => (
               <option key={dept} value={dept}>
-                {dept}
+                {dept === 'Other Department' ? '+ Other (Department Not Listed - Enter Manually Below)' : dept}
               </option>
             ))}
           </select>
           <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         </div>
+
+        {/* Custom Department Input if 'Other Department' selected */}
+        {isOtherDeptSelected && (
+          <div className="mt-2 flex flex-col gap-1.5 p-3 rounded-xl bg-purple-50/40 border border-purple-100 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-purple-900 flex items-center gap-1">
+                <GraduationCap size={13} className="text-purple-600" />
+                Custom Department / Branch Name <span className="text-red-500">*</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOtherDeptSelected(false);
+                  setCustomDepartment('');
+                  setDepartment(DEPARTMENTS[0]);
+                }}
+                className="text-[11px] font-semibold text-purple-600 hover:text-purple-800 flex items-center gap-1 cursor-pointer"
+              >
+                <ArrowLeft size={11} /> Select from standard list
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Enter your department (e.g. Aerospace Engineering, Biotechnology, Commerce, etc.)"
+                value={customDepartment}
+                onChange={e => handleCustomDepartmentChange(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 bg-white border border-purple-200 focus:border-purple-500 rounded-xl text-sm font-medium focus:outline-none transition-colors"
+              />
+            </div>
+            {customDeptError ? (
+              <p className="text-[11px] font-bold text-red-500 flex items-center gap-1">
+                <AlertCircle size={12} /> {customDeptError}
+              </p>
+            ) : (
+              <p className="text-[11px] text-slate-500">
+                Please enter your full department, degree, or engineering branch name.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

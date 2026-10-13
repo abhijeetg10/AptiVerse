@@ -111,3 +111,23 @@ export const isValidCollegeName = (name: string | null | undefined): { valid: bo
   }
   return { valid: true };
 };
+
+// Helper to validate custom department input against spam/abbreviations
+export const isValidDepartmentName = (name: string | null | undefined): { valid: boolean; reason?: string } => {
+  if (!name || typeof name !== 'string') {
+    return { valid: false, reason: 'Department name is required.' };
+  }
+  const trimmed = name.trim();
+  if (trimmed.length < 3) {
+    return { valid: false, reason: 'Department name must be at least 3 characters long.' };
+  }
+  const lower = trimmed.toLowerCase();
+  const bannedKeywords = [
+    'abc', 'xyz', 'test', 'demo', 'fake', 'none', 'na', 'n/a', 'asdf', 'qwerty',
+    '...', '---', 'unknown', 'invalid', 'dummy', 'null', 'nil'
+  ];
+  if (bannedKeywords.includes(lower) || /^[.\-_/\s]+$/.test(trimmed)) {
+    return { valid: false, reason: 'Please enter a valid department or branch name.' };
+  }
+  return { valid: true };
+};

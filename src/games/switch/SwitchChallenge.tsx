@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Play, RefreshCw, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -9,27 +9,45 @@ import { SwitchBoard } from './SwitchBoard';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
+import { createAttemptId, getFreshVariantSeed } from '../../utils/puzzlePool';
+import { useAuth } from '../../context/AuthContext';
+
+const SWITCH_LEVEL_KEY = 'aptiverse_switch_level';
 
 export const SwitchChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const [state, setState] = useState<SwitchState>(() => createInitialState(getLevel(0)));
+  const { user } = useAuth();
+  const [levelIndex, setLevelIndex] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(SWITCH_LEVEL_KEY);
+      return saved ? Math.max(0, parseInt(saved, 10)) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const [attemptId, setAttemptId] = useState<string>(() => createAttemptId());
+  const [variantSeed, setVariantSeed] = useState<number>(() => getFreshVariantSeed('switch', user?.id, levelIndex, 30));
+  const [puzzle, setPuzzle] = useState(() => getLevel(levelIndex, variantSeed));
+  const [state, setState] = useState<SwitchState>(() => createInitialState(puzzle));
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins
+  const hasSavedRef = useRef(false);
 
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0 || state.status === 'completed') return;
     const timer = setInterval(() => {
       setTimeLeft(s => s - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, state.status]);
 
   const { saveSession } = useGameSession('switch');
 
   useEffect(() => {
-    if (state.status === 'completed') {
-      saveSession(levelIndex + 1, 10, 100, 360 - timeLeft, true);
+    if (state.status === 'completed' && !hasSavedRef.current) {
+      hasSavedRef.current = true;
+      saveSession(levelIndex + 1, 10, 100, Math.max(3, 360 - timeLeft), true, attemptId);
     }
-  }, [state.status, levelIndex, timeLeft]);
+  }, [state.status, levelIndex, timeLeft, attemptId, saveSession]);
 
   const handleChoice = (index: number) => {
     if (state.status !== 'playing' || timeLeft <= 0) return;
@@ -39,13 +57,28 @@ export const SwitchChallenge: React.FC = () => {
   const loadNextLevel = () => {
     const nextIdx = levelIndex + 1;
     setLevelIndex(nextIdx);
-    setState(createInitialState(getLevel(nextIdx)));
+    const newSeed = getFreshVariantSeed('switch', user?.id, nextIdx, 30);
+    setVariantSeed(newSeed);
+    const newPuzzle = getLevel(nextIdx, newSeed);
+    setPuzzle(newPuzzle);
+    setAttemptId(createAttemptId());
+    hasSavedRef.current = false;
+    try {
+      localStorage.setItem(SWITCH_LEVEL_KEY, String(nextIdx));
+    } catch {}
+    setState(createInitialState(newPuzzle));
   };
 
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel, 1500, timeLeft <= 0);
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit, advanceNow } = useAutoAdvance(
+    state.status === 'completed', 
+    loadNextLevel, 
+    1500, 
+    timeLeft <= 0
+  );
 
+  // Reset keeps the exact same puzzle stable for this attempt without rolling a new one
   const handleReset = () => {
-    setState(createInitialState(getLevel(levelIndex)));
+    setState(createInitialState(puzzle));
   };
 
   const formatTime = (secs: number) => {
@@ -68,7 +101,7 @@ export const SwitchChallenge: React.FC = () => {
             </div>
             <div>
               <h1 className="font-bold text-sm tracking-wide">Switch Challenge</h1>
-              <div className="text-xs text-slate-500 font-medium tracking-wider uppercase">Level {levelIndex + 1} - {state.puzzle.difficulty}</div>
+              <div className="text-xs text-slate-500 font-medium tracking-wider uppercase">Level {levelIndex + 1} - {puzzle.difficulty}</div>
             </div>
           </div>
         </div>
@@ -81,7 +114,7 @@ export const SwitchChallenge: React.FC = () => {
             </span>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-white hover:bg-neutral-700 flex items-center justify-center text-neutral-300 transition-colors">
+            <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-white hover:bg-neutral-200 flex items-center justify-center text-neutral-600 transition-colors" title="Restart Level">
               <RefreshCw size={18} />
             </button>
           </div>
@@ -89,51 +122,51 @@ export const SwitchChallenge: React.FC = () => {
       </header>
 
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50 relative">
-        
         <div className="flex-1 flex flex-col items-center p-6 relative overflow-y-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Find the correct operator</h2>
             <p className="text-slate-500 text-sm">Select the 4-digit code that transforms the shapes into the output below.</p>
           </div>
 
-          <div className="mb-10 flex justify-center w-full max-w-xl relative">
+          <div className="w-full max-w-xl flex flex-col items-center gap-8">
             <SwitchBoard state={state} onChoiceSelect={handleChoice} />
 
-            {/* Overlays */}
             {state.status === 'completed' && (
-              <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm rounded-xl flex items-center justify-center p-4 animate-in fade-in duration-200">
-                <div className="bg-white p-7 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-100">
-                  <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-emerald-100">
-                    <Play size={28} className="fill-emerald-600 ml-1" />
+              <div className="w-full p-4 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between animate-in fade-in duration-300">
+                <div>
+                  <div className="text-sm font-bold text-slate-800">
+                    {state.selectedChoice === puzzle.correctChoiceIndex ? 'Correct Solution!' : 'Completed'}
                   </div>
-                  <h2 className="text-2xl font-black text-slate-900 mb-1">Correct Code!</h2>
-                  <p className="text-emerald-600 font-bold text-sm mb-5">Level {levelIndex + 1} Solved!</p>
-                  
+                  <div className="text-xs text-slate-500">
+                    {state.selectedChoice === puzzle.correctChoiceIndex ? 'Well done! Loading next challenge...' : 'Reviewing next step.'}
+                  </div>
+                </div>
+                <Button onClick={advanceNow} size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold">
+                  Next Level →
+                </Button>
+              </div>
+            )}
+
+            {/* Timeout Overlay */}
+            {timeLeft <= 0 && (
+              <div className="absolute inset-0 z-50 bg-red-900/40 backdrop-blur-sm rounded-xl flex items-center justify-center animate-in fade-in duration-300 p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border-4 border-red-500">
+                  <h2 className="text-3xl font-extrabold text-red-600 mb-2">Time's Up!</h2>
+                  <p className="text-slate-600 mb-6">You reached Level {levelIndex + 1}.</p>
                   <div className="flex flex-col gap-2.5">
                     <button 
-                      onClick={loadNextLevel}
-                      className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+                      onClick={() => { setTimeLeft(360); handleReset(); }}
+                      className="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30 cursor-pointer"
                     >
-                      <span>Next Level</span>
-                      <Play size={16} className="fill-white ml-0.5" />
+                      Try Again
                     </button>
                     <Link
                       to="/games"
-                      className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5"
+                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center"
                     >
                       All Games
                     </Link>
                   </div>
-                </div>
-              </div>
-            )}
-            
-            {state.status === 'failed' && (
-              <div className="absolute inset-0 z-50 bg-slate-50/60 backdrop-blur-sm rounded-xl flex items-center justify-center animate-in fade-in duration-300">
-                <div className="bg-slate-50 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-200">
-                  <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Incorrect</h2>
-                  <p className="text-red-500 font-bold mb-6">That code produced a different result.</p>
-                  <Button onClick={handleReset} className="w-full bg-white hover:bg-neutral-700 border-slate-200">Try Again</Button>
                 </div>
               </div>
             )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Play, RefreshCw, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -9,26 +9,45 @@ import { GeoSudokuBoard, SymbolIcon } from './GeoSudokuBoard';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
+import { createAttemptId, getFreshVariantSeed } from '../../utils/puzzlePool';
+import { useAuth } from '../../context/AuthContext';
+
+const SUDOKU_LEVEL_KEY = 'aptiverse_sudoku_level';
 
 export const GeoSudokuChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const [state, setState] = useState<GeoSudokuState>(() => createInitialState(getLevel(0)));
+  const { user } = useAuth();
+  const [levelIndex, setLevelIndex] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(SUDOKU_LEVEL_KEY);
+      return saved ? Math.max(0, parseInt(saved, 10)) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const [attemptId, setAttemptId] = useState<string>(() => createAttemptId());
+  const [variantSeed, setVariantSeed] = useState<number>(() => getFreshVariantSeed('sudoku', user?.id, levelIndex, 30));
+  const [puzzle, setPuzzle] = useState(() => getLevel(levelIndex, variantSeed));
+  const [state, setState] = useState<GeoSudokuState>(() => createInitialState(puzzle));
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins
+  const hasSavedRef = useRef(false);
+
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0 || state.status === 'completed') return;
     const timer = setInterval(() => {
       setTimeLeft(s => s - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, state.status]);
 
-  const { saveSession } = useGameSession('geo_sudoku');
+  const { saveSession } = useGameSession('sudoku');
 
   useEffect(() => {
-    if (state.status === 'completed') {
-      saveSession(levelIndex + 1, 10, 100, 360 - timeLeft, true);
+    if (state.status === 'completed' && !hasSavedRef.current) {
+      hasSavedRef.current = true;
+      saveSession(levelIndex + 1, 10, 100, Math.max(3, 360 - timeLeft), true, attemptId);
     }
-  }, [state.status, levelIndex, timeLeft]);
+  }, [state.status, levelIndex, timeLeft, attemptId, saveSession]);
 
   const handleAnswer = (symbol: GeoSymbol) => {
     if (state.status !== 'playing' || timeLeft <= 0) return;
@@ -38,13 +57,28 @@ export const GeoSudokuChallenge: React.FC = () => {
   const loadNextLevel = () => {
     const nextIdx = levelIndex + 1;
     setLevelIndex(nextIdx);
-    setState(createInitialState(getLevel(nextIdx)));
+    const newSeed = getFreshVariantSeed('sudoku', user?.id, nextIdx, 30);
+    setVariantSeed(newSeed);
+    const newPuzzle = getLevel(nextIdx, newSeed);
+    setPuzzle(newPuzzle);
+    setAttemptId(createAttemptId());
+    hasSavedRef.current = false;
+    try {
+      localStorage.setItem(SUDOKU_LEVEL_KEY, String(nextIdx));
+    } catch {}
+    setState(createInitialState(newPuzzle));
   };
 
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel, 1500, timeLeft <= 0);
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit, advanceNow } = useAutoAdvance(
+    state.status === 'completed', 
+    loadNextLevel, 
+    1500, 
+    timeLeft <= 0
+  );
 
+  // Reset preserves the exact current puzzle and board inputs without re-rolling
   const handleReset = () => {
-    setState(createInitialState(getLevel(levelIndex)));
+    setState(createInitialState(puzzle));
   };
 
   const formatTime = (secs: number) => {
@@ -55,7 +89,6 @@ export const GeoSudokuChallenge: React.FC = () => {
 
   return (
     <div className="game-container min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col fixed inset-0 z-[100]">
-      {/* Top Bar */}
       <header className="h-16 border-b border-slate-200 px-6 flex items-center justify-between shrink-0 bg-slate-100">
         <div className="flex items-center gap-4">
           <Link to="/games" className="text-slate-500 hover:text-slate-700 transition-colors">
@@ -63,12 +96,12 @@ export const GeoSudokuChallenge: React.FC = () => {
           </Link>
           <div className="h-6 w-px bg-white"></div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-amber-500 flex items-center justify-center text-sm font-bold shadow-lg shadow-amber-500/20 text-neutral-900">
+            <div className="w-8 h-8 rounded bg-amber-600 flex items-center justify-center text-sm font-bold shadow-lg shadow-amber-600/20 text-white">
               S
             </div>
             <div>
               <h1 className="font-bold text-sm tracking-wide">Geo Sudoku</h1>
-              <div className="text-xs text-slate-500 font-medium tracking-wider uppercase">Level {levelIndex + 1} - {state.puzzle.difficulty}</div>
+              <div className="text-xs text-slate-500 font-medium tracking-wider uppercase">Level {levelIndex + 1} - {puzzle.difficulty}</div>
             </div>
           </div>
         </div>
@@ -80,62 +113,79 @@ export const GeoSudokuChallenge: React.FC = () => {
               {formatTime(timeLeft)}
             </span>
           </div>
+          <div className="flex gap-2">
+            <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-white hover:bg-neutral-200 flex items-center justify-center text-neutral-600 transition-colors" title="Restart Level">
+              <RefreshCw size={18} />
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50 relative">
-        
-        {/* Game Canvas Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
-          
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Find the missing shape</h2>
-            <p className="text-slate-500 text-sm">Every row and column must contain exactly one of each shape.</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 relative overflow-y-auto">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Identify the missing symbol</h2>
+            <p className="text-slate-500 text-sm">Find which symbol fits the target cell based on row and column constraints.</p>
           </div>
 
-          <div className="mb-10 w-full flex justify-center">
-            <GeoSudokuBoard state={state} onCellClick={(r, c) => setState(prev => setActiveCell(prev, r, c))} />
-          </div>
+          <div className="flex flex-col items-center gap-8">
+            <GeoSudokuBoard
+              state={state}
+              onCellClick={(row: number, col: number) => setState(setActiveCell(state, row, col))}
+            />
 
-          {/* Answer Options */}
-          <div className="flex flex-col items-center">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Select the missing shape</span>
-            <div className="flex flex-wrap justify-center gap-4 max-w-lg">
-              {state.puzzle.symbols.map(symbol => (
-                <button 
+            {/* Symbol Palette */}
+            <div className="flex gap-4 p-3 bg-white border border-slate-200 rounded-2xl shadow-sm">
+              {puzzle.symbols.map((symbol) => (
+                <button
                   key={symbol}
                   onClick={() => handleAnswer(symbol)}
-                  disabled={state.status !== 'playing'}
-                  className="w-16 h-16 sm:w-20 sm:h-20 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-neutral-700 hover:scale-105 hover:border-neutral-500 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={state.status !== 'playing' || timeLeft <= 0}
+                  className="w-14 h-14 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer border border-slate-100"
                 >
-                  <SymbolIcon symbol={symbol} className="w-8 h-8 sm:w-10 sm:h-10" />
+                  <SymbolIcon symbol={symbol} className="w-7 h-7" />
                 </button>
               ))}
             </div>
           </div>
-          
-          {/* Completion Overlay */}
+
           {state.status === 'completed' && (
-            <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm rounded-xl flex items-center justify-center p-4 animate-in fade-in duration-200">
-              <div className="bg-white p-7 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-100">
-                <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-emerald-100">
-                  <Play size={28} className="fill-emerald-600 ml-1" />
-                </div>
-                <h2 className="text-2xl font-black text-slate-900 mb-1">Level Complete!</h2>
-                <p className="text-emerald-600 font-bold text-sm mb-5">Level {levelIndex + 1} Solved!</p>
-                
+            <div className="mt-8 bg-emerald-50 text-emerald-800 p-6 rounded-2xl border border-emerald-200 text-center animate-in fade-in slide-in-from-bottom-4 shadow-lg shadow-emerald-500/10 z-10 relative">
+              <h2 className="text-2xl font-extrabold mb-1">Sudoku Solved!</h2>
+              <p className="font-medium text-emerald-700 mb-4">Level {levelIndex + 1} completed.</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={advanceNow}
+                  className="py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  Next Level →
+                </button>
+                <Link
+                  to="/games"
+                  className="py-3 px-5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold rounded-xl text-center transition-colors flex items-center justify-center"
+                >
+                  All Games
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Timeout Overlay */}
+          {timeLeft <= 0 && (
+            <div className="absolute inset-0 z-50 bg-red-900/40 backdrop-blur-sm rounded-xl flex items-center justify-center animate-in fade-in duration-300 p-4">
+              <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border-4 border-red-500">
+                <h2 className="text-3xl font-extrabold text-red-600 mb-2">Time's Up!</h2>
+                <p className="text-slate-600 mb-6">Session finished! You reached Level {levelIndex + 1}.</p>
                 <div className="flex flex-col gap-2.5">
                   <button 
-                    onClick={loadNextLevel}
-                    className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+                    onClick={() => { setTimeLeft(360); handleReset(); }}
+                    className="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30 cursor-pointer"
                   >
-                    <span>Next Level</span>
-                    <Play size={16} className="fill-white ml-0.5" />
+                    Try Again
                   </button>
                   <Link
                     to="/games"
-                    className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center"
                   >
                     All Games
                   </Link>
@@ -143,79 +193,22 @@ export const GeoSudokuChallenge: React.FC = () => {
               </div>
             </div>
           )}
-
-          {/* Failure Overlay */}
-          {state.status === 'failed' && (
-            <div className="absolute inset-0 z-50 bg-slate-50/60 backdrop-blur-sm rounded-xl flex items-center justify-center animate-in fade-in duration-300">
-              <div className="bg-slate-50 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-200">
-                <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Incorrect</h2>
-                <p className="text-red-500 font-bold mb-6">That shape breaks the rule.</p>
-                <div className="flex gap-3 mt-4">
-                  <button 
-                    onClick={handleReset}
-                    className="flex-1 py-3 bg-neutral-700 text-white font-bold rounded-xl hover:bg-neutral-600 transition-colors flex justify-center items-center gap-2"
-                  >
-                    <RefreshCw size={18} /> Try Again
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Timeout Overlay */}
-          {timeLeft <= 0 && (
-            <div className="absolute inset-0 z-50 bg-slate-50/80 backdrop-blur-md rounded-xl flex items-center justify-center animate-in fade-in duration-300">
-              <div className="bg-slate-100 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-red-500/50">
-                <h2 className="text-3xl font-extrabold text-red-500 mb-2">Time's Up!</h2>
-                <p className="text-slate-500 mb-6">You've completed {levelIndex} levels.</p>
-                <button 
-                  onClick={() => { setTimeLeft(360); setLevelIndex(0); handleReset(); }}
-                  className="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30"
-                >
-                  Restart Assessment
-                </button>
-              </div>
-            </div>
-          )}
-
         </div>
 
         {/* Right Panel - Info */}
         <div className="w-full md:w-80 bg-slate-100 border-l border-slate-200 p-6 flex flex-col z-10">
           <div className="flex-1 flex flex-col gap-6">
-            
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-              <h3 className="text-sm font-bold text-slate-800 mb-3">Logic Progress</h3>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Target Row</span>
-                </div>
-                <div className="flex items-center justify-between text-sm mt-2">
-                  <span className="text-slate-500">Target Column</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="h-px bg-white my-2"></div>
-
-            {/* Tips / Instructions */}
-            <div className="bg-amber-900/20 border border-amber-900/50 rounded-xl p-4 flex gap-3">
-              <HelpCircle size={20} className="text-amber-500 shrink-0 mt-0.5" />
+            <div className="bg-amber-900/10 border border-amber-900/20 rounded-xl p-4 flex gap-3">
+              <HelpCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-sm font-bold text-amber-400 mb-1">Sudoku Rule</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Focus on the row and column intersecting at the <span className="text-primary-400 font-bold">?</span> mark. Eliminate shapes that already exist in that row or column.
+                <h4 className="text-sm font-bold text-amber-800 mb-1">Sudoku Rule</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Focus on the row and column intersecting at the <span className="text-amber-700 font-bold">?</span> mark. Eliminate shapes that already exist in that row or column.
                 </p>
               </div>
             </div>
-
-          </div>
-
-          <div className="mt-auto pt-6">
-             <Button className="w-full bg-slate-100 text-slate-700 hover:bg-slate-200 hover:bg-neutral-700 border border-slate-200">Get a Hint (-50pts)</Button>
           </div>
         </div>
-
       </main>
 
       <FeedbackModal 

@@ -97,10 +97,12 @@ const GridBox = ({ grid, selectable, selected, onClick, status, isCorrect }: { g
 };
 
 
-export const InductiveBoard: React.FC<{
-  state: InductiveState,
-  onToggle: (index: number) => void
-}> = ({ state, onToggle }) => {
+export interface InductiveBoardProps {
+  state: InductiveState;
+  onToggle: (index: number) => void;
+}
+
+export const InductiveBoard: React.FC<InductiveBoardProps> = ({ state, onToggle }) => {
   const { puzzle, status, selectedIndices } = state;
 
   return (

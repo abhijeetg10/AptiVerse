@@ -9,24 +9,36 @@ import { Link } from 'react-router-dom';
 import { useGameSession } from '../../hooks/useGameSession';
 import { useAutoAdvance } from '../../hooks/useAutoAdvance';
 import FeedbackModal from '../../components/ui/FeedbackModal';
+import { createAttemptId } from '../../utils/puzzlePool';
+
+const MOTION_LEVEL_KEY = 'aptiverse_motion_level';
 
 export const MotionChallenge: React.FC = () => {
-  const [levelIndex, setLevelIndex] = useState(0);
-  const [state, setState] = useState<GameState>(() => createInitialState(getLevel(0)));
+  const [levelIndex, setLevelIndex] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(MOTION_LEVEL_KEY);
+      return saved ? Math.max(0, parseInt(saved, 10)) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const [attemptId, setAttemptId] = useState<string>(() => createAttemptId());
+  const [puzzle, setPuzzle] = useState(() => getLevel(levelIndex));
+  const [state, setState] = useState<GameState>(() => createInitialState(puzzle));
   const [history, setHistory] = useState<GameState[]>([]);
   const [isSolving, setIsSolving] = useState(false);
-  // Timer for 6-minute assessment (360 seconds)
   const [timeLeft, setTimeLeft] = useState(360);
+  const hasSavedRef = useRef(false);
   
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0 || state.status === 'completed') return;
     const timer = setInterval(() => {
       setTimeLeft(s => s - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, state.status]);
 
-  // Fullscreen logic
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
@@ -41,17 +53,13 @@ export const MotionChallenge: React.FC = () => {
 
   const { saveSession } = useGameSession('motion');
 
-  const calculateScore = () => {
-    const extraMoves = Math.max(0, state.moves - state.optimalMoves);
-    return Math.max(100, 1000 - extraMoves * 25);
-  };
-
   // Save session on complete
   useEffect(() => {
-    if (state.status === 'completed') {
-      saveSession(levelIndex + 1, 10, 100, 360 - timeLeft, true);
+    if (state.status === 'completed' && !hasSavedRef.current) {
+      hasSavedRef.current = true;
+      saveSession(levelIndex + 1, 10, 100, Math.max(3, 360 - timeLeft), true, attemptId);
     }
-  }, [state.status, levelIndex, timeLeft]);
+  }, [state.status, levelIndex, timeLeft, attemptId, saveSession]);
 
   const isDraggingRef = useRef(false);
   const dragStartStateRef = useRef<GameState | null>(null);
@@ -94,7 +102,6 @@ export const MotionChallenge: React.FC = () => {
     if (isSolving || state.status !== 'playing') return;
     setIsSolving(true);
     
-    // We run the solver on the current state!
     const moves = solveBoard(state);
     
     if (!moves || moves.length === 0) {
@@ -105,7 +112,6 @@ export const MotionChallenge: React.FC = () => {
 
     let currentState = state;
     for (const move of moves) {
-      // delay for animation effect
       await new Promise(r => setTimeout(r, 400));
       currentState = applyMove(currentState, move.entityId, move.direction, move.steps);
       setState(currentState);
@@ -114,9 +120,9 @@ export const MotionChallenge: React.FC = () => {
     setIsSolving(false);
   };
 
+  // Reset restores the current attempt board without re-rolling the puzzle or creating duplicate points
   const handleReset = () => {
-    // Generate a fresh variant of the current difficulty
-    setState(createInitialState(getLevel(levelIndex)));
+    setState(createInitialState(puzzle));
     setHistory([]);
   };
 
@@ -127,19 +133,31 @@ export const MotionChallenge: React.FC = () => {
     }
   };
 
-  const handleSkip = () => {
-    saveSession(levelIndex + 1, 0, 0, 360 - timeLeft, false);
-    loadNextLevel();
-  };
-
   const loadNextLevel = () => {
     const nextIdx = levelIndex + 1;
     setLevelIndex(nextIdx);
-    setState(createInitialState(getLevel(nextIdx)));
+    const newPuzzle = getLevel(nextIdx);
+    setPuzzle(newPuzzle);
+    setAttemptId(createAttemptId());
+    hasSavedRef.current = false;
+    try {
+      localStorage.setItem(MOTION_LEVEL_KEY, String(nextIdx));
+    } catch {}
+    setState(createInitialState(newPuzzle));
     setHistory([]);
   };
 
-  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit } = useAutoAdvance(state.status === 'completed', loadNextLevel, 1500, timeLeft <= 0);
+  const handleSkip = () => {
+    saveSession(levelIndex + 1, 0, 0, Math.max(3, 360 - timeLeft), false, attemptId);
+    loadNextLevel();
+  };
+
+  const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit, advanceNow } = useAutoAdvance(
+    state.status === 'completed', 
+    loadNextLevel, 
+    1500, 
+    timeLeft <= 0
+  );
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -156,15 +174,16 @@ export const MotionChallenge: React.FC = () => {
           </Link>
           <div className="h-6 w-px bg-slate-200"></div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-blue-500 flex items-center justify-center text-sm font-bold shadow-md shadow-blue-500/20 text-white">
-              MC
+            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-sm font-bold shadow-md shadow-blue-600/20 text-white">
+              M
             </div>
             <div>
-              <h1 className="font-bold text-sm tracking-wide text-slate-900">Motion Challenge</h1>
-              <div className="text-xs text-slate-500 font-medium tracking-wider uppercase">Level {levelIndex + 1}</div>
+              <h1 className="font-bold text-sm tracking-wide">Motion Challenge</h1>
+              <div className="text-xs text-slate-500 font-medium tracking-wider uppercase">Level {levelIndex + 1} • {puzzle.difficulty}</div>
             </div>
           </div>
         </div>
+
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-end">
             <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">Time Left</span>
@@ -173,119 +192,78 @@ export const MotionChallenge: React.FC = () => {
             </span>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleAutoSolve} disabled={isSolving || state.status !== 'playing'} className="w-10 h-10 rounded-lg bg-amber-100 hover:bg-amber-200 flex items-center justify-center text-amber-700 transition-colors disabled:opacity-50" title="Auto Solve (Hint)">
-              <Lightbulb size={18} />
-            </button>
             <button onClick={toggleFullScreen} className="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors" title="Toggle Fullscreen">
               <Maximize size={18} />
+            </button>
+            <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors" title="Restart Board">
+              <RefreshCw size={18} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 relative">
-        <div className="w-full max-w-4xl flex flex-col md:flex-row gap-8 items-start justify-center">
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-100 relative">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-y-auto">
           
-          {/* Left panel - Progress & Stats */}
-          <div className="w-full md:w-64 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-            <div className="mb-6">
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Progress</p>
-              <p className="text-xl font-bold text-slate-800">Level {levelIndex + 1}</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <p className="text-xs text-slate-500 font-bold uppercase">Moves</p>
-                <p className="text-2xl font-bold text-slate-800">{state.moves}</p>
-              </div>
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <p className="text-xs text-slate-500 font-bold uppercase">Best</p>
-                <p className="text-2xl font-bold text-slate-800">{state.optimalMoves}</p>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button 
-                onClick={handleUndo} 
-                disabled={history.length === 0 || state.status !== 'playing'}
-                className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Undo size={16} /> Undo
-              </button>
-              <button 
-                onClick={handleReset}
-                className="flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
-              >
-                <RefreshCw size={16} /> Reset
-              </button>
-            </div>
-            
-            <button 
-              onClick={handleSkip}
-              disabled={state.status !== 'playing'}
-              className="w-full mt-2 py-2 px-3 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 hover:border-red-300 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Skip Level (Counts as Wrong)
-            </button>
-          </div>
-
-          {/* Board Area */}
-          <div className="flex-1 flex justify-center">
-            <div className="relative w-full max-w-[500px]">
-              <MotionBoard 
-                state={state} 
-                onMove={handleMove} 
-                onDragStart={handleDragStart} 
-                onDragEnd={handleDragEnd} 
-              />
-
-              {/* Completion Overlay */}
-              {state.status === 'completed' && (
-                <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm rounded-xl flex items-center justify-center p-4 animate-in fade-in duration-200">
-                  <div className="bg-white p-7 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border border-slate-100">
-                    <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-emerald-100">
-                      <RefreshCw size={28} className="text-emerald-600" />
-                    </div>
-                    <h2 className="text-2xl font-black text-slate-900 mb-1">Level {levelIndex + 1} Complete!</h2>
-                    <p className="text-emerald-600 font-bold text-sm mb-5">Completed in {state.moves} moves!</p>
-                    
-                    <div className="flex flex-col gap-2.5">
-                      <button 
-                        onClick={loadNextLevel}
-                        className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
-                      >
-                        <span>Next Level</span>
-                        <Play size={16} className="fill-white" />
-                      </button>
-                      <Link
-                        to="/games"
-                        className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        All Games
-                      </Link>
-                    </div>
-                  </div>
+          <div className="flex flex-col items-center gap-6 max-w-lg w-full">
+            <div className="flex justify-between items-center w-full px-4">
+              <div className="flex gap-4">
+                <div className="text-center">
+                  <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Moves</div>
+                  <div className="text-2xl font-bold text-slate-700">{state.moves}</div>
                 </div>
-              )}
-
-              {/* Timeout Overlay */}
-              {timeLeft <= 0 && (
-                <div className="absolute inset-0 z-50 bg-red-900/40 backdrop-blur-sm rounded-xl flex items-center justify-center animate-in fade-in duration-300">
-                  <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border-4 border-red-500">
-                    <h2 className="text-3xl font-extrabold text-red-600 mb-2">Time's Up!</h2>
-                    <p className="text-slate-600 mb-6">You've completed {levelIndex} levels in 6 minutes.</p>
-                    <button 
-                      onClick={() => { setTimeLeft(360); setLevelIndex(0); handleReset(); }}
-                      className="w-full py-3 bg-red-600 text-slate-900 font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30"
-                    >
-                      Try Again
-                    </button>
-                  </div>
+                <div className="text-center">
+                  <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Target</div>
+                  <div className="text-2xl font-bold text-slate-500">{puzzle.optimalMoves}</div>
                 </div>
-              )}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUndo}
+                  disabled={history.length === 0 || isSolving}
+                  className="px-3 py-2 bg-white rounded-lg border border-slate-200 text-slate-600 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                >
+                  <Undo size={14} /> Undo
+                </button>
+                <button
+                  onClick={handleAutoSolve}
+                  disabled={isSolving || state.status !== 'playing'}
+                  className="px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg font-bold text-xs flex items-center gap-1.5 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                >
+                  <Lightbulb size={14} /> {isSolving ? 'Solving...' : 'Solve'}
+                </button>
+                <button
+                  onClick={handleSkip}
+                  className="px-3 py-2 bg-slate-200 rounded-lg text-slate-700 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-300 shadow-xs"
+                >
+                  Skip
+                </button>
+              </div>
             </div>
+
+            <MotionBoard
+              state={state}
+              onMove={handleMove}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            />
+
+            {state.status === 'completed' && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center justify-between w-full shadow-sm animate-in zoom-in-95">
+                <div>
+                  <h3 className="font-extrabold text-sm">Target Reached!</h3>
+                  <p className="text-xs text-emerald-600 mt-0.5">Completed in {state.moves} moves.</p>
+                </div>
+                <button
+                  onClick={advanceNow}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  Next Level →
+                </button>
+              </div>
+            )}
           </div>
-          
         </div>
       </main>
 
@@ -297,3 +275,5 @@ export const MotionChallenge: React.FC = () => {
     </div>
   );
 };
+
+export default MotionChallenge;

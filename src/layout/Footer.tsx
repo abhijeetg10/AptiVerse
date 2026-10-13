@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Logo } from '../components/ui/Logo';
-import { MapPin, Mail, MessageCircle, Code2, GraduationCap, Building2, Sparkles } from 'lucide-react';
+import { MapPin, Mail, Code2, GraduationCap, Building2, Sparkles } from 'lucide-react';
 import { RatingBadge } from '../components/ui/RatingBadge';
 
 const Footer = () => {
@@ -69,23 +69,14 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Quick Connect Actions */}
+            {/* Quick Connect Actions - Professional Email */}
             <div className="flex flex-wrap items-center justify-center gap-3 shrink-0 w-full sm:w-auto">
               <a
                 href="mailto:argaikwad24@gmail.com"
-                className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold shadow-md shadow-slate-900/10 hover:shadow-indigo-600/20 hover:-translate-y-0.5 active:translate-y-0 transition-all"
+                className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold shadow-md shadow-slate-900/10 hover:shadow-indigo-600/20 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
               >
                 <Mail size={16} />
-                <span>Contact Us</span>
-              </a>
-              <a
-                href="https://wa.me/917745877951"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold shadow-md shadow-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all"
-              >
-                <MessageCircle size={16} />
-                <span>WhatsApp</span>
+                <span>Email Developer</span>
               </a>
             </div>
           </div>
@@ -126,15 +117,13 @@ const Footer = () => {
             </div>
 
             <a href="mailto:argaikwad24@gmail.com" className="flex items-center gap-3 group w-fit">
-              <Mail size={18} className="text-indigo-500 shrink-0 group-hover:text-indigo-600 transition-colors" />
-              <span className="text-sm text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">argaikwad24@gmail.com</span>
-            </a>
-
-            <a href="https://wa.me/917745877951" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group w-fit">
-              <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 group-hover:bg-emerald-200 transition-colors">
-                <MessageCircle size={12} className="text-emerald-700" />
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 group-hover:bg-indigo-100/80 group-hover:border-indigo-200 transition-colors">
+                <Mail size={16} className="text-indigo-600 group-hover:text-indigo-700 transition-colors" />
               </div>
-              <span className="text-sm text-slate-600 font-medium group-hover:text-emerald-700 transition-colors">WhatsApp Us</span>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Official Support</span>
+                <span className="text-sm text-slate-700 font-bold group-hover:text-indigo-600 transition-colors">argaikwad24@gmail.com</span>
+              </div>
             </a>
           </div>
         </div>

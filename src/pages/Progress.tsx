@@ -53,7 +53,8 @@ const Progress = () => {
   const getGameIcon = (gameId: string) => {
     switch (gameId) {
       case 'motion': return <Boxes size={18} className="text-blue-500" />;
-      case 'sudoku': return <Brain size={18} className="text-amber-500" />;
+      case 'sudoku':
+      case 'geo_sudoku': return <Brain size={18} className="text-amber-500" />;
       case 'inductive': return <Eye size={18} className="text-accent-500" />;
       case 'grid': return <LayoutGrid size={18} className="text-neutral-800" />;
       case 'switch': return <RotateCcw size={18} className="text-emerald-500" />;
@@ -66,7 +67,8 @@ const Progress = () => {
   const getGameName = (gameId: string) => {
     switch (gameId) {
       case 'motion': return "Motion Challenge";
-      case 'sudoku': return "Geo Sudoku";
+      case 'sudoku':
+      case 'geo_sudoku': return "Geo Sudoku";
       case 'inductive': return "Inductive Challenge";
       case 'grid': return "Grid Challenge";
       case 'switch': return "Switch Challenge";

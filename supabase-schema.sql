@@ -55,36 +55,85 @@ create policy "Users can insert their own game sessions."
   on game_sessions for insert
   with check ( auth.uid() = user_id );
 
--- Create a view for leaderboard
-create view global_leaderboard as
+-- Helper function to check if caller has 'admin' role
+create or replace function public.is_admin()
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
+  );
+end;
+$$ language plpgsql security definer;
+
+-- Admin RLS Policies
+create policy "Admins have full access to profiles"
+  on profiles for all
+  to authenticated
+  using ( is_admin() )
+  with check ( is_admin() );
+
+create policy "Admins have full access to game_sessions"
+  on game_sessions for all
+  to authenticated
+  using ( is_admin() )
+  with check ( is_admin() );
+
+-- Create a view for leaderboard with DISTINCT LEVEL SCORING (excludes blocked accounts and prevents replay farming)
+create or replace view global_leaderboard as
+with distinct_level_scores as (
+  select 
+    user_id,
+    game_id,
+    level,
+    max(score) as best_score,
+    round(avg(accuracy)) as level_acc,
+    min(time_spent) as best_time
+  from game_sessions
+  where level <= 50
+  group by user_id, game_id, level
+)
 select 
   p.id as user_id,
   p.name,
   p.college,
   p.avatar_url,
-  sum(gs.score) as total_score,
-  round(avg(gs.accuracy)) as avg_accuracy,
-  count(gs.id) as total_games,
-  sum(gs.time_spent) as total_time
+  coalesce(sum(dls.best_score), 0) as total_score,
+  coalesce(round(avg(dls.level_acc)), 0) as avg_accuracy,
+  count(dls.level) as total_games,
+  coalesce(sum(dls.best_time), 0) as total_time
 from profiles p
-join game_sessions gs on p.id = gs.user_id
+join distinct_level_scores dls on p.id = dls.user_id
+where (p.is_blocked is not true)
 group by p.id, p.name, p.college, p.avatar_url;
 
--- Create a view for specific game leaderboards
+-- Create a view for specific game leaderboards with DISTINCT LEVEL SCORING
 create or replace view game_leaderboard as
+with distinct_level_scores as (
+  select 
+    user_id,
+    game_id,
+    level,
+    max(score) as best_score,
+    round(avg(accuracy)) as level_acc,
+    min(time_spent) as best_time
+  from game_sessions
+  where level <= 50
+  group by user_id, game_id, level
+)
 select 
-  gs.game_id,
+  dls.game_id,
   p.id as user_id,
   p.name,
   p.college,
   p.avatar_url,
-  sum(gs.score) as total_score,
-  round(avg(gs.accuracy)) as avg_accuracy,
-  count(gs.id) as total_games,
-  sum(gs.time_spent) as total_time
+  coalesce(sum(dls.best_score), 0) as total_score,
+  coalesce(round(avg(dls.level_acc)), 0) as avg_accuracy,
+  count(dls.level) as total_games,
+  coalesce(sum(dls.best_time), 0) as total_time
 from profiles p
-join game_sessions gs on p.id = gs.user_id
-group by gs.game_id, p.id, p.name, p.college, p.avatar_url;
+join distinct_level_scores dls on p.id = dls.user_id
+where (p.is_blocked is not true)
+group by dls.game_id, p.id, p.name, p.college, p.avatar_url;
 
 -- Setup triggers to automatically create a profile when a new user signs up
 create function public.handle_new_user()

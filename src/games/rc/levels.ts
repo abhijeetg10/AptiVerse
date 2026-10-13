@@ -950,3 +950,14 @@ export const levels: RCPuzzle[] = [
     ]
   }
 ];
+
+export const getLevelPuzzle = (assessmentIdx: number): RCPuzzle => {
+  const passageIdx = Math.abs(assessmentIdx) % levels.length;
+  const basePuzzle = levels[passageIdx];
+  return {
+    ...basePuzzle,
+    id: `${basePuzzle.id}-assess-${assessmentIdx + 1}`,
+    title: basePuzzle.title,
+    questions: basePuzzle.questions
+  };
+};

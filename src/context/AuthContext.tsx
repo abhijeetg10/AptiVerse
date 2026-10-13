@@ -187,7 +187,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     if (existingProfile) {
-      payloadWithDept.is_blocked = false;
       const res = await supabase
         .from('profiles')
         .update(payloadWithDept)
