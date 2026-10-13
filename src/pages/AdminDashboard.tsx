@@ -328,16 +328,22 @@ export const AdminDashboard = () => {
           setColleges(colData);
           setTotalTabCount(count ?? colData.length);
         } else {
-          // Fallback to client aggregation of loaded users
+          // Fallback to querying colleges directly from profiles
+          const { data: profColleges } = await supabase
+            .from('profiles')
+            .select('college')
+            .not('college', 'is', null);
+
           const map = new Map<string, number>();
-          users.forEach(u => {
-            if (!u.college || u.college === '-') return;
-            map.set(u.college, (map.get(u.college) || 0) + 1);
+          (profColleges || []).forEach(u => {
+            const normalized = normalizeCollege(u.college);
+            if (normalized === '-') return;
+            map.set(normalized, (map.get(normalized) || 0) + 1);
           });
           const list = Array.from(map.entries())
             .map(([name, count]) => ({ college: name, student_count: count }))
             .sort((a, b) => b.student_count - a.student_count);
-          setColleges(list);
+          setColleges(list.slice(from, to + 1));
           setTotalTabCount(list.length);
         }
       }
@@ -347,7 +353,7 @@ export const AdminDashboard = () => {
     } finally {
       setTabLoading(false);
     }
-  }, [activeTab, page, searchTerm, users]);
+  }, [activeTab, page, searchTerm]);
 
   useEffect(() => {
     fetchTabData();
