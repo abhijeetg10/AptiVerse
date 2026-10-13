@@ -107,65 +107,15 @@ export const useGameSession = (gameId: string) => {
         return { success: true, alreadySaved: Boolean(rpcData.already_completed) };
       }
 
-      // If RPC failed due to authentication or authorization, fail immediately
-      if (rpcError && (rpcError.message?.includes('Security Violation') || rpcError.message?.includes('suspended'))) {
-        console.error('Security exception completing attempt:', rpcError);
-        setError(rpcError.message);
-        setStatus('error');
-        isSavingRef.current = false;
-        return { success: false, error: rpcError.message };
-      }
-
-      // 2. Compatibility Fallback: Direct table insert (supported prior to migration execution)
-      const { error: insertError } = await supabase.from('game_sessions').insert({
-        id: resolvedAttemptId,
-        user_id: userId,
-        game_id: normalizedGameId,
-        level: validLevel,
-        score: validScore,
-        accuracy: validAccuracy,
-        time_spent: validTimeSpent,
-        passed_distraction: passedDistraction
-      });
-
-      if (insertError) {
-        // Primary key or attempt_id duplicate violation (code 23505) means already recorded!
-        if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
-          const { data: existingRecord } = await supabase
-            .from('game_sessions')
-            .select('id, user_id, score')
-            .eq('id', resolvedAttemptId)
-            .maybeSingle();
-
-          if (existingRecord && existingRecord.user_id === userId) {
-            savedAttemptsRef.current.add(resolvedAttemptId);
-            setStatus('saved');
-            isSavingRef.current = false;
-            return { success: true, alreadySaved: true };
-          } else {
-            const collisionMsg = 'Attempt ID collision or unauthorized replay detected.';
-            console.error(collisionMsg, insertError);
-            setError(collisionMsg);
-            setStatus('error');
-            isSavingRef.current = false;
-            return { success: false, error: collisionMsg };
-          }
-        }
-
-        console.error('Failed to save game session:', insertError);
-        setError(insertError.message || 'Failed to save session');
-        setStatus('error');
-        isSavingRef.current = false;
-        return { success: false, error: insertError.message };
-      }
-
-      savedAttemptsRef.current.add(resolvedAttemptId);
-      setStatus('saved');
-      setError(null);
+      // If RPC failed, handle error without insecure client-side table fallback
+      const errorMsg = rpcError?.message || 'Server error recording attempt';
+      console.error('Failed to complete game attempt via trusted RPC:', rpcError);
+      setError(errorMsg);
+      setStatus('error');
       isSavingRef.current = false;
-      return { success: true };
+      return { success: false, error: errorMsg };
     } catch (err: any) {
-      console.error('Network or unexpected error saving game session:', err);
+      console.error('Network error during attempt completion:', err);
       const msg = err?.message || 'Network error saving score';
       setError(msg);
       setStatus('error');

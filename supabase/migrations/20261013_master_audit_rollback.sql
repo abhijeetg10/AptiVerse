@@ -11,9 +11,10 @@ DROP FUNCTION IF EXISTS public.create_game_attempt(TEXT, INT, TEXT, BIGINT, JSON
 -- 2. Drop game_attempts table (if safe)
 DROP TABLE IF EXISTS public.game_attempts CASCADE;
 
--- 3. Restore direct game_sessions insert permissions for authenticated users
--- Protected by RLS check (auth.uid() = user_id)
-GRANT INSERT ON public.game_sessions TO authenticated;
+-- 3. SCORE INGESTION SAFETY DURING ROLLBACK:
+-- Do NOT restore authenticated direct score insertion! Direct client table writes remain revoked.
+-- If rolled back, ranked game session writes remain protected to prevent cheat injection.
+REVOKE INSERT, UPDATE, DELETE ON public.game_sessions FROM authenticated, anon;
 GRANT SELECT ON public.game_sessions TO authenticated, anon;
 
 -- 4. PRESERVE PROFILE HARDENING (Do NOT revert to vulnerable open policies!)
