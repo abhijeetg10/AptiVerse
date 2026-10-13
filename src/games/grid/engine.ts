@@ -13,7 +13,7 @@ export function createInitialState(puzzle: GridPuzzle): GridState {
 
 export function tickCountdown(state: GridState): GridState {
   if (state.phase !== 'memorize') return state;
-  const newCountdown = state.countdown - 1;
+  const newCountdown = Math.max(0, state.countdown - 1);
   return {
     ...state,
     countdown: newCountdown,

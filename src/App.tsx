@@ -11,6 +11,8 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AdminRoute } from './components/auth/AdminRoute';
 
+import ErrorBoundary from './components/ui/ErrorBoundary';
+
 // Lazy-load heavier routes & games to keep AptiVerse lightweight
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const MotionChallenge = lazy(() => import('./games/MotionChallenge'));
@@ -29,12 +31,13 @@ const RouteLoadingFallback = () => (
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <Routes>
-            {/* Public Pages with Navbar */}
-            <Route element={<MainLayout />}>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<RouteLoadingFallback />}>
+            <Routes>
+              {/* Public Pages with Navbar */}
+              <Route element={<MainLayout />}>
               <Route index element={<Home />} />
               <Route path="games" element={<Games />} />
               <Route path="dashboard" element={<Dashboard />} />
@@ -67,6 +70,7 @@ function App() {
         </Suspense>
       </BrowserRouter>
     </AuthProvider>
+  </ErrorBoundary>
   );
 }
 

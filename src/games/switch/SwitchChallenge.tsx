@@ -35,7 +35,7 @@ export const SwitchChallenge: React.FC = () => {
   useEffect(() => {
     if (timeLeft <= 0 || state.status === 'completed') return;
     const timer = setInterval(() => {
-      setTimeLeft(s => s - 1);
+      setTimeLeft(s => Math.max(0, s - 1));
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft, state.status]);

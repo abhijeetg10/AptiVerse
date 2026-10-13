@@ -35,7 +35,7 @@ export const GeoSudokuChallenge: React.FC = () => {
   useEffect(() => {
     if (timeLeft <= 0 || state.status === 'completed') return;
     const timer = setInterval(() => {
-      setTimeLeft(s => s - 1);
+      setTimeLeft(s => Math.max(0, s - 1));
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft, state.status]);
@@ -159,6 +159,27 @@ export const GeoSudokuChallenge: React.FC = () => {
                   className="py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Next Level →
+                </button>
+                <Link
+                  to="/games"
+                  className="py-3 px-5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold rounded-xl text-center transition-colors flex items-center justify-center"
+                >
+                  All Games
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {state.status === 'failed' && (
+            <div className="mt-8 bg-red-50 text-red-800 p-6 rounded-2xl border border-red-200 text-center animate-in fade-in slide-in-from-bottom-4 shadow-lg shadow-red-500/10 z-10 relative">
+              <h2 className="text-2xl font-extrabold mb-1">Incorrect Symbol</h2>
+              <p className="font-medium text-red-700 mb-4">That symbol violates row or column constraints. Try again!</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleReset}
+                  className="py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <RefreshCw size={18} /> Try Again
                 </button>
                 <Link
                   to="/games"

@@ -34,7 +34,7 @@ export const MotionChallenge: React.FC = () => {
   useEffect(() => {
     if (timeLeft <= 0 || state.status === 'completed') return;
     const timer = setInterval(() => {
-      setTimeLeft(s => s - 1);
+      setTimeLeft(s => Math.max(0, s - 1));
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft, state.status]);
@@ -261,6 +261,30 @@ export const MotionChallenge: React.FC = () => {
                 >
                   Next Level →
                 </button>
+              </div>
+            )}
+
+            {/* Timeout Recovery Overlay */}
+            {timeLeft <= 0 && (
+              <div className="absolute inset-0 z-50 bg-red-950/40 backdrop-blur-sm rounded-xl flex items-center justify-center animate-in fade-in duration-300 p-4">
+                <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform transition-all border-4 border-red-500">
+                  <h2 className="text-3xl font-extrabold text-red-600 mb-2">Time's Up!</h2>
+                  <p className="text-slate-600 mb-6">Session finished! You reached Level {levelIndex + 1}.</p>
+                  <div className="flex flex-col gap-2.5">
+                    <button 
+                      onClick={() => { setTimeLeft(360); handleReset(); }}
+                      className="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30 cursor-pointer"
+                    >
+                      Try Again
+                    </button>
+                    <Link
+                      to="/games"
+                      className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center"
+                    >
+                      All Games
+                    </Link>
+                  </div>
+                </div>
               </div>
             )}
           </div>
