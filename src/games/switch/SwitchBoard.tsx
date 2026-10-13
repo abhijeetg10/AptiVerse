@@ -29,26 +29,58 @@ const ShapeRow = ({ shapes }: { shapes: SwitchSymbol[] }) => (
   </div>
 );
 
-const CodeBlock = ({ code, active, onClick, status }: { code: Permutation, active?: boolean, onClick?: () => void, status?: 'completed'|'failed'|'playing' }) => {
-  let bgColor = "bg-neutral-300 text-neutral-600";
+const FixedCodeBlock = ({ code }: { code: Permutation }) => {
+  return (
+    <div className="px-4 py-2 rounded-lg font-mono font-bold text-lg tracking-widest bg-neutral-200 text-neutral-700 border border-neutral-300 shadow-xs">
+      {code.join('')}
+    </div>
+  );
+};
+
+const ChoiceCodeBlock = ({
+  code,
+  label,
+  active,
+  onClick,
+  status
+}: {
+  code: Permutation;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+  status?: 'completed' | 'failed' | 'playing';
+}) => {
+  let btnColors = "bg-white text-slate-800 border-2 border-cyan-400 hover:border-cyan-600 hover:bg-cyan-50/60 shadow-sm";
   if (active) {
-    if (status === 'completed') bgColor = "bg-emerald-400 text-emerald-950";
-    else if (status === 'failed') bgColor = "bg-red-400 text-red-950";
-    else bgColor = "bg-amber-300 text-amber-950";
+    if (status === 'completed') {
+      btnColors = "bg-emerald-500 text-white border-2 border-emerald-600 shadow-md ring-2 ring-emerald-400/40";
+    } else if (status === 'failed') {
+      btnColors = "bg-rose-500 text-white border-2 border-rose-600 shadow-md ring-2 ring-rose-400/40";
+    } else {
+      btnColors = "bg-cyan-600 text-white border-2 border-cyan-700 shadow-md ring-2 ring-cyan-400/40";
+    }
   }
 
   return (
     <button 
-      disabled={!onClick}
+      disabled={!onClick || status !== 'playing'}
       onClick={onClick}
       className={cn(
-        "px-4 py-2 rounded-lg font-mono font-bold text-lg tracking-widest transition-all",
-        bgColor,
-        onClick && !active ? "hover:bg-neutral-400 cursor-pointer" : "cursor-default",
-        active && "scale-110 shadow-lg"
+        "flex flex-col items-center px-4 py-2 rounded-xl font-mono transition-all select-none",
+        btnColors,
+        onClick && status === 'playing' && !active ? "cursor-pointer hover:scale-105 active:scale-95" : "cursor-default",
+        active && "scale-105"
       )}
     >
-      {code.join('')}
+      <span className={cn(
+        "text-[10px] font-black uppercase tracking-wider mb-0.5",
+        active ? "text-white/90" : "text-cyan-700 font-bold"
+      )}>
+        Option {label}
+      </span>
+      <span className="font-extrabold text-lg tracking-widest">
+        {code.join('')}
+      </span>
     </button>
   );
 };
@@ -78,23 +110,29 @@ export const SwitchBoard: React.FC<SwitchBoardProps> = ({ state, onChoiceSelect 
       {fixedCodes.map((code, idx) => (
         <div key={idx} className="flex flex-col items-center relative w-full">
            <div className="absolute top-1/2 left-0 right-0 h-4 bg-neutral-200 -z-10 transform -translate-y-1/2 rounded-full mx-10"></div>
-           <CodeBlock code={code} />
+           <FixedCodeBlock code={code} />
            <div className="w-4 h-8 bg-neutral-600 my-4"></div>
         </div>
       ))}
 
       {/* Choice Row */}
-      <div className="flex gap-4 relative w-full justify-center">
-         <div className="absolute top-1/2 left-0 right-0 h-4 bg-neutral-200 -z-10 transform -translate-y-1/2 rounded-full mx-10 border-t-2 border-b-2 border-dashed border-neutral-400"></div>
-         {choices.map((code, idx) => (
-           <CodeBlock 
-             key={idx} 
-             code={code} 
-             active={state.selectedChoice === idx} 
-             onClick={() => onChoiceSelect(idx)}
-             status={state.status}
-           />
-         ))}
+      <div className="flex flex-col items-center relative w-full gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-3 py-0.5 rounded-full border border-cyan-200 mb-1">
+          Select Operator
+        </span>
+        <div className="flex gap-4 relative w-full justify-center">
+          <div className="absolute top-1/2 left-0 right-0 h-4 bg-neutral-200 -z-10 transform -translate-y-1/2 rounded-full mx-10 border-t-2 border-b-2 border-dashed border-neutral-400"></div>
+          {choices.map((code, idx) => (
+            <ChoiceCodeBlock 
+              key={idx} 
+              code={code} 
+              label={String.fromCharCode(65 + idx)}
+              active={state.selectedChoice === idx} 
+              onClick={() => onChoiceSelect(idx)}
+              status={state.status}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Funnel up (inverted) */}
