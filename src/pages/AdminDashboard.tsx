@@ -188,12 +188,25 @@ export const AdminDashboard = () => {
         setActiveUsersCount(usersCount ? Math.min(usersCount, 100) : 0);
       }
 
-      // College count query
-      const { count: collegeCount } = await supabase
-        .from('college_leaderboard')
-        .select('college', { count: 'exact', head: true });
-      if (collegeCount !== null) {
-        setTotalCollegesCount(collegeCount);
+      // Exact Colleges Count (distinct registered institutions)
+      try {
+        const { data: profColleges } = await supabase
+          .from('profiles')
+          .select('college')
+          .not('college', 'is', null);
+
+        if (profColleges && profColleges.length > 0) {
+          const distinctColleges = new Set(
+            profColleges
+              .map(p => normalizeCollege(p.college))
+              .filter(c => c && c !== '-')
+          );
+          setTotalCollegesCount(distinctColleges.size);
+        } else {
+          setTotalCollegesCount(0);
+        }
+      } catch {
+        setTotalCollegesCount(0);
       }
     } catch (err: any) {
       console.error('Error fetching admin KPI metrics:', err);
@@ -317,35 +330,31 @@ export const AdminDashboard = () => {
         setTotalTabCount(count ?? 0);
       }
       else if (activeTab === 'colleges') {
-        // Query college statistics via college_leaderboard view or fallback
-        const { data: colData, count, error } = await supabase
-          .from('college_leaderboard')
-          .select('*', { count: 'exact' })
-          .order('student_count', { ascending: false })
-          .range(from, to);
+        const { data: profColleges, error } = await supabase
+          .from('profiles')
+          .select('college')
+          .not('college', 'is', null);
 
-        if (!error && colData) {
-          setColleges(colData);
-          setTotalTabCount(count ?? colData.length);
-        } else {
-          // Fallback to querying colleges directly from profiles
-          const { data: profColleges } = await supabase
-            .from('profiles')
-            .select('college')
-            .not('college', 'is', null);
+        if (error) throw error;
 
-          const map = new Map<string, number>();
-          (profColleges || []).forEach(u => {
-            const normalized = normalizeCollege(u.college);
-            if (normalized === '-') return;
-            map.set(normalized, (map.get(normalized) || 0) + 1);
-          });
-          const list = Array.from(map.entries())
-            .map(([name, count]) => ({ college: name, student_count: count }))
-            .sort((a, b) => b.student_count - a.student_count);
-          setColleges(list.slice(from, to + 1));
-          setTotalTabCount(list.length);
+        const map = new Map<string, number>();
+        (profColleges || []).forEach(u => {
+          const normalized = normalizeCollege(u.college);
+          if (normalized === '-') return;
+          map.set(normalized, (map.get(normalized) || 0) + 1);
+        });
+
+        let list = Array.from(map.entries())
+          .map(([name, count]) => ({ college: name, student_count: count }))
+          .sort((a, b) => b.student_count - a.student_count);
+
+        if (searchTerm.trim()) {
+          const term = searchTerm.trim().toLowerCase();
+          list = list.filter(c => c.college.toLowerCase().includes(term));
         }
+
+        setColleges(list.slice(from, to + 1));
+        setTotalTabCount(list.length);
       }
     } catch (err: any) {
       console.error(`Error loading tab data for ${activeTab}:`, err);
@@ -925,7 +934,7 @@ export const AdminDashboard = () => {
                             </span>
                           )}
                         </td>
-                        <td className="p-4 text-sm text-emerald-600 font-bold">{col.student_count || col.studentCount || 0} Students</td>
+                        <td className="p-4 text-sm text-emerald-600 font-bold">{col.student_count ?? col.students ?? col.studentCount ?? 0} Students</td>
                       </tr>
                     );
                   })
