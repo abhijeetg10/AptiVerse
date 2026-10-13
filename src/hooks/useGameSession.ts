@@ -79,7 +79,44 @@ export const useGameSession = (gameId: string) => {
     const validTimeSpent = Math.max(2, Math.round(timeSpent));
 
     try {
-      // Pass resolvedAttemptId as primary key 'id' to guarantee DB-level uniqueness
+      // 1. Primary Trusted Path: Server-side validation & completion RPC
+      const submissionPayload = {
+        level: validLevel,
+        score: validScore,
+        accuracy: validAccuracy,
+        time_spent: validTimeSpent,
+        passed_distraction: passedDistraction,
+        solved: validScore > 0,
+        correct_count: normalizedGameId === 'di' || normalizedGameId === 'rc' 
+          ? Math.round((validScore / 10) * 24) 
+          : undefined
+      };
+
+      const { data: rpcData, error: rpcError } = await supabase.rpc('complete_game_attempt', {
+        p_attempt_id: resolvedAttemptId,
+        p_submission: submissionPayload,
+        p_client_time_spent: validTimeSpent,
+        p_passed_distraction: passedDistraction
+      });
+
+      if (!rpcError && rpcData) {
+        savedAttemptsRef.current.add(resolvedAttemptId);
+        setStatus('saved');
+        setError(null);
+        isSavingRef.current = false;
+        return { success: true, alreadySaved: Boolean(rpcData.already_completed) };
+      }
+
+      // If RPC failed due to authentication or authorization, fail immediately
+      if (rpcError && (rpcError.message?.includes('Security Violation') || rpcError.message?.includes('suspended'))) {
+        console.error('Security exception completing attempt:', rpcError);
+        setError(rpcError.message);
+        setStatus('error');
+        isSavingRef.current = false;
+        return { success: false, error: rpcError.message };
+      }
+
+      // 2. Compatibility Fallback: Direct table insert (supported prior to migration execution)
       const { error: insertError } = await supabase.from('game_sessions').insert({
         id: resolvedAttemptId,
         user_id: userId,
@@ -94,7 +131,6 @@ export const useGameSession = (gameId: string) => {
       if (insertError) {
         // Primary key or attempt_id duplicate violation (code 23505) means already recorded!
         if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
-          // Verify matching record actually exists in the database for this attempt and user
           const { data: existingRecord } = await supabase
             .from('game_sessions')
             .select('id, user_id, score')
