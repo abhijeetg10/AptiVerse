@@ -128,21 +128,80 @@ export const SwitchChallenge: React.FC = () => {
             <p className="text-slate-500 text-sm">Select the 4-digit code that transforms the shapes into the output below.</p>
           </div>
 
-          <div className="w-full max-w-xl flex flex-col items-center gap-8">
+          <div className="w-full max-w-xl flex flex-col items-center gap-6">
             <SwitchBoard state={state} onChoiceSelect={handleChoice} />
 
+            {/* Interactive Choice Palette */}
+            <div className="w-full bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm flex flex-col items-center gap-3">
+              <div className="flex items-center justify-between w-full px-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Select the Operator:
+                </span>
+                <span className="text-xs text-slate-400 font-medium">
+                  {state.status === 'playing' ? 'Click Option A, B, or C' : state.status === 'completed' ? 'Solved!' : 'Wrong Answer'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-3 w-full">
+                {puzzle.choices.map((code, idx) => {
+                  const label = String.fromCharCode(65 + idx);
+                  const isSelected = state.selectedChoice === idx;
+                  const isCorrect = state.status === 'completed' && isSelected;
+                  const isWrong = state.status === 'failed' && isSelected;
+
+                  let btnStyle = "bg-slate-50 hover:bg-cyan-50 border-2 border-slate-200 hover:border-cyan-400 text-slate-800";
+                  if (isSelected) {
+                    if (isCorrect) btnStyle = "bg-emerald-50 border-2 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20";
+                    else if (isWrong) btnStyle = "bg-rose-50 border-2 border-rose-500 text-rose-800 ring-2 ring-rose-500/20";
+                    else btnStyle = "bg-cyan-50 border-2 border-cyan-500 text-cyan-900";
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleChoice(idx)}
+                      disabled={state.status !== 'playing' || timeLeft <= 0}
+                      className={`py-3 px-4 rounded-xl flex flex-col items-center justify-center transition-all font-sans shadow-xs hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed ${btnStyle} ${state.status === 'playing' ? 'cursor-pointer' : ''}`}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">
+                        Option {label}
+                      </span>
+                      <span className="font-mono font-bold text-xl tracking-widest text-slate-800">
+                        {code.join('')}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {state.status === 'completed' && (
-              <div className="w-full p-4 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between animate-in fade-in duration-300">
+              <div className="w-full p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between animate-in fade-in duration-300">
                 <div>
-                  <div className="text-sm font-bold text-slate-800">
-                    {state.selectedChoice === puzzle.correctChoiceIndex ? 'Correct Solution!' : 'Completed'}
+                  <div className="text-sm font-bold text-emerald-800">
+                    Correct Solution!
                   </div>
-                  <div className="text-xs text-slate-500">
-                    {state.selectedChoice === puzzle.correctChoiceIndex ? 'Well done! Loading next challenge...' : 'Reviewing next step.'}
+                  <div className="text-xs text-emerald-600 mt-0.5">
+                    Well done! Advancing to the next level...
                   </div>
                 </div>
-                <Button onClick={advanceNow} size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold">
+                <Button onClick={advanceNow} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer">
                   Next Level →
+                </Button>
+              </div>
+            )}
+
+            {state.status === 'failed' && (
+              <div className="w-full p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between animate-in fade-in duration-300">
+                <div>
+                  <div className="text-sm font-bold text-rose-800">
+                    Incorrect Operator Code
+                  </div>
+                  <div className="text-xs text-rose-600 mt-0.5">
+                    That sequence does not produce the expected shape arrangement.
+                  </div>
+                </div>
+                <Button onClick={handleReset} size="sm" className="bg-rose-600 hover:bg-rose-700 text-white font-bold cursor-pointer">
+                  Try Again
                 </Button>
               </div>
             )}
