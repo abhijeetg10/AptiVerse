@@ -29,32 +29,48 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
     const fetchStats = async () => {
-      const { data, error } = await supabase
-        .from('global_leaderboard')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-        
-      if (data && !error) {
+      // 1. Fetch user sessions directly for 100% accurate, immediate stats
+      const { data: userSessions } = await supabase
+        .from('game_sessions')
+        .select('game_id, level, score, accuracy, created_at')
+        .eq('user_id', user.id);
+
+      if (userSessions && userSessions.length > 0) {
+        const bestLevelScores = new Map<string, number>();
+        let accuracySum = 0;
+        userSessions.forEach(s => {
+          const normGame = s.game_id === 'geo_sudoku' ? 'sudoku' : s.game_id;
+          const key = `${normGame}_${s.level}`;
+          const currentBest = bestLevelScores.get(key) || 0;
+          if (Number(s.score) > currentBest) {
+            bestLevelScores.set(key, Number(s.score));
+          }
+          accuracySum += Number(s.accuracy) || 0;
+        });
+
+        let totalScore = 0;
+        bestLevelScores.forEach(score => {
+          totalScore += score;
+        });
+
         setStats({
-          accuracy: Number(data.avg_accuracy) || 0,
-          games: Number(data.total_games) || 0,
-          score: Number(data.total_score) || 0,
+          score: Math.round(totalScore * 100) / 100,
+          accuracy: Math.round(accuracySum / userSessions.length),
+          games: userSessions.length
         });
       } else {
-        // Fallback directly from game_sessions
-        const { data: userSessions } = await supabase
-          .from('game_sessions')
-          .select('score, accuracy')
-          .eq('user_id', user.id);
-
-        if (userSessions && userSessions.length > 0) {
-          const totalScore = userSessions.reduce((acc, s) => acc + (Number(s.score) || 0), 0);
-          const totalAcc = userSessions.reduce((acc, s) => acc + (Number(s.accuracy) || 0), 0);
+        // Fallback to global_leaderboard view
+        const { data, error } = await supabase
+          .from('global_leaderboard')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (data && !error && Number(data.total_games) > 0) {
           setStats({
-            score: Math.round(totalScore * 100) / 100,
-            accuracy: Math.round(totalAcc / userSessions.length),
-            games: userSessions.length
+            accuracy: Number(data.avg_accuracy) || 0,
+            games: Number(data.total_games) || 0,
+            score: Number(data.total_score) || 0,
           });
         }
       }

@@ -19,33 +19,48 @@ const Progress = () => {
     if (!user) return;
     
     const fetchProgress = async () => {
-      // Fetch high level KPIs
-      const { data: kpiData } = await supabase
-        .from('global_leaderboard')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-        
-      if (kpiData) {
+      // 1. Fetch user sessions directly for 100% accurate, immediate stats
+      const { data: userSessions } = await supabase
+        .from('game_sessions')
+        .select('game_id, level, score, accuracy, created_at')
+        .eq('user_id', user.id);
+
+      if (userSessions && userSessions.length > 0) {
+        const bestLevelScores = new Map<string, number>();
+        let accuracySum = 0;
+        userSessions.forEach(s => {
+          const normGame = s.game_id === 'geo_sudoku' ? 'sudoku' : s.game_id;
+          const key = `${normGame}_${s.level}`;
+          const currentBest = bestLevelScores.get(key) || 0;
+          if (Number(s.score) > currentBest) {
+            bestLevelScores.set(key, Number(s.score));
+          }
+          accuracySum += Number(s.accuracy) || 0;
+        });
+
+        let totalScore = 0;
+        bestLevelScores.forEach(score => {
+          totalScore += score;
+        });
+
         setStats({
-          totalScore: Number(kpiData.total_score) || 0,
-          accuracy: Number(kpiData.avg_accuracy) || 0,
-          gamesPlayed: Number(kpiData.total_games) || 0
+          totalScore: Math.round(totalScore * 100) / 100,
+          accuracy: Math.round(accuracySum / userSessions.length),
+          gamesPlayed: userSessions.length
         });
       } else {
-        // Fallback directly from game_sessions if view hasn't aggregated
-        const { data: userSessions } = await supabase
-          .from('game_sessions')
-          .select('score, accuracy')
-          .eq('user_id', user.id);
-
-        if (userSessions && userSessions.length > 0) {
-          const totalScore = userSessions.reduce((acc, s) => acc + (Number(s.score) || 0), 0);
-          const totalAcc = userSessions.reduce((acc, s) => acc + (Number(s.accuracy) || 0), 0);
+        // Fallback to global_leaderboard view
+        const { data: kpiData } = await supabase
+          .from('global_leaderboard')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (kpiData && Number(kpiData.total_games) > 0) {
           setStats({
-            totalScore: Math.round(totalScore * 100) / 100,
-            accuracy: Math.round(totalAcc / userSessions.length),
-            gamesPlayed: userSessions.length
+            totalScore: Number(kpiData.total_score) || 0,
+            accuracy: Number(kpiData.avg_accuracy) || 0,
+            gamesPlayed: Number(kpiData.total_games) || 0
           });
         }
       }
