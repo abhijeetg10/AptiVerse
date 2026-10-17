@@ -80,7 +80,9 @@ export const useGameSession = (gameId: string) => {
 
     try {
       // 1. Primary Trusted Path: Server-side validation & completion RPC
-      // First ensure the attempt exists in game_attempts so complete_game_attempt can lock and complete it
+      let finalAttemptId = resolvedAttemptId;
+
+      // Check if attempt exists in game_attempts
       const { data: existingAttempt } = await supabase
         .from('game_attempts')
         .select('id, status')
@@ -88,15 +90,18 @@ export const useGameSession = (gameId: string) => {
         .maybeSingle();
 
       if (!existingAttempt) {
-        // Create attempt row using create_game_attempt RPC or direct insert
-        const { error: createAttemptError } = await supabase.rpc('create_game_attempt', {
+        // Create attempt row using create_game_attempt RPC
+        const { data: createData, error: createAttemptError } = await supabase.rpc('create_game_attempt', {
           p_game_id: normalizedGameId,
           p_level: validLevel,
           p_puzzle_id: null,
           p_seed: null,
-          p_metadata: { attempt_id: resolvedAttemptId }
+          p_metadata: { client_attempt_id: resolvedAttemptId }
         });
-        if (createAttemptError) {
+
+        if (!createAttemptError && createData?.attempt_id) {
+          finalAttemptId = createData.attempt_id;
+        } else if (createAttemptError) {
           console.warn('create_game_attempt RPC error (attempting fallback):', createAttemptError);
         }
       }
@@ -113,38 +118,25 @@ export const useGameSession = (gameId: string) => {
           : undefined
       };
 
-      // If attemptId was created on client, complete_game_attempt expects the attempt row to exist with that ID.
-      // If complete_game_attempt returns attempt not found, insert into game_attempts and retry complete.
+      // Call complete_game_attempt with finalAttemptId
       let { data: rpcData, error: rpcError } = await supabase.rpc('complete_game_attempt', {
-        p_attempt_id: resolvedAttemptId,
+        p_attempt_id: finalAttemptId,
         p_submission: submissionPayload,
         p_client_time_spent: validTimeSpent,
         p_passed_distraction: passedDistraction
       });
 
-      if (rpcError && rpcError.message?.includes('not found')) {
-        // Attempt wasn't in game_attempts with this specific resolvedAttemptId.
-        // Insert it into game_attempts with status 'in_progress' and retry completion:
-        const { error: seedAttemptError } = await supabase
-          .from('game_attempts')
-          .insert({
-            id: resolvedAttemptId,
-            user_id: userId,
-            game_id: normalizedGameId,
-            level: validLevel,
-            status: 'in_progress',
-            started_at: new Date(Date.now() - validTimeSpent * 1000).toISOString()
-          });
-
-        if (!seedAttemptError) {
-          const retryRes = await supabase.rpc('complete_game_attempt', {
-            p_attempt_id: resolvedAttemptId,
-            p_submission: submissionPayload,
-            p_client_time_spent: validTimeSpent,
-            p_passed_distraction: passedDistraction
-          });
-          rpcData = retryRes.data;
-          rpcError = retryRes.error;
+      if (rpcError && rpcError.message?.includes('not found') && finalAttemptId !== resolvedAttemptId) {
+        // Also try with original resolvedAttemptId if different
+        const retryWithOriginal = await supabase.rpc('complete_game_attempt', {
+          p_attempt_id: resolvedAttemptId,
+          p_submission: submissionPayload,
+          p_client_time_spent: validTimeSpent,
+          p_passed_distraction: passedDistraction
+        });
+        if (!retryWithOriginal.error && retryWithOriginal.data) {
+          rpcData = retryWithOriginal.data;
+          rpcError = null;
         }
       }
 
