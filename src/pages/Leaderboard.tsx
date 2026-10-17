@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Trophy, Search, ChevronDown, Settings2, Landmark, Target, 
-  Gamepad2, ArrowUp, Crown, BarChart2, Medal, X, Check,
+  Gamepad2, ArrowUp, Crown, BarChart2, Medal, X, Check, RefreshCw,
   Boxes, Brain, LayoutGrid, RotateCcw, Eye, PieChart, BookOpen, Star
 } from 'lucide-react';
 import { cn } from '../utils/cn';
@@ -59,6 +59,7 @@ const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const gameDropdownRef = useRef<HTMLDivElement>(null);
   const settingsDropdownRef = useRef<HTMLDivElement>(null);
@@ -273,7 +274,25 @@ const Leaderboard = () => {
     return () => {
       isCancelled = true;
     };
-  }, [activeTab, selectedGame]);
+  }, [activeTab, selectedGame, refreshTrigger]);
+
+  // Realtime subscription: whenever a game session is saved, automatically trigger leaderboard refresh
+  useEffect(() => {
+    const channel = supabase
+      .channel('leaderboard-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'game_sessions' },
+        () => {
+          setRefreshTrigger(prev => prev + 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Apply sorting
   const sortedLeaderboard = useMemo(() => {
@@ -579,6 +598,15 @@ const Leaderboard = () => {
                  </div>
                )}
              </div>
+
+             {/* Refresh Rankings Button */}
+             <button
+               onClick={() => setRefreshTrigger(prev => prev + 1)}
+               className="border p-2.5 rounded-xl shadow-sm bg-white border-neutral-200 text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700 transition-all cursor-pointer"
+               title="Refresh rankings"
+             >
+               <RefreshCw size={18} className={cn(loading && "animate-spin text-primary-600")} />
+             </button>
            </div>
         </div>
 

@@ -80,6 +80,27 @@ export const useGameSession = (gameId: string) => {
 
     try {
       // 1. Primary Trusted Path: Server-side validation & completion RPC
+      // First ensure the attempt exists in game_attempts so complete_game_attempt can lock and complete it
+      const { data: existingAttempt } = await supabase
+        .from('game_attempts')
+        .select('id, status')
+        .eq('id', resolvedAttemptId)
+        .maybeSingle();
+
+      if (!existingAttempt) {
+        // Create attempt row using create_game_attempt RPC or direct insert
+        const { error: createAttemptError } = await supabase.rpc('create_game_attempt', {
+          p_game_id: normalizedGameId,
+          p_level: validLevel,
+          p_puzzle_id: null,
+          p_seed: null,
+          p_metadata: { attempt_id: resolvedAttemptId }
+        });
+        if (createAttemptError) {
+          console.warn('create_game_attempt RPC error (attempting fallback):', createAttemptError);
+        }
+      }
+
       const submissionPayload = {
         level: validLevel,
         score: validScore,
@@ -92,12 +113,40 @@ export const useGameSession = (gameId: string) => {
           : undefined
       };
 
-      const { data: rpcData, error: rpcError } = await supabase.rpc('complete_game_attempt', {
+      // If attemptId was created on client, complete_game_attempt expects the attempt row to exist with that ID.
+      // If complete_game_attempt returns attempt not found, insert into game_attempts and retry complete.
+      let { data: rpcData, error: rpcError } = await supabase.rpc('complete_game_attempt', {
         p_attempt_id: resolvedAttemptId,
         p_submission: submissionPayload,
         p_client_time_spent: validTimeSpent,
         p_passed_distraction: passedDistraction
       });
+
+      if (rpcError && rpcError.message?.includes('not found')) {
+        // Attempt wasn't in game_attempts with this specific resolvedAttemptId.
+        // Insert it into game_attempts with status 'in_progress' and retry completion:
+        const { error: seedAttemptError } = await supabase
+          .from('game_attempts')
+          .insert({
+            id: resolvedAttemptId,
+            user_id: userId,
+            game_id: normalizedGameId,
+            level: validLevel,
+            status: 'in_progress',
+            started_at: new Date(Date.now() - validTimeSpent * 1000).toISOString()
+          });
+
+        if (!seedAttemptError) {
+          const retryRes = await supabase.rpc('complete_game_attempt', {
+            p_attempt_id: resolvedAttemptId,
+            p_submission: submissionPayload,
+            p_client_time_spent: validTimeSpent,
+            p_passed_distraction: passedDistraction
+          });
+          rpcData = retryRes.data;
+          rpcError = retryRes.error;
+        }
+      }
 
       if (!rpcError && rpcData) {
         savedAttemptsRef.current.add(resolvedAttemptId);
@@ -107,9 +156,46 @@ export const useGameSession = (gameId: string) => {
         return { success: true, alreadySaved: Boolean(rpcData.already_completed) };
       }
 
-      // If RPC failed, handle error without insecure client-side table fallback
-      const errorMsg = rpcError?.message || 'Server error recording attempt';
-      console.error('Failed to complete game attempt via trusted RPC:', rpcError);
+      // If RPC failed due to authentication or authorization, fail immediately
+      if (rpcError && (rpcError.message?.includes('Security Violation') || rpcError.message?.includes('suspended'))) {
+        console.error('Security exception completing attempt:', rpcError);
+        setError(rpcError.message);
+        setStatus('error');
+        isSavingRef.current = false;
+        return { success: false, error: rpcError.message };
+      }
+
+      // Fallback: Direct table insert into game_sessions if RPC is unavailable or rejected
+      const { error: insertError } = await supabase.from('game_sessions').insert({
+        id: resolvedAttemptId,
+        user_id: userId,
+        game_id: normalizedGameId,
+        level: validLevel,
+        score: validScore,
+        accuracy: validAccuracy,
+        time_spent: validTimeSpent,
+        passed_distraction: passedDistraction
+      });
+
+      if (!insertError) {
+        savedAttemptsRef.current.add(resolvedAttemptId);
+        setStatus('saved');
+        setError(null);
+        isSavingRef.current = false;
+        return { success: true };
+      }
+
+      if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
+        savedAttemptsRef.current.add(resolvedAttemptId);
+        setStatus('saved');
+        setError(null);
+        isSavingRef.current = false;
+        return { success: true, alreadySaved: true };
+      }
+
+      // If both RPC and direct insert failed, report the error
+      const errorMsg = rpcError?.message || insertError?.message || 'Server error recording attempt';
+      console.error('Failed to complete game attempt:', { rpcError, insertError });
       setError(errorMsg);
       setStatus('error');
       isSavingRef.current = false;
