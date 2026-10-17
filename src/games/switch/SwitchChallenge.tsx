@@ -40,7 +40,12 @@ export const SwitchChallenge: React.FC = () => {
     return () => clearInterval(timer);
   }, [timeLeft, state.status]);
 
-  const { saveSession } = useGameSession('switch');
+  const { saveSession, startAttempt } = useGameSession('switch');
+
+  // Register attempt on server when level begins
+  useEffect(() => {
+    startAttempt(levelIndex + 1, attemptId);
+  }, [levelIndex, attemptId, startAttempt]);
 
   useEffect(() => {
     if (state.status === 'completed' && !hasSavedRef.current) {

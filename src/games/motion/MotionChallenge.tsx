@@ -51,7 +51,12 @@ export const MotionChallenge: React.FC = () => {
     }
   };
 
-  const { saveSession } = useGameSession('motion');
+  const { saveSession, startAttempt } = useGameSession('motion');
+
+  // Register attempt on server when level begins
+  useEffect(() => {
+    startAttempt(levelIndex + 1, attemptId);
+  }, [levelIndex, attemptId, startAttempt]);
 
   // Save session on complete
   useEffect(() => {

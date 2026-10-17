@@ -36,7 +36,12 @@ export const GridChallenge: React.FC = () => {
   const puzzle = useMemo(() => generateGridLevel(`grid-${level}-s${variantSeed}`, dotsCount), [level, dotsCount, variantSeed]);
   
   const [state, setState] = useState<GridState>(() => createInitialState(puzzle));
-  const { saveSession, status: saveStatus } = useGameSession('grid');
+  const { saveSession, startAttempt, status: saveStatus } = useGameSession('grid');
+
+  // Register attempt on server when level begins
+  useEffect(() => {
+    startAttempt(level, attemptId);
+  }, [level, attemptId, startAttempt]);
 
   // Reset state when puzzle changes
   useEffect(() => {

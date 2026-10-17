@@ -36,7 +36,12 @@ export const InductiveChallenge: React.FC = () => {
     return () => clearInterval(timer);
   }, [timeLeft, state.status]);
 
-  const { saveSession } = useGameSession('inductive');
+  const { saveSession, startAttempt } = useGameSession('inductive');
+
+  // Register attempt on server when level begins
+  useEffect(() => {
+    startAttempt(levelIndex + 1, attemptId);
+  }, [levelIndex, attemptId, startAttempt]);
 
   useEffect(() => {
     if (state.status === 'completed' && !hasSavedRef.current) {

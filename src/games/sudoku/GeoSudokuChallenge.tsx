@@ -40,7 +40,12 @@ export const GeoSudokuChallenge: React.FC = () => {
     return () => clearInterval(timer);
   }, [timeLeft, state.status]);
 
-  const { saveSession } = useGameSession('sudoku');
+  const { saveSession, startAttempt } = useGameSession('sudoku');
+
+  // Register attempt on server when puzzle begins
+  useEffect(() => {
+    startAttempt(levelIndex + 1, attemptId);
+  }, [levelIndex, attemptId, startAttempt]);
 
   useEffect(() => {
     if (state.status === 'completed' && !hasSavedRef.current) {

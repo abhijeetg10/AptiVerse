@@ -30,7 +30,12 @@ export const RCChallenge: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(360); // 6 mins for RC assessment
   const hasSavedTimeoutRef = useRef(false);
 
-  const { saveSession, retrySave, status: saveStatus } = useGameSession('rc');
+  const { saveSession, startAttempt, retrySave, status: saveStatus } = useGameSession('rc');
+
+  // Register attempt on server when assessment begins
+  useEffect(() => {
+    startAttempt(levelIndex + 1, attemptId);
+  }, [levelIndex, attemptId, startAttempt]);
 
   // Fullscreen logic
   const toggleFullScreen = () => {

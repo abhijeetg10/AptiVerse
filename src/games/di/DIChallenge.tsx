@@ -87,7 +87,12 @@ export const DIChallenge: React.FC = () => {
     return () => clearInterval(timer);
   }, [timeLeft, state.status]);
 
-  const { saveSession } = useGameSession('di');
+  const { saveSession, startAttempt } = useGameSession('di');
+
+  // Register attempt on server when assessment begins
+  useEffect(() => {
+    startAttempt(levelIndex + 1, attemptId);
+  }, [levelIndex, attemptId, startAttempt]);
 
   // Handle timeout session save
   useEffect(() => {
