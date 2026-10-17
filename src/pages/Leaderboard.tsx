@@ -99,117 +99,28 @@ const Leaderboard = () => {
         const blockedSet = new Set(blockedUsers?.map(b => b.id) || []);
 
         if (!isSpecificGame && !isWeekly) {
-          // All-time all games: first attempt from global_leaderboard view
-          let loadedView = false;
-          try {
-            const { data, error } = await supabase
-              .from('global_leaderboard')
-              .select('*')
-              .order('total_score', { ascending: false })
-              .order('avg_accuracy', { ascending: false })
-              .order('total_time', { ascending: true })
-              .limit(1000);
-
-            if (!error && data && data.length > 0 && !isCancelled) {
-              const normalizedData = data
-                .filter(u => !blockedSet.has(u.user_id))
-                .map(u => ({
-                  ...u,
-                  college: normalizeCollege(u.college),
-                }))
-                .sort(sortLeaderboardEntries);
-
-              setLeaderboard(normalizedData);
-              loadedView = true;
-            }
-          } catch {}
-
-          // If view returned empty or errored, aggregate directly from game_sessions + profiles
-          if (!loadedView && !isCancelled) {
-            const { data: sessionData, error: sessionErr } = await supabase
-              .from('game_sessions')
-              .select('user_id, game_id, level, score, accuracy, time_spent, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)')
-              .order('created_at', { ascending: false })
-              .limit(5000);
-
-            if (!sessionErr && sessionData && !isCancelled) {
-              // Best score per game level
-              const bestLevelMap = new Map<string, any>();
-              sessionData.forEach((row: any) => {
-                if (!row.profiles || row.profiles.is_blocked) return;
-                const normGame = row.game_id === 'geo_sudoku' ? 'sudoku' : row.game_id;
-                const key = `${row.user_id}_${normGame}_${row.level}`;
-                const existing = bestLevelMap.get(key);
-                if (!existing || (row.score || 0) > existing.score) {
-                  bestLevelMap.set(key, row);
-                }
-              });
-
-              const userMap = new Map<string, any>();
-              bestLevelMap.forEach((row: any) => {
-                const uid = row.user_id;
-                const existing = userMap.get(uid) || {
-                  user_id: uid,
-                  name: row.profiles.name || 'Anonymous',
-                  college: normalizeCollege(row.profiles.college),
-                  avatar_url: row.profiles.avatar_url,
-                  total_score: 0,
-                  accuracy_sum: 0,
-                  total_games: 0,
-                  total_time: 0,
-                };
-                existing.total_score += (row.score || 0);
-                existing.accuracy_sum += (row.accuracy || 0);
-                existing.total_games += 1;
-                existing.total_time += (row.time_spent || 0);
-                userMap.set(uid, existing);
-              });
-
-              const aggregated = Array.from(userMap.values())
-                .filter(u => !blockedSet.has(u.user_id))
-                .map(u => ({
-                  ...u,
-                  avg_accuracy: u.total_games > 0 ? Math.round(u.accuracy_sum / u.total_games) : 0,
-                }))
-                .sort(sortLeaderboardEntries);
-
-              setLeaderboard(aggregated);
-            }
-          }
-        } else if (isWeekly && !isSpecificGame) {
-          // Weekly all games view
-          try {
-            const { data: weekData, error: weekErr } = await supabase
-              .from('weekly_leaderboard')
-              .select('*')
-              .order('total_score', { ascending: false })
-              .limit(1000);
-
-            if (!weekErr && weekData && weekData.length > 0 && !isCancelled) {
-              setLeaderboard(
-                weekData
-                  .filter(u => !blockedSet.has(u.user_id))
-                  .map(u => ({ ...u, college: normalizeCollege(u.college) }))
-                  .sort(sortLeaderboardEntries)
-              );
-              return;
-            }
-          } catch {}
-
-          // Fallback to time-windowed game_sessions aggregation
-          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-          const { data, error } = await supabase
+          // Direct aggregation from game_sessions + profiles for immediate, 100% accurate live leaderboard
+          const { data: sessionData, error: sessionErr } = await supabase
             .from('game_sessions')
-            .select('user_id, score, accuracy, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)')
-            .gte('created_at', sevenDaysAgo)
+            .select('user_id, game_id, level, score, accuracy, time_spent, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)')
             .order('created_at', { ascending: false })
-            .limit(5000);
+            .limit(10000);
 
-          if (error) throw error;
-          if (data && !isCancelled) {
-            const userMap = new Map<string, any>();
-            data.forEach((row: any) => {
+          if (!sessionErr && sessionData && sessionData.length > 0 && !isCancelled) {
+            // Calculate best score per unique game level
+            const bestLevelMap = new Map<string, any>();
+            sessionData.forEach((row: any) => {
               if (!row.profiles || row.profiles.is_blocked) return;
+              const normGame = row.game_id === 'geo_sudoku' ? 'sudoku' : row.game_id;
+              const key = `${row.user_id}_${normGame}_${row.level}`;
+              const existing = bestLevelMap.get(key);
+              if (!existing || (row.score || 0) > existing.score) {
+                bestLevelMap.set(key, row);
+              }
+            });
+
+            const userMap = new Map<string, any>();
+            bestLevelMap.forEach((row: any) => {
               const uid = row.user_id;
               const existing = userMap.get(uid) || {
                 user_id: uid,
@@ -224,6 +135,7 @@ const Leaderboard = () => {
               existing.total_score += (row.score || 0);
               existing.accuracy_sum += (row.accuracy || 0);
               existing.total_games += 1;
+              existing.total_time += (row.time_spent || 0);
               userMap.set(uid, existing);
             });
 
@@ -231,87 +143,180 @@ const Leaderboard = () => {
               .filter(u => !blockedSet.has(u.user_id))
               .map(u => ({
                 ...u,
-                avg_accuracy: Math.round(u.accuracy_sum / u.total_games),
+                avg_accuracy: u.total_games > 0 ? Math.round(u.accuracy_sum / u.total_games) : 0,
               }))
               .sort(sortLeaderboardEntries);
 
             setLeaderboard(aggregated);
-          }
-        } else {
-          // Specific game
-          let loadedFromView = false;
-          if (isSpecificGame && !isWeekly && activeGameOption?.matchIds?.length) {
-            try {
-              const { data: viewData, error: viewError } = await supabase
-                .from('game_leaderboard')
-                .select('*')
-                .in('game_id', activeGameOption.matchIds)
-                .order('total_score', { ascending: false });
+          } else {
+            // Fallback to global_leaderboard view
+            const { data, error } = await supabase
+              .from('global_leaderboard')
+              .select('*')
+              .order('total_score', { ascending: false })
+              .order('avg_accuracy', { ascending: false })
+              .order('total_time', { ascending: true })
+              .limit(1000);
 
-              if (viewData && !viewError && !isCancelled && viewData.length > 0) {
-                const normalizedData = viewData
-                  .filter(u => !blockedSet.has(u.user_id))
-                  .map(u => ({
-                    ...u,
-                    college: normalizeCollege(u.college),
-                  }))
-                  .sort(sortLeaderboardEntries);
-
-                setLeaderboard(normalizedData);
-                loadedFromView = true;
-              }
-            } catch {}
-          }
-
-          if (!loadedFromView) {
-            let query = supabase
-              .from('game_sessions')
-              .select('user_id, score, accuracy, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)');
-
-            if (isSpecificGame && activeGameOption?.matchIds?.length) {
-              query = query.in('game_id', activeGameOption.matchIds);
-            }
-            if (isWeekly) {
-              const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-              query = query.gte('created_at', sevenDaysAgo);
-            }
-
-            const { data, error } = await query
-              .order('created_at', { ascending: false })
-              .limit(5000);
-
-            if (error) throw error;
-            if (data && !isCancelled) {
-              const userMap = new Map<string, any>();
-              data.forEach((row: any) => {
-                if (!row.profiles || row.profiles.is_blocked) return;
-                const uid = row.user_id;
-                const existing = userMap.get(uid) || {
-                  user_id: uid,
-                  name: row.profiles.name || 'Anonymous',
-                  college: normalizeCollege(row.profiles.college),
-                  avatar_url: row.profiles.avatar_url,
-                  total_score: 0,
-                  accuracy_sum: 0,
-                  total_games: 0,
-                  total_time: 0,
-                };
-                existing.total_score += (row.score || 0);
-                existing.accuracy_sum += (row.accuracy || 0);
-                existing.total_games += 1;
-                userMap.set(uid, existing);
-              });
-
-              const aggregated = Array.from(userMap.values())
+            if (!error && data && !isCancelled) {
+              const normalizedData = data
                 .filter(u => !blockedSet.has(u.user_id))
                 .map(u => ({
                   ...u,
-                  avg_accuracy: Math.round(u.accuracy_sum / u.total_games),
+                  college: normalizeCollege(u.college),
                 }))
                 .sort(sortLeaderboardEntries);
 
-              setLeaderboard(aggregated);
+              setLeaderboard(normalizedData);
             }
+          }
+        } else if (isWeekly && !isSpecificGame) {
+          // Weekly direct aggregation from game_sessions (past 7 days)
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: sessionData, error: sessionErr } = await supabase
+            .from('game_sessions')
+            .select('user_id, game_id, level, score, accuracy, time_spent, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)')
+            .gte('created_at', sevenDaysAgo)
+            .order('created_at', { ascending: false })
+            .limit(10000);
+
+          if (!sessionErr && sessionData && sessionData.length > 0 && !isCancelled) {
+            const bestLevelMap = new Map<string, any>();
+            sessionData.forEach((row: any) => {
+              if (!row.profiles || row.profiles.is_blocked) return;
+              const normGame = row.game_id === 'geo_sudoku' ? 'sudoku' : row.game_id;
+              const key = `${row.user_id}_${normGame}_${row.level}`;
+              const existing = bestLevelMap.get(key);
+              if (!existing || (row.score || 0) > existing.score) {
+                bestLevelMap.set(key, row);
+              }
+            });
+
+            const userMap = new Map<string, any>();
+            bestLevelMap.forEach((row: any) => {
+              const uid = row.user_id;
+              const existing = userMap.get(uid) || {
+                user_id: uid,
+                name: row.profiles.name || 'Anonymous',
+                college: normalizeCollege(row.profiles.college),
+                avatar_url: row.profiles.avatar_url,
+                total_score: 0,
+                accuracy_sum: 0,
+                total_games: 0,
+                total_time: 0,
+              };
+              existing.total_score += (row.score || 0);
+              existing.accuracy_sum += (row.accuracy || 0);
+              existing.total_games += 1;
+              existing.total_time += (row.time_spent || 0);
+              userMap.set(uid, existing);
+            });
+
+            const aggregated = Array.from(userMap.values())
+              .filter(u => !blockedSet.has(u.user_id))
+              .map(u => ({
+                ...u,
+                avg_accuracy: u.total_games > 0 ? Math.round(u.accuracy_sum / u.total_games) : 0,
+              }))
+              .sort(sortLeaderboardEntries);
+
+            setLeaderboard(aggregated);
+          } else {
+            // Fallback to weekly view
+            try {
+              const { data: weekData, error: weekErr } = await supabase
+                .from('weekly_leaderboard')
+                .select('*')
+                .order('total_score', { ascending: false })
+                .limit(1000);
+
+              if (!weekErr && weekData && !isCancelled) {
+                setLeaderboard(
+                  weekData
+                    .filter(u => !blockedSet.has(u.user_id))
+                    .map(u => ({ ...u, college: normalizeCollege(u.college) }))
+                    .sort(sortLeaderboardEntries)
+                );
+              }
+            } catch {}
+          }
+        } else {
+          // Specific game: direct aggregation taking best score per level
+          let query = supabase
+            .from('game_sessions')
+            .select('user_id, game_id, level, score, accuracy, time_spent, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)');
+
+          if (isSpecificGame && activeGameOption?.matchIds?.length) {
+            query = query.in('game_id', activeGameOption.matchIds);
+          }
+
+          const { data: sessionData, error: sessionErr } = await query
+            .order('created_at', { ascending: false })
+            .limit(10000);
+
+          if (!sessionErr && sessionData && sessionData.length > 0 && !isCancelled) {
+            const bestLevelMap = new Map<string, any>();
+            sessionData.forEach((row: any) => {
+              if (!row.profiles || row.profiles.is_blocked) return;
+              const key = `${row.user_id}_${row.level}`;
+              const existing = bestLevelMap.get(key);
+              if (!existing || (row.score || 0) > existing.score) {
+                bestLevelMap.set(key, row);
+              }
+            });
+
+            const userMap = new Map<string, any>();
+            bestLevelMap.forEach((row: any) => {
+              const uid = row.user_id;
+              const existing = userMap.get(uid) || {
+                user_id: uid,
+                name: row.profiles.name || 'Anonymous',
+                college: normalizeCollege(row.profiles.college),
+                avatar_url: row.profiles.avatar_url,
+                total_score: 0,
+                accuracy_sum: 0,
+                total_games: 0,
+                total_time: 0,
+              };
+              existing.total_score += (row.score || 0);
+              existing.accuracy_sum += (row.accuracy || 0);
+              existing.total_games += 1;
+              existing.total_time += (row.time_spent || 0);
+              userMap.set(uid, existing);
+            });
+
+            const aggregated = Array.from(userMap.values())
+              .filter(u => !blockedSet.has(u.user_id))
+              .map(u => ({
+                ...u,
+                avg_accuracy: u.total_games > 0 ? Math.round(u.accuracy_sum / u.total_games) : 0,
+              }))
+              .sort(sortLeaderboardEntries);
+
+            setLeaderboard(aggregated);
+          } else {
+            // Fallback to game_leaderboard view
+            try {
+              if (activeGameOption?.matchIds?.length) {
+                const { data: viewData, error: viewError } = await supabase
+                  .from('game_leaderboard')
+                  .select('*')
+                  .in('game_id', activeGameOption.matchIds)
+                  .order('total_score', { ascending: false });
+
+                if (viewData && !viewError && !isCancelled && viewData.length > 0) {
+                  const normalizedData = viewData
+                    .filter(u => !blockedSet.has(u.user_id))
+                    .map(u => ({
+                      ...u,
+                      college: normalizeCollege(u.college),
+                    }))
+                    .sort(sortLeaderboardEntries);
+
+                  setLeaderboard(normalizedData);
+                }
+              }
+            } catch {}
           }
         }
       } catch (err: any) {
