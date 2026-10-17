@@ -99,27 +99,82 @@ const Leaderboard = () => {
         const blockedSet = new Set(blockedUsers?.map(b => b.id) || []);
 
         if (!isSpecificGame && !isWeekly) {
-          // All-time all games: fast global_leaderboard view
-          const { data, error } = await supabase
-            .from('global_leaderboard')
-            .select('*')
-            .order('total_score', { ascending: false })
-            .order('avg_accuracy', { ascending: false })
-            .order('total_time', { ascending: true })
-            .limit(1000);
+          // All-time all games: first attempt from global_leaderboard view
+          let loadedView = false;
+          try {
+            const { data, error } = await supabase
+              .from('global_leaderboard')
+              .select('*')
+              .order('total_score', { ascending: false })
+              .order('avg_accuracy', { ascending: false })
+              .order('total_time', { ascending: true })
+              .limit(1000);
 
-          if (error) throw error;
+            if (!error && data && data.length > 0 && !isCancelled) {
+              const normalizedData = data
+                .filter(u => !blockedSet.has(u.user_id))
+                .map(u => ({
+                  ...u,
+                  college: normalizeCollege(u.college),
+                }))
+                .sort(sortLeaderboardEntries);
 
-          if (data && !isCancelled) {
-            const normalizedData = data
-              .filter(u => !blockedSet.has(u.user_id))
-              .map(u => ({
-                ...u,
-                college: normalizeCollege(u.college),
-              }))
-              .sort(sortLeaderboardEntries);
+              setLeaderboard(normalizedData);
+              loadedView = true;
+            }
+          } catch {}
 
-            setLeaderboard(normalizedData);
+          // If view returned empty or errored, aggregate directly from game_sessions + profiles
+          if (!loadedView && !isCancelled) {
+            const { data: sessionData, error: sessionErr } = await supabase
+              .from('game_sessions')
+              .select('user_id, game_id, level, score, accuracy, time_spent, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)')
+              .order('created_at', { ascending: false })
+              .limit(5000);
+
+            if (!sessionErr && sessionData && !isCancelled) {
+              // Best score per game level
+              const bestLevelMap = new Map<string, any>();
+              sessionData.forEach((row: any) => {
+                if (!row.profiles || row.profiles.is_blocked) return;
+                const normGame = row.game_id === 'geo_sudoku' ? 'sudoku' : row.game_id;
+                const key = `${row.user_id}_${normGame}_${row.level}`;
+                const existing = bestLevelMap.get(key);
+                if (!existing || (row.score || 0) > existing.score) {
+                  bestLevelMap.set(key, row);
+                }
+              });
+
+              const userMap = new Map<string, any>();
+              bestLevelMap.forEach((row: any) => {
+                const uid = row.user_id;
+                const existing = userMap.get(uid) || {
+                  user_id: uid,
+                  name: row.profiles.name || 'Anonymous',
+                  college: normalizeCollege(row.profiles.college),
+                  avatar_url: row.profiles.avatar_url,
+                  total_score: 0,
+                  accuracy_sum: 0,
+                  total_games: 0,
+                  total_time: 0,
+                };
+                existing.total_score += (row.score || 0);
+                existing.accuracy_sum += (row.accuracy || 0);
+                existing.total_games += 1;
+                existing.total_time += (row.time_spent || 0);
+                userMap.set(uid, existing);
+              });
+
+              const aggregated = Array.from(userMap.values())
+                .filter(u => !blockedSet.has(u.user_id))
+                .map(u => ({
+                  ...u,
+                  avg_accuracy: u.total_games > 0 ? Math.round(u.accuracy_sum / u.total_games) : 0,
+                }))
+                .sort(sortLeaderboardEntries);
+
+              setLeaderboard(aggregated);
+            }
           }
         } else if (isWeekly && !isSpecificGame) {
           // Weekly all games view
