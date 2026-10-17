@@ -93,43 +93,20 @@ CREATE POLICY "Game sessions are viewable by everyone."
   ON public.game_sessions FOR SELECT
   USING ( true );
 
--- 4. Global Leaderboard View: Unified sudoku + geo_sudoku, fair-play scoring
+-- 4. Global Leaderboard View: Pure cumulative scoring across all sessions
 DROP VIEW IF EXISTS global_leaderboard CASCADE;
 CREATE VIEW global_leaderboard AS
-WITH normalized_sessions AS (
-  SELECT 
-    id,
-    user_id,
-    CASE WHEN game_id = 'geo_sudoku' THEN 'sudoku' ELSE game_id END AS game_id,
-    level,
-    score,
-    accuracy,
-    time_spent,
-    created_at
-  FROM game_sessions
-),
-distinct_level_scores AS (
-  SELECT 
-    user_id,
-    game_id,
-    level,
-    MAX(score) AS best_score,
-    ROUND(AVG(accuracy)) AS level_acc,
-    MIN(time_spent) AS best_time
-  FROM normalized_sessions
-  GROUP BY user_id, game_id, level
-)
 SELECT 
   p.id AS user_id,
   p.name,
   p.college,
   p.avatar_url,
-  COALESCE(SUM(dls.best_score), 0)::numeric(10,2) AS total_score,
-  COALESCE(ROUND(AVG(dls.level_acc)), 0) AS avg_accuracy,
-  COUNT(dls.level) AS total_games,
-  COALESCE(SUM(dls.best_time), 0) AS total_time
+  COALESCE(SUM(s.score), 0)::numeric(10,2) AS total_score,
+  COALESCE(ROUND(AVG(s.accuracy)), 0) AS avg_accuracy,
+  COUNT(s.id)::integer AS total_games,
+  COALESCE(SUM(s.time_spent), 0)::integer AS total_time
 FROM profiles p
-JOIN distinct_level_scores dls ON p.id = dls.user_id
+JOIN game_sessions s ON p.id = s.user_id
 WHERE (p.is_blocked IS NOT TRUE)
 GROUP BY p.id, p.name, p.college, p.avatar_url;
 
@@ -304,23 +281,58 @@ export const AdminDashboard = () => {
         setTotalTabCount(count ?? 0);
       }
       else if (activeTab === 'leaderboard') {
-        let query = supabase
-          .from('global_leaderboard')
-          .select('*', { count: 'exact' });
+        const { data: profileData, error: profileErr } = await supabase
+          .from('profiles')
+          .select('id, name, college, avatar_url, is_blocked, game_sessions(score, accuracy, time_spent, game_id, created_at)')
+          .eq('is_blocked', false);
 
+        if (profileErr) throw profileErr;
+
+        let list: any[] = [];
+        (profileData || []).forEach((p: any) => {
+          const sessions = p.game_sessions || [];
+          if (sessions.length === 0) return;
+
+          let total_score = 0;
+          let accuracy_sum = 0;
+          let total_time = 0;
+          sessions.forEach((s: any) => {
+            total_score += Number(s.score) || 0;
+            accuracy_sum += Number(s.accuracy) || 0;
+            total_time += Number(s.time_spent) || 0;
+          });
+
+          list.push({
+            user_id: p.id,
+            name: p.name || 'Anonymous',
+            college: normalizeCollege(p.college),
+            avatar_url: p.avatar_url,
+            total_score,
+            avg_accuracy: sessions.length > 0 ? Math.round(accuracy_sum / sessions.length) : 0,
+            total_games: sessions.length,
+            total_time,
+          });
+        });
+
+        // Search filtering
         if (searchTerm.trim()) {
-          query = query.or(`name.ilike.%${searchTerm.trim()}%,college.ilike.%${searchTerm.trim()}%`);
+          const term = searchTerm.trim().toLowerCase();
+          list = list.filter(u => 
+            (u.name && u.name.toLowerCase().includes(term)) ||
+            (u.college && u.college.toLowerCase().includes(term))
+          );
         }
 
-        const { data, count, error } = await query
-          .order('total_score', { ascending: false })
-          .order('avg_accuracy', { ascending: false })
-          .order('total_time', { ascending: true })
-          .range(from, to);
+        // Sort descending by total_score, avg_accuracy, total_time
+        list.sort((a, b) => {
+          if (b.total_score !== a.total_score) return b.total_score - a.total_score;
+          if (b.avg_accuracy !== a.avg_accuracy) return b.avg_accuracy - a.avg_accuracy;
+          if (a.total_time !== b.total_time) return a.total_time - b.total_time;
+          return (a.name || '').localeCompare(b.name || '');
+        });
 
-        if (error) throw error;
-        setLeaderboard(data ? data.map(u => ({ ...u, college: normalizeCollege(u.college) })) : []);
-        setTotalTabCount(count ?? 0);
+        setTotalTabCount(list.length);
+        setLeaderboard(list.slice(from, to + 1));
       }
       else if (activeTab === 'bugs') {
         let query = supabase
