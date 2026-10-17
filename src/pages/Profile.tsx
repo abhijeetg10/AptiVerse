@@ -49,22 +49,11 @@ const Profile = () => {
         .eq('user_id', user.id);
 
       if (userSessions && userSessions.length > 0) {
-        // Group by game_id and level to take best score per unique level
-        const bestLevelScores = new Map<string, number>();
+        let totalScore = 0;
         let accuracySum = 0;
         userSessions.forEach(s => {
-          const normGame = s.game_id === 'geo_sudoku' ? 'sudoku' : s.game_id;
-          const key = `${normGame}_${s.level}`;
-          const currentBest = bestLevelScores.get(key) || 0;
-          if (Number(s.score) > currentBest) {
-            bestLevelScores.set(key, Number(s.score));
-          }
+          totalScore += Number(s.score) || 0;
           accuracySum += Number(s.accuracy) || 0;
-        });
-
-        let totalScore = 0;
-        bestLevelScores.forEach(score => {
-          totalScore += score;
         });
 
         setStats({

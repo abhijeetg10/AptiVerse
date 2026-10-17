@@ -107,20 +107,9 @@ const Leaderboard = () => {
             .limit(10000);
 
           if (!sessionErr && sessionData && sessionData.length > 0 && !isCancelled) {
-            // Calculate best score per unique game level
-            const bestLevelMap = new Map<string, any>();
+            const userMap = new Map<string, any>();
             sessionData.forEach((row: any) => {
               if (!row.profiles || row.profiles.is_blocked) return;
-              const normGame = row.game_id === 'geo_sudoku' ? 'sudoku' : row.game_id;
-              const key = `${row.user_id}_${normGame}_${row.level}`;
-              const existing = bestLevelMap.get(key);
-              if (!existing || (row.score || 0) > existing.score) {
-                bestLevelMap.set(key, row);
-              }
-            });
-
-            const userMap = new Map<string, any>();
-            bestLevelMap.forEach((row: any) => {
               const uid = row.user_id;
               const existing = userMap.get(uid) || {
                 user_id: uid,
@@ -181,19 +170,9 @@ const Leaderboard = () => {
             .limit(10000);
 
           if (!sessionErr && sessionData && sessionData.length > 0 && !isCancelled) {
-            const bestLevelMap = new Map<string, any>();
+            const userMap = new Map<string, any>();
             sessionData.forEach((row: any) => {
               if (!row.profiles || row.profiles.is_blocked) return;
-              const normGame = row.game_id === 'geo_sudoku' ? 'sudoku' : row.game_id;
-              const key = `${row.user_id}_${normGame}_${row.level}`;
-              const existing = bestLevelMap.get(key);
-              if (!existing || (row.score || 0) > existing.score) {
-                bestLevelMap.set(key, row);
-              }
-            });
-
-            const userMap = new Map<string, any>();
-            bestLevelMap.forEach((row: any) => {
               const uid = row.user_id;
               const existing = userMap.get(uid) || {
                 user_id: uid,
@@ -241,7 +220,7 @@ const Leaderboard = () => {
             } catch {}
           }
         } else {
-          // Specific game: direct aggregation taking best score per level
+          // Specific game: direct cumulative aggregation
           let query = supabase
             .from('game_sessions')
             .select('user_id, game_id, level, score, accuracy, time_spent, created_at, profiles:user_id(id, name, college, avatar_url, is_blocked)');
@@ -255,18 +234,9 @@ const Leaderboard = () => {
             .limit(10000);
 
           if (!sessionErr && sessionData && sessionData.length > 0 && !isCancelled) {
-            const bestLevelMap = new Map<string, any>();
+            const userMap = new Map<string, any>();
             sessionData.forEach((row: any) => {
               if (!row.profiles || row.profiles.is_blocked) return;
-              const key = `${row.user_id}_${row.level}`;
-              const existing = bestLevelMap.get(key);
-              if (!existing || (row.score || 0) > existing.score) {
-                bestLevelMap.set(key, row);
-              }
-            });
-
-            const userMap = new Map<string, any>();
-            bestLevelMap.forEach((row: any) => {
               const uid = row.user_id;
               const existing = userMap.get(uid) || {
                 user_id: uid,
