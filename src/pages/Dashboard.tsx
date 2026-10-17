@@ -33,14 +33,30 @@ const Dashboard = () => {
         .from('global_leaderboard')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
         
       if (data && !error) {
         setStats({
-          accuracy: data.avg_accuracy || 0,
-          games: data.total_games || 0,
-          score: data.total_score || 0,
+          accuracy: Number(data.avg_accuracy) || 0,
+          games: Number(data.total_games) || 0,
+          score: Number(data.total_score) || 0,
         });
+      } else {
+        // Fallback directly from game_sessions
+        const { data: userSessions } = await supabase
+          .from('game_sessions')
+          .select('score, accuracy')
+          .eq('user_id', user.id);
+
+        if (userSessions && userSessions.length > 0) {
+          const totalScore = userSessions.reduce((acc, s) => acc + (Number(s.score) || 0), 0);
+          const totalAcc = userSessions.reduce((acc, s) => acc + (Number(s.accuracy) || 0), 0);
+          setStats({
+            score: Math.round(totalScore * 100) / 100,
+            accuracy: Math.round(totalAcc / userSessions.length),
+            games: userSessions.length
+          });
+        }
       }
 
       // Fetch user's actual most recently played game

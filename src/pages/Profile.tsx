@@ -46,15 +46,32 @@ const Profile = () => {
         .from('global_leaderboard')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
         
       if (data) {
         setStats({
-          totalScore: data.total_score || 0,
-          gamesPlayed: data.total_games || 0,
-          accuracy: data.avg_accuracy || 0,
-          streak: data.total_games > 0 ? 1 : 0
+          totalScore: Number(data.total_score) || 0,
+          gamesPlayed: Number(data.total_games) || 0,
+          accuracy: Number(data.avg_accuracy) || 0,
+          streak: Number(data.total_games) > 0 ? 1 : 0
         });
+      } else {
+        // Fallback directly from game_sessions if view has not yet aggregated
+        const { data: userSessions } = await supabase
+          .from('game_sessions')
+          .select('score, accuracy')
+          .eq('user_id', user.id);
+
+        if (userSessions && userSessions.length > 0) {
+          const totalScore = userSessions.reduce((acc, s) => acc + (Number(s.score) || 0), 0);
+          const totalAcc = userSessions.reduce((acc, s) => acc + (Number(s.accuracy) || 0), 0);
+          setStats({
+            totalScore: Math.round(totalScore * 100) / 100,
+            gamesPlayed: userSessions.length,
+            accuracy: Math.round(totalAcc / userSessions.length),
+            streak: 1
+          });
+        }
       }
     };
     fetchStats();

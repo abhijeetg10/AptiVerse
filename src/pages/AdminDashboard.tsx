@@ -80,6 +80,19 @@ END $$;
 ALTER TABLE public.game_sessions ADD COLUMN IF NOT EXISTS attempt_id UUID;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_game_sessions_attempt_id ON public.game_sessions(attempt_id) WHERE attempt_id IS NOT NULL;
 
+-- Ensure authenticated users can record game sessions
+GRANT INSERT, SELECT ON public.game_sessions TO authenticated;
+DROP POLICY IF EXISTS "Users can insert their own game sessions." ON public.game_sessions;
+CREATE POLICY "Users can insert their own game sessions."
+  ON public.game_sessions FOR INSERT
+  TO authenticated
+  WITH CHECK ( auth.uid() = user_id );
+
+DROP POLICY IF EXISTS "Game sessions are viewable by everyone." ON public.game_sessions;
+CREATE POLICY "Game sessions are viewable by everyone."
+  ON public.game_sessions FOR SELECT
+  USING ( true );
+
 -- 4. Global Leaderboard View: Unified sudoku + geo_sudoku, fair-play scoring
 DROP VIEW IF EXISTS global_leaderboard CASCADE;
 CREATE VIEW global_leaderboard AS

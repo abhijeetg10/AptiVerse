@@ -24,14 +24,30 @@ const Progress = () => {
         .from('global_leaderboard')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
         
       if (kpiData) {
         setStats({
-          totalScore: kpiData.total_score || 0,
-          accuracy: kpiData.avg_accuracy || 0,
-          gamesPlayed: kpiData.total_games || 0
+          totalScore: Number(kpiData.total_score) || 0,
+          accuracy: Number(kpiData.avg_accuracy) || 0,
+          gamesPlayed: Number(kpiData.total_games) || 0
         });
+      } else {
+        // Fallback directly from game_sessions if view hasn't aggregated
+        const { data: userSessions } = await supabase
+          .from('game_sessions')
+          .select('score, accuracy')
+          .eq('user_id', user.id);
+
+        if (userSessions && userSessions.length > 0) {
+          const totalScore = userSessions.reduce((acc, s) => acc + (Number(s.score) || 0), 0);
+          const totalAcc = userSessions.reduce((acc, s) => acc + (Number(s.accuracy) || 0), 0);
+          setStats({
+            totalScore: Math.round(totalScore * 100) / 100,
+            accuracy: Math.round(totalAcc / userSessions.length),
+            gamesPlayed: userSessions.length
+          });
+        }
       }
 
       // Fetch recent history
