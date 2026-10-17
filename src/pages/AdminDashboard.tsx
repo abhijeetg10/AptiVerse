@@ -93,7 +93,7 @@ CREATE POLICY "Game sessions are viewable by everyone."
   ON public.game_sessions FOR SELECT
   USING ( true );
 
--- 4. Global Leaderboard View: Pure cumulative scoring across all sessions
+-- 4. Global Leaderboard View: Pure cumulative scoring
 DROP VIEW IF EXISTS global_leaderboard CASCADE;
 CREATE VIEW global_leaderboard AS
 SELECT 
@@ -103,8 +103,8 @@ SELECT
   p.avatar_url,
   COALESCE(SUM(s.score), 0)::numeric(10,2) AS total_score,
   COALESCE(ROUND(AVG(s.accuracy)), 0) AS avg_accuracy,
-  COUNT(s.id)::integer AS total_games,
-  COALESCE(SUM(s.time_spent), 0)::integer AS total_time
+  COUNT(s.id) AS total_games,
+  COALESCE(SUM(s.time_spent), 0) AS total_time
 FROM profiles p
 JOIN game_sessions s ON p.id = s.user_id
 WHERE (p.is_blocked IS NOT TRUE)
@@ -281,14 +281,20 @@ export const AdminDashboard = () => {
         setTotalTabCount(count ?? 0);
       }
       else if (activeTab === 'leaderboard') {
-        const { data: profileData, error: profileErr } = await supabase
+        let query = supabase
           .from('profiles')
-          .select('id, name, college, avatar_url, is_blocked, game_sessions(score, accuracy, time_spent, game_id, created_at)')
+          .select('id, name, college, avatar_url, is_blocked, game_sessions(score, accuracy, time_spent, created_at)')
           .eq('is_blocked', false);
 
-        if (profileErr) throw profileErr;
+        if (searchTerm.trim()) {
+          query = query.or(`name.ilike.%${searchTerm.trim()}%,college.ilike.%${searchTerm.trim()}%`);
+        }
 
-        let list: any[] = [];
+        const { data: profileData, error } = await query;
+
+        if (error) throw error;
+
+        const list: any[] = [];
         (profileData || []).forEach((p: any) => {
           const sessions = p.game_sessions || [];
           if (sessions.length === 0) return;
@@ -304,7 +310,7 @@ export const AdminDashboard = () => {
 
           list.push({
             user_id: p.id,
-            name: p.name || 'Anonymous',
+            name: p.name || 'Unknown',
             college: normalizeCollege(p.college),
             avatar_url: p.avatar_url,
             total_score,
@@ -314,21 +320,11 @@ export const AdminDashboard = () => {
           });
         });
 
-        // Search filtering
-        if (searchTerm.trim()) {
-          const term = searchTerm.trim().toLowerCase();
-          list = list.filter(u => 
-            (u.name && u.name.toLowerCase().includes(term)) ||
-            (u.college && u.college.toLowerCase().includes(term))
-          );
-        }
-
-        // Sort descending by total_score, avg_accuracy, total_time
+        // Sort descending by total_score, avg_accuracy, and ascending by total_time
         list.sort((a, b) => {
           if (b.total_score !== a.total_score) return b.total_score - a.total_score;
           if (b.avg_accuracy !== a.avg_accuracy) return b.avg_accuracy - a.avg_accuracy;
-          if (a.total_time !== b.total_time) return a.total_time - b.total_time;
-          return (a.name || '').localeCompare(b.name || '');
+          return (a.total_time || 0) - (b.total_time || 0);
         });
 
         setTotalTabCount(list.length);
