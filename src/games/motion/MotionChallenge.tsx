@@ -28,9 +28,18 @@ export const MotionChallenge: React.FC = () => {
   const [state, setState] = useState<GameState>(() => createInitialState(puzzle));
   const [history, setHistory] = useState<GameState[]>([]);
   const [isSolving, setIsSolving] = useState(false);
+  const [isAutoSolved, setIsAutoSolved] = useState(false);
+  const isAutoSolvedRef = useRef(false);
+  const solvingCancelledRef = useRef(false);
   const [timeLeft, setTimeLeft] = useState(360);
   const hasSavedRef = useRef(false);
   
+  useEffect(() => {
+    return () => {
+      solvingCancelledRef.current = true;
+    };
+  }, []);
+
   useEffect(() => {
     if (timeLeft <= 0 || state.status === 'completed') return;
     const timer = setInterval(() => {
@@ -58,11 +67,15 @@ export const MotionChallenge: React.FC = () => {
     startAttempt(levelIndex + 1, attemptId);
   }, [levelIndex, attemptId, startAttempt]);
 
-  // Save session on complete
+  // Save session on complete: if auto-solved by system, award 0 score / 0 accuracy / solved=false
   useEffect(() => {
     if (state.status === 'completed' && !hasSavedRef.current) {
       hasSavedRef.current = true;
-      saveSession(levelIndex + 1, 10, 100, Math.max(3, 360 - timeLeft), true, attemptId);
+      if (isAutoSolvedRef.current) {
+        saveSession(levelIndex + 1, 0, 0, Math.max(3, 360 - timeLeft), false, attemptId);
+      } else {
+        saveSession(levelIndex + 1, 10, 100, Math.max(3, 360 - timeLeft), true, attemptId);
+      }
     }
   }, [state.status, levelIndex, timeLeft, attemptId, saveSession]);
 
@@ -106,6 +119,9 @@ export const MotionChallenge: React.FC = () => {
   const handleAutoSolve = async () => {
     if (isSolving || state.status !== 'playing') return;
     setIsSolving(true);
+    setIsAutoSolved(true);
+    isAutoSolvedRef.current = true;
+    solvingCancelledRef.current = false;
     
     const moves = solveBoard(state);
     
@@ -117,7 +133,9 @@ export const MotionChallenge: React.FC = () => {
 
     let currentState = state;
     for (const move of moves) {
+      if (solvingCancelledRef.current) break;
       await new Promise(r => setTimeout(r, 400));
+      if (solvingCancelledRef.current) break;
       currentState = applyMove(currentState, move.entityId, move.direction, move.steps);
       setState(currentState);
     }
@@ -125,8 +143,20 @@ export const MotionChallenge: React.FC = () => {
     setIsSolving(false);
   };
 
-  // Reset restores the current attempt board without re-rolling the puzzle or creating duplicate points
+  // Reset restores the current attempt board without re-rolling the puzzle.
+  // If previously auto-solved or completed, starts a fresh attempt so legitimate manual solve can earn points.
   const handleReset = () => {
+    solvingCancelledRef.current = true;
+    setIsSolving(false);
+    setIsAutoSolved(false);
+    isAutoSolvedRef.current = false;
+
+    if (hasSavedRef.current) {
+      const newAttemptId = createAttemptId();
+      setAttemptId(newAttemptId);
+      startAttempt(levelIndex + 1, newAttemptId);
+    }
+    hasSavedRef.current = false;
     setState(createInitialState(puzzle));
     setHistory([]);
   };
@@ -139,6 +169,10 @@ export const MotionChallenge: React.FC = () => {
   };
 
   const loadNextLevel = () => {
+    solvingCancelledRef.current = true;
+    setIsSolving(false);
+    setIsAutoSolved(false);
+    isAutoSolvedRef.current = false;
     const nextIdx = levelIndex + 1;
     setLevelIndex(nextIdx);
     const newPuzzle = getLevel(nextIdx);
@@ -160,7 +194,7 @@ export const MotionChallenge: React.FC = () => {
   const { isFeedbackOpen, handleFeedbackClose, handleFeedbackSubmit, advanceNow } = useAutoAdvance(
     state.status === 'completed', 
     loadNextLevel, 
-    1500, 
+    isAutoSolved ? 3000 : 1500, 
     timeLeft <= 0
   );
 
@@ -234,13 +268,14 @@ export const MotionChallenge: React.FC = () => {
                 <button
                   onClick={handleAutoSolve}
                   disabled={isSolving || state.status !== 'playing'}
-                  className="px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg font-bold text-xs flex items-center gap-1.5 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                  className="px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg font-bold text-xs flex items-center gap-1.5 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+                  title="Auto-solve demonstration (0 score awarded)"
                 >
-                  <Lightbulb size={14} /> {isSolving ? 'Solving...' : 'Solve'}
+                  <Lightbulb size={14} /> {isSolving ? 'Solving...' : 'Solve (0 pts)'}
                 </button>
                 <button
                   onClick={handleSkip}
-                  className="px-3 py-2 bg-slate-200 rounded-lg text-slate-700 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-300 shadow-xs"
+                  className="px-3 py-2 bg-slate-200 rounded-lg text-slate-700 font-bold text-xs flex items-center gap-1.5 hover:bg-slate-300 shadow-xs cursor-pointer"
                 >
                   Skip
                 </button>
@@ -255,18 +290,45 @@ export const MotionChallenge: React.FC = () => {
             />
 
             {state.status === 'completed' && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center justify-between w-full shadow-sm animate-in zoom-in-95">
-                <div>
-                  <h3 className="font-extrabold text-sm">Target Reached!</h3>
-                  <p className="text-xs text-emerald-600 mt-0.5">Completed in {state.moves} moves.</p>
+              isAutoSolved ? (
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-2xl flex items-center justify-between w-full shadow-sm animate-in zoom-in-95">
+                  <div>
+                    <h3 className="font-extrabold text-sm flex items-center gap-1.5 text-amber-800">
+                      <Lightbulb size={16} className="text-amber-600" /> Auto-Solved (0 Points)
+                    </h3>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      Solved by system • No score awarded to prevent unfair points.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleReset}
+                      className="px-3 py-2 bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                    >
+                      Try Yourself
+                    </button>
+                    <button
+                      onClick={advanceNow}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                    >
+                      Next Level →
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={advanceNow}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
-                >
-                  Next Level →
-                </button>
-              </div>
+              ) : (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center justify-between w-full shadow-sm animate-in zoom-in-95">
+                  <div>
+                    <h3 className="font-extrabold text-sm">Target Reached! (+10 pts)</h3>
+                    <p className="text-xs text-emerald-600 mt-0.5">Completed in {state.moves} moves.</p>
+                  </div>
+                  <button
+                    onClick={advanceNow}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                  >
+                    Next Level →
+                  </button>
+                </div>
+              )
             )}
 
             {/* Timeout Recovery Overlay */}
