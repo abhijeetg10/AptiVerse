@@ -370,16 +370,14 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
             <span className="hidden sm:inline">{isMuted ? 'Muted' : 'Voice Active'}</span>
           </button>
 
-          {hasStarted && (
-            <button
-              onClick={handleExitInterview}
-              className="p-2 rounded-xl text-xs font-semibold bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/40 flex items-center gap-1.5 transition-colors"
-              title="Exit Fullscreen Interview"
-            >
-              <X size={15} />
-              <span>Exit Interview</span>
-            </button>
-          )}
+          <button
+            onClick={handleExitInterview}
+            className="p-2 px-3 rounded-xl text-xs font-bold bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/40 flex items-center gap-1.5 transition-colors shadow-sm"
+            title="Exit Interview Room"
+          >
+            <X size={15} />
+            <span>Exit Interview</span>
+          </button>
         </div>
       </div>
 
@@ -387,19 +385,16 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
         /* Pre-Interview Briefing */
         <div className="p-8 lg:p-12 max-w-3xl mx-auto text-center my-auto">
           
-          <div className="relative w-28 h-28 mx-auto mb-5 rounded-3xl overflow-hidden border-2 border-primary-500 shadow-2xl">
-            <img 
-              src={recruiter.img} 
-              alt={recruiter.name}
-              className="w-full h-full object-cover object-top"
-            />
-            <span className="absolute bottom-1 right-1 bg-emerald-500 text-white p-1 rounded-full shadow">
-              <CheckCircle2 size={14} />
+          {/* Futuristic Holographic Silhouette Preview */}
+          <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-slate-900 border-2 border-primary-500/60 shadow-[0_0_25px_rgba(59,130,246,0.3)] flex items-center justify-center relative">
+            <Eye size={42} className="text-primary-400 animate-pulse" />
+            <span className="absolute bottom-0 right-0 bg-emerald-500 text-white p-1 rounded-full shadow">
+              <CheckCircle2 size={13} />
             </span>
           </div>
 
           <h2 className="text-3xl font-extrabold text-white mb-1.5">
-            Meet Your Interviewer: {recruiter.name}
+            Infosys Virtual Interviewer: {recruiter.name}
           </h2>
           <p className="text-primary-300 text-xs font-semibold uppercase tracking-wider mb-4">
             {recruiter.role} • {recruiter.unit}
@@ -407,7 +402,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
 
           <p className="text-slate-300 text-sm leading-relaxed mb-6 max-w-xl mx-auto">
             {activeRound === 'technical'
-              ? `${recruiter.name} will speak each question aloud in real time with animated speech responses. Answer her questions while observing your own live webcam feed for posture and eye contact.`
+              ? `${recruiter.name} will speak each question aloud in real time with dynamic soundwave indicators. Answer while observing your own live webcam feed for posture and eye contact.`
               : `${recruiter.name} will conduct your behavioral and culture discussion, evaluating your adaptability to Infosys Development Centers and situational teamwork handling.`}
           </p>
 
@@ -420,13 +415,22 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={handleStartInterview}
-            className="w-full sm:w-auto px-10 py-4 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition-all flex items-center justify-center gap-3 mx-auto text-base active:scale-95"
-          >
-            <Play size={20} className="fill-white" />
-            Launch Immersive Fullscreen AI Interview
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={handleStartInterview}
+              className="px-10 py-4 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition-all flex items-center justify-center gap-3 text-base active:scale-95"
+            >
+              <Play size={20} className="fill-white" />
+              Launch Immersive Fullscreen AI Interview
+            </button>
+
+            <button
+              onClick={handleExitInterview}
+              className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-sm transition-colors"
+            >
+              Exit to Dashboard
+            </button>
+          </div>
         </div>
       ) : isFinished ? (
         /* Evaluation Card */
@@ -593,6 +597,13 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                   className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700"
                 >
                   Previous Question
+                </button>
+
+                <button
+                  onClick={handleExitInterview}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-red-950/40 hover:bg-red-900/50 text-red-300 border border-red-800/50 flex items-center gap-1.5 transition-colors"
+                >
+                  <X size={13} /> Exit Interview
                 </button>
 
                 <button
