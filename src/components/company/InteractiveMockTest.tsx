@@ -730,12 +730,12 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                     : `In official Infosys screening, candidates must clear every section. You scored ${overallPercentage}%, but missed cutoff in: ${failedSections.map(f => f.name).join(', ')}. Review the solutions below and re-test.`}
                 </p>
 
-                {allSectionsCleared && onProceedToTechnicalInterview && (
+                {onProceedToTechnicalInterview && (
                   <button
                     onClick={onProceedToTechnicalInterview}
                     className="mt-6 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-emerald-500/30 flex items-center gap-2 transition-all active:scale-95"
                   >
-                    <Video size={18} /> Proceed to Round 2 (Technical AI Interview) <ArrowRight size={16} />
+                    <Video size={18} /> {allSectionsCleared ? 'Proceed to Round 2 (Technical AI Interview)' : 'Continue to Round 2 (Technical AI Interview)'} <ArrowRight size={16} />
                   </button>
                 )}
               </div>

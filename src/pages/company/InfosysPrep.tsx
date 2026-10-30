@@ -18,6 +18,7 @@ import { InteractiveMockTest } from '../../components/company/InteractiveMockTes
 import { AIMockInterviewRoom } from '../../components/company/AIMockInterviewRoom';
 import { AdBanner } from '../../components/ui/AdBanner';
 import infosysLogo from '../../assets/infosys-logo.jpg';
+import gecMysoreImg from '../../assets/gec-mysore.jpg';
 
 export const InfosysPrep: React.FC = () => {
   const { user, signInWithGoogle } = useAuth();
@@ -48,13 +49,14 @@ export const InfosysPrep: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans pb-24">
       
       {/* Hero Header */}
-      <div className="bg-gradient-to-b from-blue-950 via-slate-900 to-slate-900 text-white pt-8 pb-12 px-6 border-b border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl -z-0"></div>
+      <div className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white pt-8 pb-12 px-6 border-b border-slate-800 relative overflow-hidden">
+        {/* Glow backdrop */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary-600/15 rounded-full blur-3xl -z-0"></div>
         
         <div className="max-w-7xl mx-auto relative z-10">
           
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs text-slate-400 mb-4">
+          <div className="flex items-center gap-2 text-xs text-slate-400 mb-6">
             <a href="/" className="hover:text-white transition-colors">Home</a>
             <ChevronRight size={12} />
             <a href="/games" className="hover:text-white transition-colors">Aptitude Games</a>
@@ -62,41 +64,93 @@ export const InfosysPrep: React.FC = () => {
             <span className="text-primary-400 font-semibold">Infosys Systems Engineer Placement Drive</span>
           </div>
 
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-white p-1 overflow-hidden shrink-0 shadow-lg hidden sm:flex items-center justify-center">
-                <img src={infosysLogo} alt="Infosys" className="w-full h-full object-contain" />
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-primary-500/20 text-primary-300 border border-primary-500/30 flex items-center gap-1.5">
-                    <Building2 size={13} /> Infosys Limited (Off-Campus & On-Campus)
-                  </span>
-                  <span className="px-3 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Systems Engineer Trainee • INR 3.6 LPA
-                  </span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Left Content (7 Cols) */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-white p-1 overflow-hidden shrink-0 shadow-md flex items-center justify-center">
+                  <img src={infosysLogo} alt="Infosys" className="w-full h-full object-contain" />
                 </div>
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary-500/20 text-primary-300 border border-primary-500/30 flex items-center gap-1.5">
+                  <Building2 size={13} /> Infosys Limited (On & Off Campus 2025–2026)
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Systems Engineer Trainee • INR 3.6 LPA
+                </span>
+              </div>
 
-                <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-white mb-2">
-                  Infosys Placement Drive: <span className="text-primary-400">Mock Test & AI Interview</span>
-                </h1>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
+                Infosys Placement Drive <span className="text-primary-400 block sm:inline">Mock Tests & AI Interview</span>
+              </h1>
 
-                <p className="text-slate-300 text-sm lg:text-base max-w-3xl leading-relaxed">
-                  Official pattern recruitment simulation: <strong>54 Questions / 100 Minutes</strong> across 5 sections with strict cutoffs, followed by live webcam AI Technical and HR interview panels.
-                </p>
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+                Experience the authentic recruitment simulation: full-length timed screening (<strong>54 Questions • 100 Minutes</strong>) across 5 sections with strict cutoffs, followed by live camera AI Technical and HR interview panels.
+              </p>
+
+              {/* Quick Info Badges */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-slate-300">
+                  <Clock size={13} className="text-primary-400" />
+                  <span>5 Timed Sections</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-slate-300">
+                  <ShieldCheck size={13} className="text-emerald-400" />
+                  <span>Section-Wise Cutoffs</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-slate-300">
+                  <Video size={13} className="text-blue-400" />
+                  <span>AI Recruiter Panel</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-slate-300">
+                  <CheckCircle2 size={13} className="text-teal-400" />
+                  <span>No Negative Marking</span>
+                </div>
               </div>
             </div>
 
-            {/* Quick Metrics Badge */}
-            <div className="flex items-center gap-3 bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/80 shrink-0 text-xs">
-              <div>
-                <span className="text-slate-400 block text-[11px]">Training Center</span>
-                <span className="font-bold text-white">GEC Mysuru (19-23 wks)</span>
-              </div>
-              <div className="w-[1px] h-8 bg-slate-700"></div>
-              <div>
-                <span className="text-slate-400 block text-[11px]">Format A Blueprint</span>
-                <span className="font-bold text-emerald-400">54 Qs • Sectional Cutoffs</span>
+            {/* Right: Training Center Showcase Card (5 Cols) */}
+            <div className="lg:col-span-5">
+              <div className="bg-slate-800/70 backdrop-blur-md rounded-3xl border border-slate-700/80 p-4 shadow-2xl hover:border-slate-600 transition-all duration-300">
+                {/* Mysore Campus Image */}
+                <div className="relative rounded-2xl overflow-hidden h-44 sm:h-48 w-full group">
+                  <img 
+                    src={gecMysoreImg} 
+                    alt="Infosys Global Education Center (GEC) Mysuru" 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
+                  
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 flex items-center gap-1.5">
+                    <MapPin size={11} className="text-rose-400" />
+                    <span>Mysuru, Karnataka</span>
+                  </div>
+
+                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-primary-300 mb-0.5">
+                      Your Training Destination
+                    </div>
+                    <div className="text-sm font-extrabold line-clamp-1">
+                      Infosys Global Education Center (GEC)
+                    </div>
+                  </div>
+                </div>
+
+                {/* Training Details Below Image */}
+                <div className="pt-3 px-1 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+                    <span className="flex items-center gap-1.5 text-slate-200">
+                      <GraduationCap size={14} className="text-primary-400" />
+                      Foundation Training Program
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      19 – 23 Weeks
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    World's largest corporate training university spread across 337 acres. Selected candidates undergo paid, residential world-class engineering and soft-skills training here.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -173,8 +227,8 @@ export const InfosysPrep: React.FC = () => {
                   </p>
                 </div>
 
-                {/* 4 Cards Grid - Styled after Reference UI */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* 4 Cards Grid - Styled in AptiVerse Theme */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {ALL_INFOSYS_MOCK_TESTS.map((bundle) => {
                     let savedScore: any = null;
                     if (user) {
@@ -184,108 +238,141 @@ export const InfosysPrep: React.FC = () => {
                       } catch (e) {}
                     }
 
+                    // Card styling config per difficulty tag
+                    const badgeConfig = {
+                      'Official Sample': {
+                        pillBg: 'bg-blue-50 text-blue-700 border-blue-200/80',
+                        dotBg: 'bg-blue-500',
+                        label: 'Sample Pattern',
+                        borderHover: 'hover:border-blue-400',
+                        btnBg: 'bg-blue-600 hover:bg-blue-700',
+                      },
+                      'Easy': {
+                        pillBg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+                        dotBg: 'bg-emerald-500',
+                        label: 'Easy Difficulty',
+                        borderHover: 'hover:border-emerald-400',
+                        btnBg: 'bg-emerald-600 hover:bg-emerald-700',
+                      },
+                      'Moderate': {
+                        pillBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
+                        dotBg: 'bg-amber-500',
+                        label: 'Moderate Difficulty',
+                        borderHover: 'hover:border-amber-400',
+                        btnBg: 'bg-amber-600 hover:bg-amber-700',
+                      },
+                      'Hard': {
+                        pillBg: 'bg-purple-50 text-purple-700 border-purple-200/80',
+                        dotBg: 'bg-purple-500',
+                        label: 'Hard Difficulty',
+                        borderHover: 'hover:border-purple-400',
+                        btnBg: 'bg-purple-600 hover:bg-purple-700',
+                      },
+                    }[bundle.tag] || {
+                      pillBg: 'bg-slate-50 text-slate-700 border-slate-200',
+                      dotBg: 'bg-slate-500',
+                      label: bundle.tag,
+                      borderHover: 'hover:border-slate-400',
+                      btnBg: 'bg-primary-600 hover:bg-primary-700',
+                    };
+
                     return (
                       <div 
                         key={bundle.id}
-                        className="bg-white rounded-3xl border border-slate-200/80 shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col justify-between group hover:-translate-y-1.5"
+                        className={`bg-white rounded-2xl border border-neutral-200/90 ${badgeConfig.borderHover} shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col justify-between group hover:-translate-y-1`}
                       >
                         <div>
-                          {/* Colored Top Header Banner (Inspired by Reference) */}
-                          <div className={`h-24 ${bundle.cardBannerColor} relative p-3 flex items-start justify-between text-white overflow-hidden`}>
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent pointer-events-none" />
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-sm">
-                              {bundle.tag === 'Official Sample' ? 'Sample Pattern' : `${bundle.tag} Pack`}
+                          {/* Top Header Pill Row */}
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1.5 ${badgeConfig.pillBg}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${badgeConfig.dotBg}`}></span>
+                              {badgeConfig.label}
                             </span>
-                            <span className="text-[10px] font-bold text-white/90 bg-black/25 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 font-mono">
-                              Pack 0{bundle.testNumber}
+                            <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                              MOCK 0{bundle.testNumber}
                             </span>
                           </div>
 
-                          {/* Overlapping Central Crest / Avatar Badge */}
-                          <div className="-mt-8 mx-auto w-16 h-16 rounded-full bg-white p-1 shadow-xl border border-slate-100 flex items-center justify-center relative z-10 group-hover:scale-105 transition-transform duration-300">
-                            <div className={`w-full h-full rounded-full ${bundle.cardBannerColor} flex items-center justify-center text-white font-black text-base shadow-inner`}>
-                              0{bundle.testNumber}
-                            </div>
+                          {/* Title & Description */}
+                          <h3 className="text-base font-extrabold text-neutral-900 group-hover:text-primary-600 transition-colors line-clamp-1">
+                            {bundle.title}
+                          </h3>
+                          <div className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                            {bundle.subtitle}
+                          </div>
+                          <p className="text-xs text-neutral-500 leading-relaxed mt-2 mb-4 line-clamp-2">
+                            {bundle.description}
+                          </p>
+
+                          {/* Stats Strip */}
+                          <div className="flex items-center justify-between text-xs font-semibold text-neutral-600 bg-neutral-50 p-2.5 rounded-xl border border-neutral-100 mb-4">
+                            <span className="flex items-center gap-1.5">
+                              <Clock size={13} className="text-primary-600" />
+                              {bundle.totalTimeMinutes} Mins
+                            </span>
+                            <span className="text-neutral-300">•</span>
+                            <span className="flex items-center gap-1.5">
+                              <FileText size={13} className="text-primary-600" />
+                              {bundle.totalQuestions} Questions
+                            </span>
+                            <span className="text-neutral-300">•</span>
+                            <span className="text-emerald-600 font-bold">
+                              3 Rounds
+                            </span>
                           </div>
 
-                          {/* Title & Track Details */}
-                          <div className="px-5 pt-2 text-center">
-                            <h4 className="text-base font-black text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                              {bundle.title}
-                            </h4>
-                            <div className="text-[11px] font-semibold text-slate-400 mt-0.5">
-                              {bundle.subtitle}
+                          {/* 3-Stage Pipeline Breakdown */}
+                          <div className="space-y-2 mb-5 pt-3 border-t border-neutral-100">
+                            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider flex items-center justify-between">
+                              <span>Hiring Journey Stages</span>
+                              <span className="text-primary-600 font-medium">Standard Flow</span>
                             </div>
-                            <p className="text-[11px] text-slate-500 leading-relaxed mt-2 line-clamp-2 px-1">
-                              {bundle.description}
-                            </p>
-                          </div>
 
-                          {/* Stats Row (3 Columns: Questions, Duration, Pipeline) */}
-                          <div className="mx-4 mt-3 py-2.5 px-1 rounded-2xl bg-slate-50 border border-slate-100 grid grid-cols-3 text-center">
-                            <div>
-                              <span className="text-xs font-black text-slate-800 block">{bundle.totalQuestions} Qs</span>
-                              <span className="text-[9px] text-slate-400 font-semibold uppercase">Aptitude</span>
-                            </div>
-                            <div className="border-x border-slate-200">
-                              <span className="text-xs font-black text-slate-800 block">{bundle.totalTimeMinutes}m</span>
-                              <span className="text-[9px] text-slate-400 font-semibold uppercase">Time</span>
-                            </div>
-                            <div>
-                              <span className="text-xs font-black text-emerald-600 block">3 Rounds</span>
-                              <span className="text-[9px] text-slate-400 font-semibold uppercase">Pipeline</span>
-                            </div>
-                          </div>
-
-                          {/* 3-Stage Pipeline Progression Indicators (Dots row from Reference) */}
-                          <div className="mx-4 mt-3 pt-2.5 border-t border-slate-100">
-                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                              <span>Hiring Pipeline</span>
-                              <span className="text-blue-600 font-bold">Standard Flow</span>
-                            </div>
-                            <div className="space-y-1.5 text-[11px] text-slate-600">
-                              <div className="flex items-center justify-between p-1 rounded-lg bg-slate-50 border border-slate-100">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                                  <span className="font-semibold text-slate-700">R1: Online Aptitude</span>
+                            <div className="space-y-1.5 text-xs">
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-neutral-50/70 border border-neutral-100">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-5 h-5 rounded-md bg-blue-100 text-blue-700 font-bold text-[10px] flex items-center justify-center shrink-0">1</span>
+                                  <span className="font-semibold text-neutral-800">Round 1: Online Aptitude</span>
                                 </div>
-                                <span className="text-[10px] text-slate-400 font-mono">{bundle.sectionsConfig.length} Sec</span>
+                                <span className="text-[11px] text-neutral-500 font-mono">54 Qs</span>
                               </div>
-                              <div className="flex items-center justify-between p-1 rounded-lg bg-slate-50 border border-slate-100">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                                  <span className="font-semibold text-slate-700">R2: Technical Panel</span>
+
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-neutral-50/70 border border-neutral-100">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-bold text-[10px] flex items-center justify-center shrink-0">2</span>
+                                  <span className="font-semibold text-neutral-800">Round 2: Technical Panel</span>
                                 </div>
-                                <span className="text-[10px] text-blue-600 font-mono font-bold">{bundle.technicalPrompts.length} Qs</span>
+                                <span className="text-[11px] text-indigo-600 font-bold font-mono">{bundle.technicalPrompts.length} Qs</span>
                               </div>
-                              <div className="flex items-center justify-between p-1 rounded-lg bg-slate-50 border border-slate-100">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                                  <span className="font-semibold text-slate-700">R3: HR & Managerial</span>
+
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-neutral-50/70 border border-neutral-100">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 font-bold text-[10px] flex items-center justify-center shrink-0">3</span>
+                                  <span className="font-semibold text-neutral-800">Round 3: HR & Behavioral</span>
                                 </div>
-                                <span className="text-[10px] text-emerald-600 font-mono font-bold">{bundle.hrPrompts.length} Qs</span>
+                                <span className="text-[11px] text-emerald-600 font-bold font-mono">{bundle.hrPrompts.length} Qs</span>
                               </div>
                             </div>
                           </div>
 
                           {/* Best Score Badge if candidate attempted before */}
                           {savedScore && (
-                            <div className="mx-4 mt-3 p-2 rounded-xl bg-slate-900 text-white text-[11px] flex items-center justify-between">
+                            <div className="mb-4 p-2.5 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between">
                               <div>
-                                <span className="text-slate-400 text-[9px] block">Your Best Score</span>
+                                <span className="text-slate-400 text-[10px] block">Your Best Score</span>
                                 <span className="font-bold text-emerald-400">{savedScore.score} / {savedScore.total_questions}</span>
                               </div>
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold ${
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                 savedScore.cleared ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                               }`}>
-                                {savedScore.cleared ? 'Cleared Cutoff' : 'Attempt Recorded'}
+                                {savedScore.cleared ? 'Cleared Cutoff' : 'Recorded'}
                               </span>
                             </div>
                           )}
                         </div>
 
                         {/* Action CTA Button */}
-                        <div className="p-4 pt-3">
+                        <div>
                           <button
                             onClick={() => {
                               if (!user) {
@@ -295,10 +382,10 @@ export const InfosysPrep: React.FC = () => {
                               setSelectedMockBundle(bundle);
                               setActiveRoundStep(1);
                             }}
-                            className={`w-full py-3 ${bundle.cardBannerColor} hover:brightness-110 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-98`}
+                            className={`w-full py-3 ${badgeConfig.btnBg} text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm hover:shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98]`}
                           >
                             <Play size={13} className="fill-white" />
-                            Start Complete Drive 0{bundle.testNumber}
+                            Start Mock Drive 0{bundle.testNumber}
                             <ArrowRight size={13} />
                           </button>
                         </div>
