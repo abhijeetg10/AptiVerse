@@ -1,17 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Building2, Sparkles, ArrowRight, Clock, Video, CheckCircle2,
-  Lock, BookOpen, FileText, Award, Compass
+  Building2, Sparkles, ArrowRight, Clock, Lock
 } from 'lucide-react';
-import { Badge } from '../ui/Badge';
-import infosysLogo from '../../assets/infosys-logo.jpg';
+import gecMysoreImg from '../../assets/gec-mysore.jpg';
 
 export const CompanyCardsSection: React.FC = () => {
   return (
     <section className="pt-16 pb-20 max-w-7xl mx-auto px-6 font-sans">
 
-      {/* Header */}
+      {/* Section Header */}
       <div className="flex flex-col items-center text-center mb-14">
         <div className="flex items-center gap-3 text-primary-600 font-bold text-xs tracking-wider uppercase mb-3">
           <div className="w-10 h-[2px] bg-primary-200"></div>
@@ -30,171 +28,212 @@ export const CompanyCardsSection: React.FC = () => {
         </p>
       </div>
 
-      {/* Cards Grid */}
+      {/* Cards Grid - Sized identical to Game Cards on Home Page */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-        {/* 1. INFOSYS - ACTIVE */}
+        {/* 1. INFOSYS - ACTIVE (Uses Mysore GEC Training Center Image) */}
         <Link
           to="/company/infosys"
-          className="group bg-white rounded-2xl shadow-sm border border-neutral-200/80 hover:shadow-xl hover:border-primary-300 transition-all duration-300 flex flex-col overflow-hidden h-full"
+          className="group relative rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 h-[400px] flex flex-col justify-between p-5 border border-slate-700/30 hover:-translate-y-1.5"
         >
-          {/* Visual Header */}
-          <div className="h-40 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-500/20 via-transparent to-transparent"></div>
+          {/* Mysore GEC Background Photo */}
+          <img 
+            src={gecMysoreImg} 
+            alt="Infosys GEC Mysuru Campus" 
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 brightness-[0.85]"
+          />
+          {/* Seamless Dark Gradient Overlay (from reference style) */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-black/30 pointer-events-none" />
 
-            {/* Live Indicator */}
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-extrabold shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+          {/* Top Bar Badges */}
+          <div className="relative z-10 flex items-center justify-between">
+            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/90 backdrop-blur-md text-white flex items-center gap-1.5 shadow-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               ACTIVE DRIVE
-            </div>
-
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-blue-200 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10">
-              3.6 LPA Ref.
-            </div>
-
-            {/* Visual Icon / Monogram */}
-            <div className="relative z-10 transform group-hover:scale-105 transition-transform duration-500 flex flex-col items-center">
-              <div className="w-16 h-14 rounded-2xl bg-white p-1 flex items-center justify-center shadow-xl overflow-hidden">
-                <img src={infosysLogo} alt="Infosys" className="w-full h-full object-contain" />
-              </div>
-              <span className="text-white/80 font-semibold text-xs mt-2 tracking-wide">Systems Engineer</span>
-            </div>
+            </span>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-black/50 backdrop-blur-md border border-white/20 shadow-sm font-mono">
+              3.6 LPA
+            </span>
           </div>
 
-            {/* Features Bullet List */}
-            <div className="p-5 flex-1 flex flex-col justify-between">
-              <div className="space-y-2 mb-4 text-xs text-neutral-600">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
-                  <span>Round 1: 4 Mocks (Sample, Easy, Moderate, Hard)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
-                  <span>Round 2: Technical Interview (AI Video Panel)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
-                  <span>Round 3: HR & Behavioral Discussion</span>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <div className="pt-3 border-t border-neutral-100 flex items-center justify-between text-xs font-bold text-primary-600 group-hover:text-primary-700">
-                <span className="bg-primary-600 text-white px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm group-hover:bg-primary-700 transition-colors">
-                  <Clock size={13} /> Start Mock Test
-                </span>
-                <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-              </div>
+          {/* Bottom Content Area */}
+          <div className="relative z-10 mt-auto">
+            <h3 className="text-xl font-black text-white tracking-tight leading-snug drop-shadow-md mb-0.5 group-hover:text-primary-300 transition-colors">
+              Infosys Limited
+            </h3>
+            <div className="text-xs text-primary-300 font-semibold mb-2">
+              Systems Engineer Trainee • GEC Mysuru
             </div>
-          </Link>
-
-        {/* 2. TCS NQT - UPCOMING */}
-        <div className="bg-neutral-50/70 rounded-2xl shadow-sm border border-neutral-200/80 flex flex-col overflow-hidden h-full opacity-90 hover:opacity-100 transition-opacity">
-          <div className="h-40 bg-neutral-800 flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
-              <Clock size={10} /> UPCOMING
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-14 rounded-2xl bg-neutral-700 text-white font-black text-xl flex items-center justify-center border border-neutral-600">
-                TCS
-              </div>
-              <span className="text-neutral-300 font-semibold text-xs mt-2">National Qualifier Test</span>
-            </div>
-          </div>
-
-          <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-800 mb-1">TCS NQT Preparation</h3>
-            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
-              Numerical, Verbal & Reasoning cognitive modules with Ninja and Digital track coding challenges.
+            <p className="text-xs text-slate-200/90 leading-relaxed mb-3 line-clamp-2">
+              Official pattern screening tests with 5 timed sections and webcam AI Technical & HR interview panels.
             </p>
 
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
-                Ninja & Digital
-              </Badge>
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
-                Cognitive + Code
-              </Badge>
+            {/* Translucent Tags Strip (from reference image) */}
+            <div className="flex flex-wrap items-center gap-1.5 mb-4">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15 flex items-center gap-1">
+                <Sparkles size={10} className="text-amber-300" /> 4 Mock Packs
+              </span>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15">
+                3-Round Pipeline
+              </span>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15">
+                AI Recruiter
+              </span>
             </div>
 
-            <div className="mt-auto pt-4 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
-              <span className="flex items-center gap-1.5 text-[11px]"><Lock size={12} /> In Progress</span>
-              <span className="text-[10px] bg-neutral-200 text-neutral-600 px-2 py-0.5 rounded font-bold">Coming Soon</span>
+            {/* Bottom Button ('Reserve now' pill style from reference image) */}
+            <div className="w-full py-3 rounded-full bg-white text-slate-900 font-black text-xs uppercase tracking-wider shadow-lg hover:bg-slate-100 transition-all flex items-center justify-center gap-2 group-hover:shadow-white/20 active:scale-[0.98]">
+              Prepare Now <ArrowRight size={14} />
+            </div>
+          </div>
+        </Link>
+
+        {/* 2. TCS NQT - UPCOMING */}
+        <div className="group relative rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 h-[400px] flex flex-col justify-between p-5 border border-slate-700/30">
+          {/* Corporate Campus Photo */}
+          <img 
+            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop" 
+            alt="TCS Campus" 
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-[0.7]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-black/30 pointer-events-none" />
+
+          {/* Top Bar Badges */}
+          <div className="relative z-10 flex items-center justify-between">
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/50 backdrop-blur-md border border-white/20 flex items-center gap-1.5 shadow-sm">
+              <Clock size={11} className="text-amber-400" />
+              UPCOMING
+            </span>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-black/50 backdrop-blur-md border border-white/20 shadow-sm font-mono">
+              3.36 - 7 LPA
+            </span>
+          </div>
+
+          {/* Bottom Content Area */}
+          <div className="relative z-10 mt-auto">
+            <h3 className="text-xl font-black text-white tracking-tight leading-snug drop-shadow-md mb-0.5">
+              TCS NQT 2026
+            </h3>
+            <div className="text-xs text-amber-300 font-semibold mb-2">
+              Ninja & Digital Track • TCS BPS
+            </div>
+            <p className="text-xs text-slate-200/90 leading-relaxed mb-3 line-clamp-2">
+              Cognitive aptitude (Numerical, Verbal, Reasoning) and advanced coding challenges.
+            </p>
+
+            {/* Translucent Tags Strip */}
+            <div className="flex flex-wrap items-center gap-1.5 mb-4">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15">
+                Ninja & Digital
+              </span>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15">
+                Cognitive + Code
+              </span>
+            </div>
+
+            {/* Bottom Button */}
+            <div className="w-full py-3 rounded-full bg-white/15 backdrop-blur-md text-slate-300 font-bold text-xs uppercase tracking-wider border border-white/20 flex items-center justify-center gap-2 cursor-not-allowed">
+              <Lock size={12} className="text-slate-300" /> In Progress • Coming Soon
             </div>
           </div>
         </div>
 
         {/* 3. CAPGEMINI - UPCOMING */}
-        <div className="bg-neutral-50/70 rounded-2xl shadow-sm border border-neutral-200/80 flex flex-col overflow-hidden h-full opacity-90 hover:opacity-100 transition-opacity">
-          <div className="h-40 bg-blue-900 flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
-              <Clock size={10} /> UPCOMING
-            </div>
+        <div className="group relative rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 h-[400px] flex flex-col justify-between p-5 border border-slate-700/30">
+          {/* Corporate Campus Photo */}
+          <img 
+            src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop" 
+            alt="Capgemini Campus" 
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-[0.7]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-black/30 pointer-events-none" />
 
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-14 rounded-2xl bg-blue-800 text-white font-black text-xl flex items-center justify-center border border-blue-700">
-                CAP
-              </div>
-              <span className="text-blue-100 font-semibold text-xs mt-2">Excellence Assessment</span>
-            </div>
+          {/* Top Bar Badges */}
+          <div className="relative z-10 flex items-center justify-between">
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/50 backdrop-blur-md border border-white/20 flex items-center gap-1.5 shadow-sm">
+              <Clock size={11} className="text-amber-400" />
+              UPCOMING
+            </span>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-black/50 backdrop-blur-md border border-white/20 shadow-sm font-mono">
+              4.25 LPA
+            </span>
           </div>
 
-          <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-800 mb-1">Capgemini Excellence</h3>
-            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
-              Game-based aptitude, pseudocode tracing, English communication and technical interview rounds.
+          {/* Bottom Content Area */}
+          <div className="relative z-10 mt-auto">
+            <h3 className="text-xl font-black text-white tracking-tight leading-snug drop-shadow-md mb-0.5">
+              Capgemini Excellence
+            </h3>
+            <div className="text-xs text-blue-300 font-semibold mb-2">
+              Analyst & Senior Analyst Track
+            </div>
+            <p className="text-xs text-slate-200/90 leading-relaxed mb-3 line-clamp-2">
+              Game-based aptitude, pseudocode algorithms, English communication, and technical interview panels.
             </p>
 
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
+            {/* Translucent Tags Strip */}
+            <div className="flex flex-wrap items-center gap-1.5 mb-4">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15">
                 Game Aptitude
-              </Badge>
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
+              </span>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15">
                 Pseudocode
-              </Badge>
+              </span>
             </div>
 
-            <div className="mt-auto pt-4 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
-              <span className="flex items-center gap-1.5 text-[11px]"><Lock size={12} /> In Progress</span>
-              <span className="text-[10px] bg-neutral-200 text-neutral-600 px-2 py-0.5 rounded font-bold">Coming Soon</span>
+            {/* Bottom Button */}
+            <div className="w-full py-3 rounded-full bg-white/15 backdrop-blur-md text-slate-300 font-bold text-xs uppercase tracking-wider border border-white/20 flex items-center justify-center gap-2 cursor-not-allowed">
+              <Lock size={12} className="text-slate-300" /> In Progress • Coming Soon
             </div>
           </div>
         </div>
 
         {/* 4. ACCENTURE - UPCOMING */}
-        <div className="bg-neutral-50/70 rounded-2xl shadow-sm border border-neutral-200/80 flex flex-col overflow-hidden h-full opacity-90 hover:opacity-100 transition-opacity">
-          <div className="h-40 bg-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
-              <Clock size={10} /> UPCOMING
-            </div>
+        <div className="group relative rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 h-[400px] flex flex-col justify-between p-5 border border-slate-700/30">
+          {/* Corporate Campus Photo */}
+          <img 
+            src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=800&auto=format&fit=crop" 
+            alt="Accenture Campus" 
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-[0.7]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-black/30 pointer-events-none" />
 
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-14 rounded-2xl bg-purple-900 text-white font-black text-2xl flex items-center justify-center border border-purple-800">
-                &gt;
-              </div>
-              <span className="text-purple-200 font-semibold text-xs mt-2">ASE / FSE Track</span>
-            </div>
+          {/* Top Bar Badges */}
+          <div className="relative z-10 flex items-center justify-between">
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold text-white bg-black/50 backdrop-blur-md border border-white/20 flex items-center gap-1.5 shadow-sm">
+              <Clock size={11} className="text-amber-400" />
+              UPCOMING
+            </span>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-black/50 backdrop-blur-md border border-white/20 shadow-sm font-mono">
+              4.5 - 6.5 LPA
+            </span>
           </div>
 
-          <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-800 mb-1">Accenture Assessment</h3>
-            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
-              Cognitive reasoning, technical assessment (Cloud, Security, MS Office) & coding problems.
+          {/* Bottom Content Area */}
+          <div className="relative z-10 mt-auto">
+            <h3 className="text-xl font-black text-white tracking-tight leading-snug drop-shadow-md mb-0.5">
+              Accenture ASE Drive
+            </h3>
+            <div className="text-xs text-purple-300 font-semibold mb-2">
+              Associate Software Engineer Track
+            </div>
+            <p className="text-xs text-slate-200/90 leading-relaxed mb-3 line-clamp-2">
+              Cognitive assessment, technical MCQ (Cloud, Security, Networking), and communication rounds.
             </p>
 
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
-                Cognitive
-              </Badge>
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
-                Technical MCQ
-              </Badge>
+            {/* Translucent Tags Strip */}
+            <div className="flex flex-wrap items-center gap-1.5 mb-4">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15">
+                Cognitive + MCQ
+              </span>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/15 backdrop-blur-md text-white border border-white/15">
+                Cloud & Security
+              </span>
             </div>
 
-            <div className="mt-auto pt-4 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
-              <span className="flex items-center gap-1.5 text-[11px]"><Lock size={12} /> In Progress</span>
-              <span className="text-[10px] bg-neutral-200 text-neutral-600 px-2 py-0.5 rounded font-bold">Coming Soon</span>
+            {/* Bottom Button */}
+            <div className="w-full py-3 rounded-full bg-white/15 backdrop-blur-md text-slate-300 font-bold text-xs uppercase tracking-wider border border-white/20 flex items-center justify-center gap-2 cursor-not-allowed">
+              <Lock size={12} className="text-slate-300" /> In Progress • Coming Soon
             </div>
           </div>
         </div>
