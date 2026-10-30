@@ -1,15 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Video, VideoOff, Mic, MicOff, Volume2, VolumeX, Play, RotateCcw, 
-  ChevronRight, CheckCircle2, Award, AlertCircle, Sparkles, BookOpen, Clock, HelpCircle 
+  Video, VideoOff, Mic, Volume2, VolumeX, Play, RotateCcw, 
+  ChevronRight, CheckCircle2, Award, Sparkles, BookOpen, Clock, HelpCircle, ArrowRight 
 } from 'lucide-react';
-import { INTERVIEW_QUESTIONS, type InterviewPrompt } from '../../data/infosysPrepData';
+import { 
+  TECHNICAL_INTERVIEW_PROMPTS, 
+  HR_INTERVIEW_PROMPTS, 
+  type InterviewPrompt 
+} from '../../data/infosysPrepData';
 
 interface AIMockInterviewRoomProps {
+  initialRound?: 'technical' | 'hr';
   onClose?: () => void;
+  onProceedToHR?: () => void;
 }
 
-export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClose }) => {
+export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ 
+  initialRound = 'technical', 
+  onClose,
+  onProceedToHR
+}) => {
+  const [activeRound, setActiveRound] = useState<'technical' | 'hr'>(initialRound);
+  const questions: InterviewPrompt[] = activeRound === 'technical' 
+    ? TECHNICAL_INTERVIEW_PROMPTS 
+    : HR_INTERVIEW_PROMPTS;
+
   const [hasStarted, setHasStarted] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -25,7 +40,14 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<any>(null);
 
-  const currentQuestion: InterviewPrompt = INTERVIEW_QUESTIONS[currentIdx];
+  const currentQuestion: InterviewPrompt = questions[currentIdx] || questions[0];
+
+  useEffect(() => {
+    setActiveRound(initialRound);
+    setCurrentIdx(0);
+    setIsFinished(false);
+    setHasStarted(false);
+  }, [initialRound]);
 
   // Request camera access
   const startCamera = async () => {
@@ -34,7 +56,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
-          audio: false // keep audio local to avoid echo feedback
+          audio: false // keep audio local to avoid feedback
         });
         streamRef.current = stream;
         if (videoRef.current) {
@@ -46,7 +68,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
       }
     } catch (err: any) {
       console.warn('Camera access denied or unavailable:', err);
-      setCameraError('Camera access was not granted. You can still practice with audio and video simulation.');
+      setCameraError('Camera access was not granted. You can still practice with simulated audio.');
       setIsCameraActive(false);
     }
   };
@@ -63,10 +85,9 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
   const speakQuestion = (text: string) => {
     if (isMuted || !('speechSynthesis' in window)) return;
 
-    window.speechSynthesis.cancel(); // Stop any pending speech
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Attempt to pick a clear, professional English voice
     const voices = window.speechSynthesis.getVoices();
     const recruiterVoice = voices.find(v => 
       (v.lang.includes('en-IN') || v.lang.includes('en-GB') || v.lang.includes('en-US')) && 
@@ -74,7 +95,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
     ) || voices.find(v => v.lang.startsWith('en'));
 
     if (recruiterVoice) utterance.voice = recruiterVoice;
-    utterance.rate = 0.95; // Steady, professional cadence
+    utterance.rate = 0.95;
     utterance.pitch = 1.0;
 
     utterance.onstart = () => setIsSpeaking(true);
@@ -91,13 +112,15 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
     setIsFinished(false);
     await startCamera();
 
-    // Small welcome intro then first question
+    const roundTitle = activeRound === 'technical' 
+      ? 'Infosys Systems Engineer Technical Interview' 
+      : 'Infosys Systems Engineer HR and Behavioral Interview';
+
     setTimeout(() => {
-      speakQuestion(`Welcome to your Infosys Systems Engineer Mock Interview. Let us begin. ${INTERVIEW_QUESTIONS[0].question}`);
+      speakQuestion(`Welcome to your ${roundTitle}. Let us begin with the first question. ${questions[0].question}`);
     }, 600);
   };
 
-  // Timer for answer duration
   useEffect(() => {
     if (hasStarted && !isFinished) {
       timerRef.current = setInterval(() => {
@@ -109,7 +132,6 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
     };
   }, [hasStarted, isFinished]);
 
-  // Clean up media on unmount
   useEffect(() => {
     return () => {
       stopCamera();
@@ -122,16 +144,16 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
 
   const handleNextQuestion = () => {
     setShowAnswerGuide(false);
-    if (currentIdx + 1 < INTERVIEW_QUESTIONS.length) {
+    if (currentIdx + 1 < questions.length) {
       const nextIdx = currentIdx + 1;
       setCurrentIdx(nextIdx);
-      const nextQ = INTERVIEW_QUESTIONS[nextIdx];
+      const nextQ = questions[nextIdx];
       
       const transitionPhrases = [
         "Thank you. Let's move on to the next question.",
         "Understood. Here is the next technical prompt.",
         "Alright. Let's proceed to the next scenario.",
-        "Good. Now tell me about this."
+        "Good. Now please explain this."
       ];
       const phrase = transitionPhrases[nextIdx % transitionPhrases.length];
       
@@ -139,7 +161,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
     } else {
       setIsFinished(true);
       stopCamera();
-      speakQuestion("Congratulations. You have completed the Infosys AI mock interview session. Please review your performance feedback.");
+      speakQuestion(`Thank you. You have completed the Infosys ${activeRound === 'technical' ? 'Technical' : 'HR'} interview round. Please review your performance feedback.`);
     }
   };
 
@@ -156,7 +178,8 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
   };
 
   return (
-    <div className="bg-slate-900 text-white rounded-3xl overflow-hidden border border-slate-800 shadow-2xl">
+    <div className="bg-slate-900 text-white rounded-3xl overflow-hidden border border-slate-800 shadow-2xl font-sans">
+      
       {/* Header Bar */}
       <div className="bg-slate-950 px-6 py-4 flex flex-wrap items-center justify-between border-b border-slate-800 gap-4">
         <div className="flex items-center gap-3">
@@ -165,20 +188,44 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-base text-white">Infosys AI Virtual Interview Room</span>
+              <span className="font-bold text-base text-white">
+                {activeRound === 'technical' ? 'Round 2: Technical Interview Panel' : 'Round 3: HR & Behavioral Interview Panel'}
+              </span>
               <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                Live Simulation
+                Live AI Simulation
               </span>
             </div>
-            <p className="text-xs text-slate-400">Systems Engineer (Trainee) • Candidate Assessment</p>
+            <p className="text-xs text-slate-400">Infosys Systems Engineer • Candidate Evaluation</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* Round Switcher and Mute Controls */}
+        <div className="flex items-center gap-3">
+          {!hasStarted && (
+            <div className="flex items-center bg-slate-900 rounded-xl p-1 border border-slate-800 text-xs">
+              <button
+                onClick={() => setActiveRound('technical')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  activeRound === 'technical' ? 'bg-primary-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Round 2: Technical ({TECHNICAL_INTERVIEW_PROMPTS.length} Qs)
+              </button>
+              <button
+                onClick={() => setActiveRound('hr')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  activeRound === 'hr' ? 'bg-primary-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Round 3: HR ({HR_INTERVIEW_PROMPTS.length} Qs)
+              </button>
+            </div>
+          )}
+
           {hasStarted && !isFinished && (
             <div className="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-mono">
               <Clock size={14} className="text-amber-400 animate-pulse" />
-              <span>Session: {formatSeconds(elapsedTime)}</span>
+              <span>{formatSeconds(elapsedTime)}</span>
             </div>
           )}
 
@@ -192,10 +239,9 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
                 ? 'bg-red-500/10 text-red-400 border-red-500/30' 
                 : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
             }`}
-            title={isMuted ? 'Unmute Recruiter Voice' : 'Mute Recruiter Voice'}
           >
-            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            <span className="hidden sm:inline">{isMuted ? 'Voice Muted' : 'Voice Active'}</span>
+            {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+            <span className="hidden sm:inline">{isMuted ? 'Muted' : 'Voice On'}</span>
           </button>
         </div>
       </div>
@@ -207,28 +253,30 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
             <Video size={36} />
           </div>
 
-          <h2 className="text-3xl font-extrabold text-white mb-3">
-            Infosys Systems Engineer AI Mock Interview
+          <h2 className="text-3xl font-extrabold text-white mb-2">
+            {activeRound === 'technical' ? 'Infosys Round 2: Technical Interview' : 'Infosys Round 3: HR & Behavioral Interview'}
           </h2>
           <p className="text-slate-300 text-base leading-relaxed mb-8">
-            Experience what it feels like to face an Infosys technical & HR panel. The AI Recruiter will ask real candidate-reported questions aloud, while you practice maintaining eye contact, clear articulation, and structured explanations.
+            {activeRound === 'technical'
+              ? 'Face real candidate-reported technical questions on Java, OOP, DBMS/SQL, Operating Systems, DSA, and your resume projects. The AI Recruiter speaks each question aloud while your webcam gives you feedback on posture and eye contact.'
+              : 'Face the final Infosys HR round covering self-introduction, relocation willingness to any Infosys Development Center, team conflict resolution, and career ambitions.'}
           </p>
 
           <div className="grid sm:grid-cols-3 gap-4 mb-8 text-left">
             <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
               <div className="text-primary-400 text-xs font-bold uppercase tracking-wider mb-1">Step 1</div>
-              <div className="font-semibold text-white text-sm mb-1">Webcam & Audio Check</div>
-              <div className="text-xs text-slate-400">Enables user video preview for posture & eye contact simulation.</div>
+              <div className="font-semibold text-white text-sm mb-1">Webcam Simulation</div>
+              <div className="text-xs text-slate-400">Live preview to practice composure and eye-contact.</div>
             </div>
             <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
               <div className="text-primary-400 text-xs font-bold uppercase tracking-wider mb-1">Step 2</div>
-              <div className="font-semibold text-white text-sm mb-1">Real-Time Recruiter Voice</div>
-              <div className="text-xs text-slate-400">Questions are read aloud with natural pauses to simulate the panel.</div>
+              <div className="font-semibold text-white text-sm mb-1">Recruiter Voice</div>
+              <div className="text-xs text-slate-400">AI reads questions aloud with natural pacing.</div>
             </div>
             <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700/60">
               <div className="text-primary-400 text-xs font-bold uppercase tracking-wider mb-1">Step 3</div>
-              <div className="font-semibold text-white text-sm mb-1">Self Evaluation & Report</div>
-              <div className="text-xs text-slate-400">Check ideal answers, key talking points, and score your readiness.</div>
+              <div className="font-semibold text-white text-sm mb-1">Ideal Answers</div>
+              <div className="text-xs text-slate-400">Review key talking points expected by Infosys interviewers.</div>
             </div>
           </div>
 
@@ -237,42 +285,41 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
             className="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition-all flex items-center justify-center gap-3 mx-auto text-base active:scale-95"
           >
             <Play size={20} className="fill-white" />
-            Enable Camera & Start Mock Interview
+            Enable Camera & Begin {activeRound === 'technical' ? 'Technical' : 'HR'} Interview
           </button>
-          <p className="text-[11px] text-slate-500 mt-3">
-            * Video is processed strictly in your local browser window. No video or audio is ever recorded or uploaded.
-          </p>
         </div>
       ) : isFinished ? (
-        /* Post-Interview Evaluation & Scorecard */
+        /* Evaluation Card */
         <div className="p-8 lg:p-12 max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl mx-auto flex items-center justify-center mb-4 border border-emerald-500/30">
               <Award size={32} />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Interview Session Completed!</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {activeRound === 'technical' ? 'Technical Interview Completed!' : 'HR Interview Completed!'}
+            </h2>
             <p className="text-slate-400 text-sm">
-              Total Duration: {formatSeconds(elapsedTime)} • Questions Answered: {INTERVIEW_QUESTIONS.length}
+              Total Duration: {formatSeconds(elapsedTime)} • Questions Covered: {questions.length}
             </p>
           </div>
 
           <div className="bg-slate-800/70 rounded-2xl p-6 border border-slate-700 mb-8">
             <h3 className="font-bold text-base text-white mb-4 flex items-center gap-2">
               <CheckCircle2 size={18} className="text-emerald-400" />
-              Recruiter Evaluation & Key Talking Points Breakdown
+              Recruiter Evaluation Rubric & Ideal Answering Points
             </h3>
-            
-            <div className="space-y-4 max-h-[420px] overflow-y-auto pr-2">
-              {INTERVIEW_QUESTIONS.map((q, idx) => (
+
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              {questions.map((q, idx) => (
                 <div key={q.id} className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-left">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs font-semibold text-primary-400">Question {idx + 1} • {q.category}</span>
-                    <span className="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">{q.round}</span>
+                    <span className="text-[11px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded">{q.tag}</span>
                   </div>
-                  <div className="font-medium text-sm text-slate-200 mb-2">{q.question}</div>
+                  <div className="font-medium text-sm text-slate-200 mb-2">"{q.question}"</div>
                   
-                  <div className="mt-2 pt-2 border-t border-slate-800/80">
-                    <div className="text-xs font-semibold text-amber-400 mb-1">What Infosys Interviewers Look For:</div>
+                  <div className="mt-2 pt-2 border-t border-slate-800">
+                    <div className="text-xs font-bold text-amber-400 mb-1">Key Talking Points:</div>
                     <ul className="list-disc list-inside space-y-1 text-xs text-slate-300">
                       {q.expectedPoints.map((pt, pIdx) => (
                         <li key={pIdx}>{pt}</li>
@@ -282,7 +329,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
 
                   {notes[q.id] && (
                     <div className="mt-2 text-xs bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-slate-400">
-                      <span className="font-semibold text-slate-300">Your Notes:</span> {notes[q.id]}
+                      <span className="font-semibold text-slate-300">Your Spoken Notes:</span> {notes[q.id]}
                     </div>
                   )}
                 </div>
@@ -291,12 +338,26 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <button
-              onClick={handleStartInterview}
-              className="px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-primary-600/20"
-            >
-              <RotateCcw size={16} /> Retake Mock Interview
-            </button>
+            {activeRound === 'technical' ? (
+              <button
+                onClick={() => {
+                  setActiveRound('hr');
+                  setHasStarted(false);
+                  setIsFinished(false);
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white text-sm font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-500/30"
+              >
+                Proceed to Round 3: HR Interview <ArrowRight size={16} />
+              </button>
+            ) : (
+              <button
+                onClick={handleStartInterview}
+                className="px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold rounded-xl flex items-center gap-2 shadow-lg"
+              >
+                <RotateCcw size={16} /> Retake HR Interview
+              </button>
+            )}
+
             {onClose && (
               <button
                 onClick={onClose}
@@ -308,14 +369,13 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
           </div>
         </div>
       ) : (
-        /* Active Interview Room (Split Screen: Recruiter + Candidate Video) */
+        /* Active Split-Screen Room */
         <div className="p-6 lg:p-8">
           <div className="grid lg:grid-cols-12 gap-6 items-start">
             
-            {/* Left 7 cols: Interactive Stage */}
+            {/* Left 7 cols: Recruiter Prompt Canvas */}
             <div className="lg:col-span-7 flex flex-col gap-6">
               
-              {/* Recruiter Persona & Question Card */}
               <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 relative shadow-inner">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -332,30 +392,29 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
                     </div>
                     <div>
                       <div className="font-bold text-sm text-white flex items-center gap-2">
-                        Priya Sharma
+                        {activeRound === 'technical' ? 'Priya Sharma' : 'Ananya Verma'}
                         <span className="text-[10px] bg-primary-900/60 text-primary-300 px-2 py-0.5 rounded border border-primary-700/50">
-                          Infosys Senior Panelist
+                          {activeRound === 'technical' ? 'Technical Panelist' : 'Senior HR Manager'}
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
                         {isSpeaking ? (
                           <span className="text-emerald-400 font-medium flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Speaking question...
+                            Speaking prompt aloud...
                           </span>
                         ) : (
-                          <span>Listening to your response</span>
+                          <span>Listening to your spoken answer</span>
                         )}
                       </div>
                     </div>
                   </div>
 
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
-                    Question {currentIdx + 1} of {INTERVIEW_QUESTIONS.length}
+                    Question {currentIdx + 1} of {questions.length}
                   </span>
                 </div>
 
-                {/* Question Box */}
                 <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800/80 mb-4">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-950 text-primary-400 border border-primary-800/50">
@@ -371,7 +430,6 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
                   </p>
                 </div>
 
-                {/* Recruiter Action Buttons */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                   <button
                     onClick={handleRepeatQuestion}
@@ -384,15 +442,14 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
                     onClick={() => setShowAnswerGuide(!showAnswerGuide)}
                     className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg border border-amber-500/30"
                   >
-                    <HelpCircle size={14} /> {showAnswerGuide ? 'Hide Ideal Answer Guide' : 'Show Ideal Answer Guide'}
+                    <HelpCircle size={14} /> {showAnswerGuide ? 'Hide Ideal Points' : 'Show Ideal Points'}
                   </button>
                 </div>
 
-                {/* Answer Guide Collapsible */}
                 {showAnswerGuide && (
                   <div className="mt-4 p-4 rounded-xl bg-slate-900 border border-amber-500/30 text-xs text-slate-300 animate-fadeIn">
                     <div className="font-bold text-amber-300 mb-2 flex items-center gap-1.5">
-                      <Sparkles size={14} /> Key Points Infosys Interviewers Expect:
+                      <Sparkles size={14} /> Expected Candidate Points:
                     </div>
                     <ul className="list-disc list-inside space-y-1 mb-2 text-slate-200">
                       {currentQuestion.expectedPoints.map((pt, i) => (
@@ -406,22 +463,19 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
                 )}
               </div>
 
-              {/* Response Note Taking / Speaking Workspace */}
               <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-slate-300">Quick Response Notes / Scratchpad:</span>
-                  <span className="text-[11px] text-slate-500">Practice your bullet points</span>
-                </div>
+                <span className="text-xs font-semibold text-slate-300 block mb-2">
+                  Spoken Talking Points & Scratchpad:
+                </span>
                 <textarea
                   value={notes[currentQuestion.id] || ''}
                   onChange={(e) => setNotes({ ...notes, [currentQuestion.id]: e.target.value })}
-                  placeholder="Type key keywords or bullet points you spoke during your answer..."
+                  placeholder="Record key keywords or points you covered in your response..."
                   rows={3}
-                  className="w-full bg-slate-900 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-primary-500 transition-colors"
+                  className="w-full bg-slate-900 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-primary-500"
                 />
               </div>
 
-              {/* Navigation Controls */}
               <div className="flex items-center justify-between">
                 <button
                   disabled={currentIdx === 0}
@@ -433,21 +487,21 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
                   }}
                   className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700"
                 >
-                  Previous
+                  Previous Prompt
                 </button>
 
                 <button
                   onClick={handleNextQuestion}
                   className="px-6 py-2.5 rounded-xl text-xs font-bold bg-primary-600 hover:bg-primary-500 text-white flex items-center gap-2 shadow-lg shadow-primary-600/30 transition-all active:scale-95"
                 >
-                  {currentIdx + 1 === INTERVIEW_QUESTIONS.length ? 'Finish Interview' : 'Submit & Next Question'}
+                  {currentIdx + 1 === questions.length ? 'Complete Round' : 'Next Prompt'}
                   <ChevronRight size={14} />
                 </button>
               </div>
 
             </div>
 
-            {/* Right 5 cols: Candidate Live Video Feed */}
+            {/* Right 5 cols: Live Webcam Stream */}
             <div className="lg:col-span-5 flex flex-col gap-4">
               <div className="bg-slate-950 rounded-2xl p-3 border border-slate-800 shadow-xl relative overflow-hidden">
                 <div className="relative aspect-[4/3] bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800">
@@ -475,62 +529,49 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
                     </div>
                   )}
 
-                  {/* Overlays on live feed */}
                   {isCameraActive && (
-                    <>
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm">
-                        <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                        LIVE CANDIDATE
-                      </div>
-                      <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded text-[11px] text-slate-200">
-                        Maintain Eye Contact with Camera
-                      </div>
-                    </>
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                      PROCTORED INTERVIEW
+                    </div>
                   )}
                 </div>
 
-                {/* Video controls */}
                 <div className="flex items-center justify-between pt-3 px-1 text-xs">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={isCameraActive ? stopCamera : startCamera}
-                      className={`p-2 rounded-lg border text-xs flex items-center gap-1.5 ${
-                        isCameraActive 
-                          ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' 
-                          : 'bg-primary-600/20 text-primary-400 border-primary-500/40'
-                      }`}
-                    >
-                      {isCameraActive ? <Video size={14} /> : <VideoOff size={14} />}
-                      <span>{isCameraActive ? 'Turn Off Camera' : 'Turn On Camera'}</span>
-                    </button>
-                  </div>
+                  <button
+                    onClick={isCameraActive ? stopCamera : startCamera}
+                    className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 text-xs flex items-center gap-1.5"
+                  >
+                    {isCameraActive ? <Video size={14} /> : <VideoOff size={14} />}
+                    <span>{isCameraActive ? 'Turn Off Video' : 'Turn On Video'}</span>
+                  </button>
 
                   <div className="flex items-center gap-1 text-[11px] text-emerald-400">
                     <CheckCircle2 size={13} />
-                    <span>Mic Audio Ready</span>
+                    <span>Microphone Ready</span>
                   </div>
                 </div>
               </div>
 
-              {/* Interview Rubric Checklist */}
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs">
                 <div className="font-bold text-slate-300 mb-2 flex items-center gap-1.5">
                   <BookOpen size={14} className="text-primary-400" />
-                  Infosys Systems Engineer Scoring Rubric:
+                  {activeRound === 'technical' ? 'Technical Round Focus Areas:' : 'HR Round Focus Areas:'}
                 </div>
-                <div className="space-y-2 text-slate-400 text-[11px]">
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary-400 font-bold">•</span>
-                    <span><strong>Concept Clarity:</strong> Ability to define OOP, DBMS & OS principles with clean analogies.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary-400 font-bold">•</span>
-                    <span><strong>Project Ownership:</strong> Defending database and architectural decisions made in your own project.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary-400 font-bold">•</span>
-                    <span><strong>Communication:</strong> Professional composure, structured articulation, and flexibility for relocation.</span>
-                  </div>
+                <div className="space-y-1.5 text-slate-400 text-[11px]">
+                  {activeRound === 'technical' ? (
+                    <>
+                      <div>• Clean object-oriented coding terminology.</div>
+                      <div>• Ability to explain DB normalization and SQL queries.</div>
+                      <div>• Defending individual contribution on college projects.</div>
+                    </>
+                  ) : (
+                    <>
+                      <div>• Concise 90-second self-introduction.</div>
+                      <div>• Unconditional willingness to relocate to any Infosys DC.</div>
+                      <div>• Conflict resolution using STAR framework.</div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -539,6 +580,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ onClos
           </div>
         </div>
       )}
+
     </div>
   );
 };

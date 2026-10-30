@@ -1,15 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Building2, Sparkles, ArrowRight, Clock, Video, CheckCircle2, 
-  Lock, BookOpen, FileText, Award, Compass 
+import {
+  Building2, Sparkles, ArrowRight, Clock, Video, CheckCircle2,
+  Lock, BookOpen, FileText, Award, Compass
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
+import infosysLogo from '../../assets/infosys-logo.jpg';
 
 export const CompanyCardsSection: React.FC = () => {
   return (
     <section className="pt-16 pb-20 max-w-7xl mx-auto px-6 font-sans">
-      
+
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-14">
         <div className="flex items-center gap-3 text-primary-600 font-bold text-xs tracking-wider uppercase mb-3">
@@ -19,11 +20,11 @@ export const CompanyCardsSection: React.FC = () => {
           </span>
           <div className="w-10 h-[2px] bg-primary-200"></div>
         </div>
-        
+
         <h2 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 tracking-tight mb-3">
           Company Mock Tests & <span className="text-primary-600">AI Interviews</span>
         </h2>
-        
+
         <p className="text-neutral-500 max-w-2xl text-sm lg:text-base leading-relaxed">
           Master company-specific hiring blueprints, pattern-accurate screening mocks, and simulated AI recruiter interviews tailored to top campus tech employers.
         </p>
@@ -31,16 +32,16 @@ export const CompanyCardsSection: React.FC = () => {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        
+
         {/* 1. INFOSYS - ACTIVE */}
-        <Link 
+        <Link
           to="/company/infosys"
           className="group bg-white rounded-2xl shadow-sm border border-neutral-200/80 hover:shadow-xl hover:border-primary-300 transition-all duration-300 flex flex-col overflow-hidden h-full"
         >
           {/* Visual Header */}
           <div className="h-40 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-500/20 via-transparent to-transparent"></div>
-            
+
             {/* Live Indicator */}
             <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-extrabold shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
@@ -53,40 +54,39 @@ export const CompanyCardsSection: React.FC = () => {
 
             {/* Visual Icon / Monogram */}
             <div className="relative z-10 transform group-hover:scale-105 transition-transform duration-500 flex flex-col items-center">
-              <div className="w-14 h-14 rounded-2xl bg-white text-blue-950 font-black text-2xl flex items-center justify-center shadow-xl">
-                Infy
+              <div className="w-16 h-14 rounded-2xl bg-white p-1 flex items-center justify-center shadow-xl overflow-hidden">
+                <img src={infosysLogo} alt="Infosys" className="w-full h-full object-contain" />
               </div>
               <span className="text-white/80 font-semibold text-xs mt-2 tracking-wide">Systems Engineer</span>
             </div>
           </div>
 
-          {/* Body */}
-          <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-900 mb-1 group-hover:text-primary-600 transition-colors">
-              Infosys SE Preparation
-            </h3>
-            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
-              54–60 Qs blueprint, 34 practice MCQs with step solutions, and webcam AI recruiter mock interview.
-            </p>
+            {/* Features Bullet List */}
+            <div className="p-5 flex-1 flex flex-col justify-between">
+              <div className="space-y-2 mb-4 text-xs text-neutral-600">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
+                  <span>Round 1: 54 Qs • 100m (Sectional Cutoffs)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
+                  <span>Round 2: Technical Interview (AI Video Panel)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
+                  <span>Round 3: HR & Behavioral Discussion</span>
+                </div>
+              </div>
 
-            <div className="flex flex-wrap items-center gap-1.5 mb-4">
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-primary-50 text-primary-700 border border-primary-100 font-bold">
-                Pattern A & B
-              </Badge>
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-100">
-                <Video size={10} /> AI Interview
-              </Badge>
-            </div>
-
-            {/* Footer */}
-            <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between">
-              <span className="text-[10px] text-primary-600 font-bold uppercase tracking-wider">Start Prep</span>
-              <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-md shadow-primary-600/30 group-hover:bg-primary-700 transition-colors shrink-0">
-                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+              {/* Action Button */}
+              <div className="pt-3 border-t border-neutral-100 flex items-center justify-between text-xs font-bold text-primary-600 group-hover:text-primary-700">
+                <span className="bg-primary-600 text-white px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm group-hover:bg-primary-700 transition-colors">
+                  <Clock size={13} /> Start Mock Test
+                </span>
+                <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
-          </div>
-        </Link>
+          </Link>
 
         {/* 2. TCS NQT - UPCOMING */}
         <div className="bg-neutral-50/70 rounded-2xl shadow-sm border border-neutral-200/80 flex flex-col overflow-hidden h-full opacity-90 hover:opacity-100 transition-opacity">

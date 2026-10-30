@@ -1,39 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, CheckCircle2, XCircle, RotateCcw, AlertTriangle, 
-  HelpCircle, ChevronRight, ChevronLeft, Bookmark, Award, BookOpen, Filter, Zap 
+  HelpCircle, ChevronRight, ChevronLeft, Bookmark, Award, BookOpen, 
+  ArrowRight, ShieldCheck, ShieldAlert, Sparkles, Video 
 } from 'lucide-react';
-import { MOCK_TEST_QUESTIONS, type InfosysQuestion } from '../../data/infosysPrepData';
+import { 
+  OFFICIAL_54_QUESTIONS, 
+  INFOSYS_SECTIONS_CONFIG, 
+  type InfosysQuestion, 
+  type SectionConfig 
+} from '../../data/infosysPrepData';
 
 interface InteractiveMockTestProps {
-  testMode?: 'full' | 'diagnostic';
+  onProceedToTechnicalInterview?: () => void;
 }
 
-export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ testMode = 'full' }) => {
-  // Mock Test 1 (Full): all 34 questions
-  // Mock Test 2 (Diagnostic): 15 questions
-  const allQuestions: InfosysQuestion[] = testMode === 'diagnostic' 
-    ? MOCK_TEST_QUESTIONS.filter((_, idx) => idx % 2 === 0).slice(0, 15)
-    : MOCK_TEST_QUESTIONS;
+export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ 
+  onProceedToTechnicalInterview 
+}) => {
+  // Current section index (0: Reasoning, 1: Math, 2: Verbal, 3: Pseudocode, 4: Puzzle)
+  const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
+  const activeSectionConfig = INFOSYS_SECTIONS_CONFIG[currentSectionIdx];
 
-  const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
+  // Filter questions for the active section
+  const sectionQuestions = OFFICIAL_54_QUESTIONS.filter(
+    q => q.section === activeSectionConfig.name
+  );
+
+  const [activeQuestionInSecIdx, setActiveQuestionInSecIdx] = useState(0);
+  const currentQ: InfosysQuestion = sectionQuestions[activeQuestionInSecIdx] || sectionQuestions[0];
+
+  // Answers & marked status across all questions
   const [selectedAnswers, setSelectedAnswers] = useState<{ [qId: string]: number }>({});
   const [markedForReview, setMarkedForReview] = useState<{ [qId: string]: boolean }>({});
-  const [timeLeft, setTimeLeft] = useState(testMode === 'diagnostic' ? 25 * 60 : 60 * 60);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isTimed, setIsTimed] = useState(true);
-  const [activeFilterSection, setActiveFilterSection] = useState<string>('All');
 
-  const currentQ = allQuestions[activeQuestionIdx];
+  // Section-specific timer
+  const [sectionTimeLeft, setSectionTimeLeft] = useState(activeSectionConfig.timeMinutes * 60);
+  const [isTestCompleted, setIsTestCompleted] = useState(false);
+  const [speedMode, setSpeedMode] = useState(false); // Toggle to speed up timer for rapid testing
 
-  // Timer countdown
+  // Reset section timer whenever section changes
   useEffect(() => {
-    if (isSubmitted || !isTimed) return;
+    if (!isTestCompleted) {
+      setSectionTimeLeft(speedMode ? 60 : activeSectionConfig.timeMinutes * 60);
+      setActiveQuestionInSecIdx(0);
+    }
+  }, [currentSectionIdx, speedMode]);
+
+  // Section countdown timer
+  useEffect(() => {
+    if (isTestCompleted) return;
+
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setSectionTimeLeft(prev => {
         if (prev <= 1) {
-          clearInterval(timer);
-          setIsSubmitted(true);
+          // Time expired for this section! Auto-advance to next section or submit test
+          handleAdvanceSection(true);
           return 0;
         }
         return prev - 1;
@@ -41,10 +63,10 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ testMo
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isSubmitted, isTimed]);
+  }, [currentSectionIdx, isTestCompleted, speedMode]);
 
   const handleSelectOption = (optIdx: number) => {
-    if (isSubmitted) return;
+    if (isTestCompleted) return;
     setSelectedAnswers(prev => ({
       ...prev,
       [currentQ.id]: optIdx
@@ -58,12 +80,28 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ testMo
     }));
   };
 
+  const handleAdvanceSection = (isAuto: boolean = false) => {
+    if (currentSectionIdx + 1 < INFOSYS_SECTIONS_CONFIG.length) {
+      if (!isAuto) {
+        const confirmMsg = `Are you sure you want to submit "${activeSectionConfig.name}"? You will NOT be able to return to this section once submitted.`;
+        if (!window.confirm(confirmMsg)) return;
+      }
+      setCurrentSectionIdx(prev => prev + 1);
+    } else {
+      if (!isAuto) {
+        if (!window.confirm("This is the final section. Submit entire Infosys Round 1 assessment?")) return;
+      }
+      setIsTestCompleted(true);
+    }
+  };
+
   const handleResetTest = () => {
     setSelectedAnswers({});
     setMarkedForReview({});
-    setTimeLeft(testMode === 'diagnostic' ? 25 * 60 : 60 * 60);
-    setIsSubmitted(false);
-    setActiveQuestionIdx(0);
+    setCurrentSectionIdx(0);
+    setActiveQuestionInSecIdx(0);
+    setSectionTimeLeft(INFOSYS_SECTIONS_CONFIG[0].timeMinutes * 60);
+    setIsTestCompleted(false);
   };
 
   const formatTime = (secs: number) => {
@@ -72,89 +110,133 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ testMo
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Score Calculation
-  const totalQuestions = allQuestions.length;
-  const answeredCount = Object.keys(selectedAnswers).length;
-  const correctCount = allQuestions.filter(q => selectedAnswers[q.id] === q.correctAnswer).length;
-  const incorrectCount = answeredCount - correctCount;
-  const percentage = Math.round((correctCount / totalQuestions) * 100);
+  // Sectional Cutoff Evaluation
+  const sectionalReport = INFOSYS_SECTIONS_CONFIG.map(sec => {
+    const questions = OFFICIAL_54_QUESTIONS.filter(q => q.section === sec.name);
+    const correctCount = questions.filter(q => selectedAnswers[q.id] === q.correctAnswer).length;
+    const answeredCount = questions.filter(q => selectedAnswers[q.id] !== undefined).length;
+    const scorePct = Math.round((correctCount / questions.length) * 100);
+    const cleared = scorePct >= sec.cutoffPercentage;
 
-  // Section Breakdown
-  const sections = Array.from(new Set(allQuestions.map(q => q.section)));
-  const sectionStats = sections.map(sec => {
-    const secQuestions = allQuestions.filter(q => q.section === sec);
-    const secCorrect = secQuestions.filter(q => selectedAnswers[q.id] === q.correctAnswer).length;
     return {
-      section: sec,
-      total: secQuestions.length,
-      correct: secCorrect,
-      pct: Math.round((secCorrect / secQuestions.length) * 100)
+      ...sec,
+      correctCount,
+      answeredCount,
+      scorePct,
+      cleared
     };
   });
 
+  const totalQuestions = OFFICIAL_54_QUESTIONS.length;
+  const totalCorrect = sectionalReport.reduce((acc, curr) => acc + curr.correctCount, 0);
+  const totalAttempted = Object.keys(selectedAnswers).length;
+  const overallPercentage = Math.round((totalCorrect / totalQuestions) * 100);
+  const allSectionsCleared = sectionalReport.every(sec => sec.cleared);
+  const failedSections = sectionalReport.filter(sec => !sec.cleared);
+
   return (
-    <div className="bg-white rounded-3xl border border-neutral-200/80 shadow-xl overflow-hidden font-sans">
+    <div className="bg-white rounded-3xl border border-neutral-200/90 shadow-xl overflow-hidden font-sans">
       
-      {/* Top Test Banner */}
-      <div className="bg-neutral-900 text-white px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800">
+      {/* Top Banner with Official Infosys Round 1 Header */}
+      <div className="bg-slate-950 text-white px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-base">
-              {testMode === 'full' ? 'Infosys Systems Engineer Full Practice Mock (Set A)' : 'Infosys Rapid Diagnostic Logic Assessment'}
+            <span className="font-extrabold text-base text-white">
+              Infosys Systems Engineer Assessment (Round 1)
             </span>
-            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-primary-500/20 text-primary-400 border border-primary-500/30">
-              Exam Simulation
+            <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-primary-600/30 text-primary-300 border border-primary-500/30">
+              Format A • 54 Questions • 100 Minutes
             </span>
           </div>
-          <div className="text-xs text-neutral-400 mt-0.5">
-            {totalQuestions} Questions • Pattern-accurate quantitative, reasoning, verbal, pseudocode & puzzles
-          </div>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Section-by-section timed screening with strict sectional cutoff thresholds.
+          </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          {!isSubmitted && (
-            <div className="flex items-center gap-2 bg-neutral-800 px-3.5 py-1.5 rounded-xl border border-neutral-700">
-              <Clock size={16} className={`text-amber-400 ${timeLeft < 300 ? 'animate-bounce text-red-400' : ''}`} />
-              <span className="font-mono text-sm font-bold text-white">
-                {isTimed ? formatTime(timeLeft) : 'Untimed Practice'}
-              </span>
-            </div>
+        <div className="flex items-center gap-3">
+          {/* Speed mode for fast testing */}
+          {!isTestCompleted && (
+            <button
+              onClick={() => setSpeedMode(!speedMode)}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
+                speedMode 
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
+                  : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white'
+              }`}
+              title="Sets timer to 60s per section for quick testing"
+            >
+              {speedMode ? '⚡ Fast Test Mode Active' : 'Normal Timers (100m)'}
+            </button>
           )}
 
-          {!isSubmitted ? (
-            <button
-              onClick={() => setIsSubmitted(true)}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition-all active:scale-95"
-            >
-              Submit Mock Test
-            </button>
+          {!isTestCompleted ? (
+            <div className="flex items-center gap-2 bg-slate-900 px-3.5 py-1.5 rounded-xl border border-slate-700">
+              <Clock size={16} className={`text-amber-400 ${sectionTimeLeft < 180 ? 'animate-bounce text-red-400' : ''}`} />
+              <div className="text-xs">
+                <span className="text-slate-400 block text-[10px] leading-none">Section Time Left</span>
+                <span className="font-mono text-sm font-bold text-white leading-none">
+                  {formatTime(sectionTimeLeft)}
+                </span>
+              </div>
+            </div>
           ) : (
             <button
               onClick={handleResetTest}
-              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
             >
-              <RotateCcw size={14} /> Retake Test
+              <RotateCcw size={14} /> Retake Assessment
             </button>
           )}
         </div>
       </div>
 
-      {/* Main Body */}
-      {!isSubmitted ? (
+      {/* Section Progress Stepper (Infosys strictly moves section by section) */}
+      {!isTestCompleted && (
+        <div className="bg-slate-900/90 px-6 py-3 border-b border-slate-800 flex items-center gap-2 overflow-x-auto text-xs">
+          {INFOSYS_SECTIONS_CONFIG.map((sec, idx) => {
+            const isCurrent = idx === currentSectionIdx;
+            const isPast = idx < currentSectionIdx;
+
+            return (
+              <div 
+                key={sec.id}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all ${
+                  isCurrent 
+                    ? 'bg-primary-600 text-white font-bold shadow-md shadow-primary-600/30' 
+                    : isPast 
+                      ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-medium' 
+                      : 'bg-slate-800 text-slate-400 border border-slate-700/60'
+                }`}
+              >
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  isCurrent ? 'bg-white text-primary-700' : isPast ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'
+                }`}>
+                  {isPast ? '✓' : idx + 1}
+                </span>
+                <span>{sec.name}</span>
+                <span className="text-[10px] opacity-75 font-mono">({sec.questionCount} Qs / {sec.timeMinutes}m)</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* TEST IN PROGRESS */}
+      {!isTestCompleted ? (
         <div className="p-6 lg:p-8">
           <div className="grid lg:grid-cols-12 gap-8 items-start">
             
-            {/* Left 8 cols: Question Canvas */}
+            {/* Left 8 cols: Active Question Canvas */}
             <div className="lg:col-span-8 flex flex-col gap-6">
               
-              {/* Question Header & Meta */}
+              {/* Question Header */}
               <div className="flex items-center justify-between pb-3 border-b border-neutral-100 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-neutral-900 bg-neutral-100 px-2.5 py-1 rounded-lg">
-                    Question {activeQuestionIdx + 1} of {totalQuestions}
+                  <span className="font-bold text-neutral-900 bg-neutral-100 px-3 py-1 rounded-lg">
+                    Section {currentSectionIdx + 1}: {activeSectionConfig.name}
                   </span>
-                  <span className="text-primary-600 font-semibold bg-primary-50 px-2.5 py-1 rounded-lg">
-                    {currentQ.section}
+                  <span className="text-primary-700 font-semibold bg-primary-50 px-2.5 py-1 rounded-lg">
+                    Question {activeQuestionInSecIdx + 1} of {sectionQuestions.length}
                   </span>
                   <span className="text-neutral-500 hidden sm:inline">• {currentQ.topic}</span>
                 </div>
@@ -163,35 +245,35 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ testMo
                   onClick={handleToggleReview}
                   className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                     markedForReview[currentQ.id]
-                      ? 'bg-amber-100 text-amber-700'
+                      ? 'bg-amber-100 text-amber-800'
                       : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                   }`}
                 >
                   <Bookmark size={13} />
-                  <span>{markedForReview[currentQ.id] ? 'Marked for Review' : 'Mark for Review'}</span>
+                  <span>{markedForReview[currentQ.id] ? 'Marked' : 'Mark for Review'}</span>
                 </button>
               </div>
 
-              {/* Question Statement */}
-              <div className="bg-neutral-50/80 p-6 rounded-2xl border border-neutral-200/70">
-                <p className="text-base text-neutral-900 font-medium leading-relaxed whitespace-pre-line mb-4">
+              {/* Question Box */}
+              <div className="bg-neutral-50/80 p-6 rounded-2xl border border-neutral-200/80">
+                <p className="text-base text-neutral-900 font-medium leading-relaxed whitespace-pre-line mb-3">
                   {currentQ.question}
                 </p>
 
                 {currentQ.codeSnippet && (
-                  <div className="bg-[#0f172a] text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-neutral-800 my-3 leading-relaxed shadow-inner">
+                  <div className="bg-[#0f172a] text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-neutral-800 my-3 shadow-inner">
                     <pre>{currentQ.codeSnippet}</pre>
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 text-[11px] text-neutral-400 pt-2">
-                  <span>Difficulty: <strong className="text-neutral-700">{currentQ.difficulty}</strong></span>
+                <div className="flex items-center gap-3 text-[11px] text-neutral-400 pt-2 border-t border-neutral-200/60">
+                  <span>Section Cutoff: <strong className="text-neutral-700">{activeSectionConfig.cutoffPercentage}% (≥{activeSectionConfig.minCorrectRequired} correct)</strong></span>
                   <span>•</span>
                   <span>Source: <strong className="text-neutral-700">{currentQ.evidence}</strong></span>
                 </div>
               </div>
 
-              {/* Options List */}
+              {/* Multiple Choice Options */}
               <div className="space-y-3">
                 {currentQ.options.map((option, optIdx) => {
                   const isSelected = selectedAnswers[currentQ.id] === optIdx;
@@ -224,12 +306,12 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ testMo
                 })}
               </div>
 
-              {/* Navigation Footer */}
+              {/* Navigation Controls */}
               <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
                 <button
-                  disabled={activeQuestionIdx === 0}
-                  onClick={() => setActiveQuestionIdx(prev => prev - 1)}
-                  className="px-5 py-2.5 rounded-xl border border-neutral-200 text-neutral-700 font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-neutral-50"
+                  disabled={activeQuestionInSecIdx === 0}
+                  onClick={() => setActiveQuestionInSecIdx(prev => prev - 1)}
+                  className="px-4 py-2.5 rounded-xl border border-neutral-200 text-neutral-700 font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-neutral-50"
                 >
                   <ChevronLeft size={16} /> Previous
                 </button>
@@ -242,78 +324,58 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ testMo
                         delete updated[currentQ.id];
                         setSelectedAnswers(updated);
                       }}
-                      className="text-xs text-neutral-500 hover:text-red-500 transition-colors"
+                      className="text-xs text-neutral-400 hover:text-red-500 transition-colors"
                     >
-                      Clear Response
+                      Clear
                     </button>
                   )}
 
-                  <button
-                    onClick={() => {
-                      if (activeQuestionIdx + 1 < totalQuestions) {
-                        setActiveQuestionIdx(prev => prev + 1);
-                      } else {
-                        setIsSubmitted(true);
-                      }
-                    }}
-                    className="px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-primary-600/20 transition-all active:scale-95"
-                  >
-                    {activeQuestionIdx + 1 === totalQuestions ? 'Submit Exam' : 'Save & Next'}
-                    <ChevronRight size={16} />
-                  </button>
+                  {activeQuestionInSecIdx + 1 < sectionQuestions.length ? (
+                    <button
+                      onClick={() => setActiveQuestionInSecIdx(prev => prev + 1)}
+                      className="px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-primary-600/20 transition-all active:scale-95"
+                    >
+                      Save & Next Question <ChevronRight size={15} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAdvanceSection(false)}
+                      className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all active:scale-95"
+                    >
+                      {currentSectionIdx + 1 === INFOSYS_SECTIONS_CONFIG.length ? 'Submit Final Test' : 'Submit Section & Move to Next'}
+                      <ChevronRight size={15} />
+                    </button>
+                  )}
                 </div>
               </div>
 
             </div>
 
-            {/* Right 4 cols: Question Palette */}
+            {/* Right 4 cols: Section Question Palette */}
             <div className="lg:col-span-4 bg-neutral-50/70 p-5 rounded-2xl border border-neutral-200/80">
-              <div className="font-bold text-sm text-neutral-900 mb-3 flex items-center justify-between">
-                <span>Question Palette</span>
-                <span className="text-xs text-neutral-500 font-normal">
-                  {answeredCount}/{totalQuestions} Answered
-                </span>
+              <div className="font-bold text-sm text-neutral-900 mb-2">
+                {activeSectionConfig.name} Palette
               </div>
+              <p className="text-xs text-neutral-500 mb-4">
+                Questions in this section ({sectionQuestions.length}). You must finish this section before the timer expires.
+              </p>
 
-              {/* Palette Legend */}
-              <div className="grid grid-cols-2 gap-2 text-[11px] text-neutral-600 mb-4 bg-white p-3 rounded-xl border border-neutral-200">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-primary-600"></span>
-                  <span>Answered ({answeredCount})</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-neutral-200"></span>
-                  <span>Unanswered ({totalQuestions - answeredCount})</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-amber-400"></span>
-                  <span>Review ({Object.values(markedForReview).filter(Boolean).length})</span>
-                </div>
-              </div>
-
-              {/* Grid of question buttons */}
-              <div className="grid grid-cols-5 gap-2 max-h-[320px] overflow-y-auto pr-1">
-                {allQuestions.map((q, idx) => {
+              <div className="grid grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                {sectionQuestions.map((q, idx) => {
                   const isAnswered = selectedAnswers[q.id] !== undefined;
                   const isMarked = markedForReview[q.id];
-                  const isCurrent = idx === activeQuestionIdx;
+                  const isCurrent = idx === activeQuestionInSecIdx;
 
-                  let btnStyle = 'bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-100';
-                  if (isAnswered) {
-                    btnStyle = 'bg-primary-600 text-white border-primary-600 font-bold';
-                  }
-                  if (isMarked) {
-                    btnStyle = 'bg-amber-400 text-neutral-900 border-amber-500 font-bold';
-                  }
-                  if (isCurrent) {
-                    btnStyle += ' ring-2 ring-primary-500 ring-offset-2';
-                  }
+                  let style = 'bg-white text-neutral-700 border-neutral-200';
+                  if (isAnswered) style = 'bg-primary-600 text-white border-primary-600 font-bold';
+                  if (isMarked) style = 'bg-amber-400 text-neutral-900 border-amber-500 font-bold';
+                  if (isCurrent) style += ' ring-2 ring-primary-500 ring-offset-2';
 
                   return (
                     <button
                       key={q.id}
-                      onClick={() => setActiveQuestionIdx(idx)}
-                      className={`h-9 rounded-xl text-xs font-semibold border transition-all ${btnStyle}`}
+                      onClick={() => setActiveQuestionInSecIdx(idx)}
+                      className={`h-9 rounded-xl text-xs font-semibold border transition-all ${style}`}
                     >
                       {idx + 1}
                     </button>
@@ -321,215 +383,213 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ testMo
                 })}
               </div>
 
-              {/* Test summary info */}
-              <div className="mt-4 pt-4 border-t border-neutral-200 text-xs text-neutral-500 space-y-1">
-                <div>• Sectional cutoffs are typical in Infosys drives.</div>
-                <div>• Review all marked questions before submitting.</div>
+              {/* Section Cutoff Notice */}
+              <div className="mt-5 p-3 rounded-xl bg-primary-50 border border-primary-100 text-xs text-primary-950">
+                <div className="font-bold mb-0.5 flex items-center gap-1.5 text-primary-800">
+                  <ShieldCheck size={14} /> Strict Cutoff Rule:
+                </div>
+                <div>
+                  Infosys requires passing <strong>ALL 5 sections</strong> independently. Scoring 100% in Math will not compensate for failing Pseudocode or Verbal cutoffs.
+                </div>
               </div>
             </div>
 
           </div>
         </div>
       ) : (
-        /* Results & In-Depth Solution Review */
-        <div className="p-6 lg:p-10">
+        /* SECTIONAL SCORECARD & CUTOFF EVALUATION */
+        <div className="p-6 lg:p-10 font-sans">
           
-          {/* Score Header Card */}
-          <div className="bg-gradient-to-r from-neutral-900 to-primary-950 text-white rounded-3xl p-8 mb-8 shadow-xl relative overflow-hidden">
-            <div className="grid md:grid-cols-3 gap-6 items-center">
-              <div>
-                <span className="text-xs font-bold text-primary-400 uppercase tracking-wider">
-                  Test Performance Summary
-                </span>
-                <h3 className="text-3xl font-extrabold mt-1 mb-2">
-                  {percentage >= 70 ? '🎉 Excellent! Drive Ready' : percentage >= 50 ? '👍 Good Effort! Minor Review Needed' : '📚 Needs Practice & Focus'}
+          {/* Main Verdict Header Card */}
+          <div className={`rounded-3xl p-8 mb-8 text-white shadow-xl relative overflow-hidden ${
+            allSectionsCleared 
+              ? 'bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 border border-emerald-500/40' 
+              : 'bg-gradient-to-r from-red-950 via-slate-900 to-slate-950 border border-red-500/40'
+          }`}>
+            <div className="grid lg:grid-cols-12 gap-8 items-center">
+              
+              <div className="lg:col-span-8">
+                <div className="flex items-center gap-2 mb-2">
+                  {allSectionsCleared ? (
+                    <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+                      <ShieldCheck size={14} /> ALL SECTIONAL CUTOFFS CLEARED
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-red-500/20 text-red-300 border border-red-500/40 flex items-center gap-1.5">
+                      <ShieldAlert size={14} /> MISSED SECTIONAL CUTOFF ({failedSections.length} Sections)
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-3xl font-extrabold text-white mb-2">
+                  {allSectionsCleared 
+                    ? '🎉 Congratulations! You Qualified for Round 2 (Technical Interview)' 
+                    : 'Placement Assessment Screening Result: Not Cleared'}
                 </h3>
-                <p className="text-xs text-neutral-300">
-                  {percentage >= 65 ? 'Score safely clears historical Infosys Systems Engineer sectional thresholds.' : 'Focus on Pseudocode logic and Numerical speed to clear campus cutoffs.'}
+
+                <p className="text-slate-300 text-sm leading-relaxed max-w-2xl">
+                  {allSectionsCleared
+                    ? 'You have successfully met or exceeded the official cutoff benchmarks across Reasoning, Math, Verbal, Pseudocode, and Puzzles. You are ready to enter the Technical Interview panel.'
+                    : `In official Infosys screening, candidates must clear every section. You scored ${overallPercentage}%, but missed cutoff in: ${failedSections.map(f => f.name).join(', ')}. Review the solutions below and re-test.`}
                 </p>
+
+                {allSectionsCleared && onProceedToTechnicalInterview && (
+                  <button
+                    onClick={onProceedToTechnicalInterview}
+                    className="mt-6 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-emerald-500/30 flex items-center gap-2 transition-all active:scale-95"
+                  >
+                    <Video size={18} /> Proceed to Round 2 (Technical AI Interview) <ArrowRight size={16} />
+                  </button>
+                )}
               </div>
 
-              {/* Big Score Dial */}
-              <div className="flex items-center justify-center">
-                <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/15 text-center">
-                  <div className="text-4xl font-extrabold text-white">
-                    {correctCount} <span className="text-xl text-neutral-400 font-normal">/ {totalQuestions}</span>
+              {/* Overall Score Dial */}
+              <div className="lg:col-span-4 flex justify-center">
+                <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/15 text-center w-full max-w-[260px]">
+                  <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Total Score</div>
+                  <div className="text-5xl font-extrabold text-white">
+                    {totalCorrect} <span className="text-2xl text-slate-400 font-normal">/ {totalQuestions}</span>
                   </div>
-                  <div className="text-xs text-emerald-400 font-semibold mt-1">{percentage}% Accuracy</div>
+                  <div className={`text-sm font-bold mt-2 ${allSectionsCleared ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {overallPercentage}% Overall Accuracy
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">
+                    Attempted: {totalAttempted} of {totalQuestions}
+                  </div>
                 </div>
               </div>
 
-              {/* Quick breakdown metrics */}
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-white/10">
-                  <span className="text-neutral-400">Correct Answers:</span>
-                  <span className="font-bold text-emerald-400">{correctCount}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-white/10">
-                  <span className="text-neutral-400">Incorrect Answers:</span>
-                  <span className="font-bold text-red-400">{incorrectCount}</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-neutral-400">Unanswered Questions:</span>
-                  <span className="font-bold text-amber-300">{totalQuestions - answeredCount}</span>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Sectional Performance Grid */}
-          <h4 className="font-bold text-base text-neutral-900 mb-4 flex items-center gap-2">
-            <Award size={18} className="text-primary-600" />
-            Section-Wise Performance Breakdown
+          {/* Section-Wise Cutoff Breakdown Table */}
+          <h4 className="font-extrabold text-lg text-neutral-900 mb-4 flex items-center gap-2">
+            <Award size={20} className="text-primary-600" />
+            Official Infosys Section-Wise Cutoff Analysis
           </h4>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-            {sectionStats.map(stat => (
-              <div key={stat.section} className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200">
-                <div className="text-xs text-neutral-500 font-medium truncate">{stat.section}</div>
-                <div className="text-xl font-extrabold text-neutral-900 mt-1">
-                  {stat.correct} / {stat.total}
+          <div className="grid md:grid-cols-5 gap-4 mb-10">
+            {sectionalReport.map((sec) => (
+              <div 
+                key={sec.id}
+                className={`p-5 rounded-2xl border-2 transition-all ${
+                  sec.cleared 
+                    ? 'bg-emerald-50/50 border-emerald-300/80' 
+                    : 'bg-red-50/50 border-red-300/80'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-xs text-neutral-900 truncate">{sec.name}</span>
+                  {sec.cleared ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                      CLEARED
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-800">
+                      FAILED
+                    </span>
+                  )}
                 </div>
-                <div className="w-full bg-neutral-200 h-1.5 rounded-full mt-2 overflow-hidden">
+
+                <div className="text-2xl font-extrabold text-neutral-900 my-1">
+                  {sec.correctCount} / {sec.questionCount}
+                </div>
+
+                <div className="text-xs text-neutral-600 mb-2">
+                  Score: <strong>{sec.scorePct}%</strong> (Req: {sec.cutoffPercentage}%)
+                </div>
+
+                <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full rounded-full ${stat.pct >= 70 ? 'bg-emerald-500' : stat.pct >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
-                    style={{ width: `${stat.pct}%` }}
+                    className={`h-full rounded-full ${sec.cleared ? 'bg-emerald-600' : 'bg-red-600'}`}
+                    style={{ width: `${Math.min(100, sec.scorePct)}%` }}
                   />
                 </div>
-                <div className="text-[11px] text-neutral-500 mt-1 font-semibold">{stat.pct}% Score</div>
+
+                <div className="text-[10px] text-neutral-500 mt-2">
+                  Min to pass: {sec.minCorrectRequired} of {sec.questionCount} Qs
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Section Filter for Review */}
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h4 className="font-bold text-base text-neutral-900 flex items-center gap-2">
+          {/* Detailed Question Review List */}
+          <div className="pt-6 border-t border-neutral-200">
+            <h4 className="font-bold text-base text-neutral-900 mb-4 flex items-center gap-2">
               <BookOpen size={18} className="text-primary-600" />
-              Detailed Solutions & Explanations ({allQuestions.length} Questions)
+              Complete Question Review & Step-by-Step Solutions (54 Questions)
             </h4>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              <button
-                onClick={() => setActiveFilterSection('All')}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                  activeFilterSection === 'All' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                }`}
-              >
-                All Sections
-              </button>
-              {sections.map(sec => (
-                <button
-                  key={sec}
-                  onClick={() => setActiveFilterSection(sec)}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors whitespace-nowrap ${
-                    activeFilterSection === sec ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                  }`}
-                >
-                  {sec}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Detailed Question Review List */}
-          <div className="space-y-6">
-            {allQuestions
-              .filter(q => activeFilterSection === 'All' || q.section === activeFilterSection)
-              .map((q, idx) => {
+            <div className="space-y-4">
+              {OFFICIAL_54_QUESTIONS.map((q, idx) => {
                 const userChoice = selectedAnswers[q.id];
                 const isCorrect = userChoice === q.correctAnswer;
                 const isSkipped = userChoice === undefined;
 
                 return (
                   <div 
-                    key={q.id} 
-                    className={`p-6 rounded-2xl border-2 transition-all ${
+                    key={q.id}
+                    className={`p-5 rounded-2xl border transition-all ${
                       isCorrect 
-                        ? 'bg-emerald-50/30 border-emerald-200/80' 
+                        ? 'bg-emerald-50/20 border-emerald-200' 
                         : isSkipped 
                           ? 'bg-neutral-50 border-neutral-200' 
-                          : 'bg-red-50/30 border-red-200/80'
+                          : 'bg-red-50/20 border-red-200'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-3 text-xs">
+                    <div className="flex items-center justify-between text-xs mb-2">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-neutral-900">Q{idx + 1}</span>
-                        <span className="text-primary-700 bg-primary-100/60 px-2 py-0.5 rounded font-medium">
+                        <span className="text-primary-700 font-semibold bg-primary-100/60 px-2 py-0.5 rounded">
                           {q.section}
                         </span>
                         <span className="text-neutral-500">• {q.topic}</span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 font-bold text-xs">
-                        {isCorrect && (
-                          <span className="text-emerald-700 flex items-center gap-1 bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                            <CheckCircle2 size={14} /> Correct (+1)
-                          </span>
-                        )}
-                        {!isCorrect && !isSkipped && (
-                          <span className="text-red-700 flex items-center gap-1 bg-red-100 px-2.5 py-0.5 rounded-full">
-                            <XCircle size={14} /> Incorrect (0)
-                          </span>
-                        )}
-                        {isSkipped && (
-                          <span className="text-neutral-600 flex items-center gap-1 bg-neutral-200 px-2.5 py-0.5 rounded-full">
-                            Skipped
-                          </span>
-                        )}
-                      </div>
+                      <span className={`font-bold px-2.5 py-0.5 rounded-full text-xs ${
+                        isCorrect ? 'bg-emerald-100 text-emerald-800' : isSkipped ? 'bg-neutral-200 text-neutral-700' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {isCorrect ? 'Correct (+1)' : isSkipped ? 'Skipped' : 'Incorrect (0)'}
+                      </span>
                     </div>
 
-                    <p className="text-neutral-900 font-medium text-sm mb-3 leading-relaxed whitespace-pre-line">
+                    <p className="text-sm font-medium text-neutral-900 mb-2 leading-relaxed whitespace-pre-line">
                       {q.question}
                     </p>
 
                     {q.codeSnippet && (
-                      <div className="bg-[#0f172a] text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto mb-3 shadow-inner">
+                      <div className="bg-[#0f172a] text-emerald-400 p-3 rounded-xl font-mono text-xs overflow-x-auto my-2">
                         <pre>{q.codeSnippet}</pre>
                       </div>
                     )}
 
-                    {/* Options Review */}
-                    <div className="grid sm:grid-cols-2 gap-2 my-3">
+                    <div className="grid sm:grid-cols-2 gap-2 text-xs my-3">
                       {q.options.map((opt, optIdx) => {
                         const isThisCorrect = optIdx === q.correctAnswer;
-                        const isThisUserChoice = optIdx === userChoice;
+                        const isUserPick = optIdx === userChoice;
 
-                        let optClass = 'bg-white border-neutral-200 text-neutral-700';
-                        if (isThisCorrect) {
-                          optClass = 'bg-emerald-100 border-emerald-300 text-emerald-950 font-semibold';
-                        } else if (isThisUserChoice && !isThisCorrect) {
-                          optClass = 'bg-red-100 border-red-300 text-red-950 font-semibold';
-                        }
+                        let badgeClass = 'bg-white border-neutral-200 text-neutral-700';
+                        if (isThisCorrect) badgeClass = 'bg-emerald-100 border-emerald-300 text-emerald-950 font-bold';
+                        else if (isUserPick) badgeClass = 'bg-red-100 border-red-300 text-red-950 font-bold';
 
                         return (
-                          <div 
-                            key={optIdx} 
-                            className={`p-3 rounded-xl border text-xs flex items-center justify-between ${optClass}`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center font-bold text-[10px]">
-                                {String.fromCharCode(65 + optIdx)}
-                              </span>
-                              <span>{opt}</span>
-                            </span>
-                            {isThisCorrect && <CheckCircle2 size={14} className="text-emerald-700 shrink-0" />}
-                            {isThisUserChoice && !isThisCorrect && <XCircle size={14} className="text-red-700 shrink-0" />}
+                          <div key={optIdx} className={`p-2.5 rounded-xl border flex items-center justify-between ${badgeClass}`}>
+                            <span>{String.fromCharCode(65 + optIdx)}. {opt}</span>
+                            {isThisCorrect && <CheckCircle2 size={13} className="text-emerald-700 shrink-0" />}
+                            {isUserPick && !isThisCorrect && <XCircle size={13} className="text-red-700 shrink-0" />}
                           </div>
                         );
                       })}
                     </div>
 
-                    {/* Step-by-step Solution */}
-                    <div className="mt-4 p-4 rounded-xl bg-white border border-neutral-200 text-xs text-neutral-800">
-                      <div className="font-bold text-primary-700 mb-1 flex items-center gap-1.5">
-                        <HelpCircle size={14} /> Step-by-Step Explanation:
-                      </div>
-                      <p className="text-neutral-700 leading-relaxed">{q.explanation}</p>
+                    <div className="p-3 bg-white rounded-xl border border-neutral-200 text-xs text-neutral-700">
+                      <strong className="text-primary-700">Explanation: </strong>
+                      {q.explanation}
                     </div>
                   </div>
                 );
               })}
+            </div>
           </div>
 
         </div>
