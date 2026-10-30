@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Clock, CheckCircle2, XCircle, RotateCcw, AlertTriangle, 
   HelpCircle, ChevronRight, ChevronLeft, Bookmark, Award, BookOpen, 
-  ArrowRight, ShieldCheck, ShieldAlert, Sparkles, Video, Maximize2, Play, Lock, LogIn, ArrowLeft 
+  ArrowRight, ShieldCheck, ShieldAlert, Sparkles, Video, Maximize2, Play, Lock, LogIn, ArrowLeft, UserCheck 
 } from 'lucide-react';
 import type { InfosysQuestion, SectionConfig } from '../../data/infosysPrepData';
 import { MOCK_TEST_1, type MockTestBundle } from '../../data/infosysMockTests';
@@ -104,10 +104,6 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   }, [currentSectionIdx, hasStarted, isTestCompleted, speedMode, showFullscreenAlert]);
 
   const handleStartExam = async () => {
-    if (!user) {
-      setShowSignInModal(true);
-      return;
-    }
     setHasStarted(true);
     setIsTestCompleted(false);
     setCurrentSectionIdx(0);
@@ -132,8 +128,6 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
 
   // Minimal student marks persistence (zero database bloat, no per-question timestamps)
   const saveStudentMarks = async (finalAnswers: { [qId: string]: number }) => {
-    if (!user) return;
-    
     let totalScore = 0;
     const sectionalScores: { [secName: string]: number } = {};
     
@@ -150,8 +144,9 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
       return secQs.length > 0 ? (secCorrect / secQs.length) * 100 >= sec.cutoffPercentage : true;
     });
 
+    const userKey = user?.id || 'guest';
     const record = {
-      user_id: user.id,
+      user_id: userKey,
       company: 'infosys',
       test_id: activeBundle.id,
       test_title: activeBundle.title,
@@ -162,26 +157,28 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
       created_at: new Date().toISOString()
     };
 
-    // 1. Cache to localStorage for fast instant access
+    // 1. Cache to localStorage for fast instant access (both logged in and guest)
     try {
-      localStorage.setItem(`aptiverse_infosys_score_${user.id}_${activeBundle.id}`, JSON.stringify(record));
+      localStorage.setItem(`aptiverse_infosys_score_${userKey}_${activeBundle.id}`, JSON.stringify(record));
     } catch (e) {
       console.warn('LocalStorage save note:', e);
     }
 
-    // 2. Minimal DB insert
-    try {
-      await supabase.from('company_mock_scores').insert([{
-        user_id: user.id,
-        company: 'infosys',
-        test_id: activeBundle.id,
-        score: totalScore,
-        total_questions: allQuestions.length,
-        sectional_scores: sectionalScores,
-        cleared: isAllCleared
-      }]);
-    } catch (err) {
-      console.warn('DB score save note (non-blocking):', err);
+    // 2. Minimal DB insert if authenticated
+    if (user?.id) {
+      try {
+        await supabase.from('company_mock_scores').insert([{
+          user_id: user.id,
+          company: 'infosys',
+          test_id: activeBundle.id,
+          score: totalScore,
+          total_questions: allQuestions.length,
+          sectional_scores: sectionalScores,
+          cleared: isAllCleared
+        }]);
+      } catch (err) {
+        console.warn('DB score save note (non-blocking):', err);
+      }
     }
   };
 
@@ -279,13 +276,22 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
               onClick={async () => {
                 await signInWithGoogle();
               }}
-              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all mb-3 active:scale-98"
+              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all mb-2.5 active:scale-98"
             >
               <LogIn size={18} /> Sign In with Google
             </button>
             <button
+              onClick={async () => {
+                setShowSignInModal(false);
+                await handleStartExam();
+              }}
+              className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700 flex items-center justify-center gap-2 transition-all mb-3"
+            >
+              <UserCheck size={16} className="text-emerald-400" /> Continue as Guest (Practice Mode)
+            </button>
+            <button
               onClick={() => setShowSignInModal(false)}
-              className="text-xs text-slate-400 hover:text-white transition-colors py-2"
+              className="text-xs text-slate-400 hover:text-white transition-colors py-1"
             >
               Cancel
             </button>

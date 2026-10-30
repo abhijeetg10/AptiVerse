@@ -228,142 +228,196 @@ export const InfosysPrep: React.FC = () => {
                   </p>
                 </div>
 
-                {/* 4 Cards Grid - Styled in AptiVerse Theme */}
+                {/* 4 Cards Grid - Styled referencing Image 1 & Image 2 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {ALL_INFOSYS_MOCK_TESTS.map((bundle) => {
                     let savedScore: any = null;
-                    if (user) {
-                      try {
-                        const raw = localStorage.getItem(`aptiverse_infosys_score_${user.id}_${bundle.id}`);
-                        if (raw) savedScore = JSON.parse(raw);
-                      } catch (e) {}
-                    }
+                    try {
+                      const userKey = user ? user.id : 'guest';
+                      const raw = localStorage.getItem(`aptiverse_infosys_score_${userKey}_${bundle.id}`) ||
+                                  localStorage.getItem(`aptiverse_infosys_score_guest_${bundle.id}`);
+                      if (raw) savedScore = JSON.parse(raw);
+                    } catch (e) {}
 
-                    // Card styling config per difficulty tag
-                    const badgeConfig = {
+                    // Pack Theme Config matching design reference
+                    const packThemes = {
                       'Official Sample': {
-                        pillBg: 'bg-blue-50 text-blue-700 border-blue-200/80',
-                        dotBg: 'bg-blue-500',
-                        label: 'Sample Pattern',
-                        borderHover: 'hover:border-blue-400',
+                        headerBg: 'bg-gradient-to-b from-blue-100 via-blue-50/80 to-blue-50/20',
+                        topPill: 'bg-blue-500 text-white',
+                        topLabel: 'SAMPLE PATTERN',
+                        circleBg: 'bg-blue-600 text-white',
                         btnBg: 'bg-blue-600 hover:bg-blue-700',
+                        borderHover: 'hover:border-blue-300 hover:shadow-blue-500/10',
+                        titleHover: 'group-hover:text-blue-600',
+                        visual: (
+                          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-blue-100 flex items-center justify-center relative">
+                            <FileText size={26} className="text-blue-500" />
+                            <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold shadow">
+                              ✓
+                            </span>
+                          </div>
+                        )
                       },
                       'Easy': {
-                        pillBg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-                        dotBg: 'bg-emerald-500',
-                        label: 'Easy Difficulty',
-                        borderHover: 'hover:border-emerald-400',
+                        headerBg: 'bg-gradient-to-b from-emerald-100 via-emerald-50/80 to-emerald-50/20',
+                        topPill: 'bg-emerald-600 text-white',
+                        topLabel: 'EASY PACK',
+                        circleBg: 'bg-emerald-600 text-white',
                         btnBg: 'bg-emerald-600 hover:bg-emerald-700',
+                        borderHover: 'hover:border-emerald-300 hover:shadow-emerald-500/10',
+                        titleHover: 'group-hover:text-emerald-600',
+                        visual: (
+                          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-emerald-100 flex items-center justify-center relative">
+                            <Target size={28} className="text-emerald-500" />
+                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 animate-ping opacity-60" />
+                          </div>
+                        )
                       },
                       'Moderate': {
-                        pillBg: 'bg-amber-50 text-amber-700 border-amber-200/80',
-                        dotBg: 'bg-amber-500',
-                        label: 'Moderate Difficulty',
-                        borderHover: 'hover:border-amber-400',
-                        btnBg: 'bg-amber-600 hover:bg-amber-700',
+                        headerBg: 'bg-gradient-to-b from-purple-100 via-purple-50/80 to-purple-50/20',
+                        topPill: 'bg-purple-600 text-white',
+                        topLabel: 'MODERATE PACK',
+                        circleBg: 'bg-purple-600 text-white',
+                        btnBg: 'bg-purple-600 hover:bg-purple-700',
+                        borderHover: 'hover:border-purple-300 hover:shadow-purple-500/10',
+                        titleHover: 'group-hover:text-purple-600',
+                        visual: (
+                          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-purple-100 flex items-center justify-center relative">
+                            <Code2 size={26} className="text-purple-600" />
+                            <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-md bg-purple-600 text-white font-mono text-[9px] font-black shadow">
+                              &lt;/&gt;
+                            </span>
+                          </div>
+                        )
                       },
                       'Hard': {
-                        pillBg: 'bg-purple-50 text-purple-700 border-purple-200/80',
-                        dotBg: 'bg-purple-500',
-                        label: 'Hard Difficulty',
-                        borderHover: 'hover:border-purple-400',
-                        btnBg: 'bg-purple-600 hover:bg-purple-700',
-                      },
+                        headerBg: 'bg-gradient-to-b from-amber-100 via-amber-50/80 to-amber-50/20',
+                        topPill: 'bg-amber-600 text-white',
+                        topLabel: 'HARD PACK',
+                        circleBg: 'bg-amber-600 text-white',
+                        btnBg: 'bg-amber-600 hover:bg-amber-700',
+                        borderHover: 'hover:border-amber-300 hover:shadow-amber-500/10',
+                        titleHover: 'group-hover:text-amber-600',
+                        visual: (
+                          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-amber-100 flex items-center justify-center relative">
+                            <Trophy size={26} className="text-amber-500" />
+                            <span className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold shadow">
+                              ★
+                            </span>
+                          </div>
+                        )
+                      }
                     }[bundle.tag] || {
-                      pillBg: 'bg-slate-50 text-slate-700 border-slate-200',
-                      dotBg: 'bg-slate-500',
-                      label: bundle.tag,
-                      borderHover: 'hover:border-slate-400',
+                      headerBg: 'bg-gradient-to-b from-slate-100 to-slate-50',
+                      topPill: 'bg-slate-700 text-white',
+                      topLabel: bundle.tag,
+                      circleBg: 'bg-slate-700 text-white',
                       btnBg: 'bg-primary-600 hover:bg-primary-700',
+                      borderHover: 'hover:border-slate-300',
+                      titleHover: 'group-hover:text-primary-600',
+                      visual: <FileText size={26} className="text-slate-600" />
                     };
 
                     return (
                       <div 
                         key={bundle.id}
-                        className={`bg-white rounded-2xl border border-neutral-200/90 ${badgeConfig.borderHover} shadow-sm hover:shadow-xl transition-all duration-300 p-6 flex flex-col justify-between group hover:-translate-y-1`}
+                        className={`bg-white rounded-3xl border border-slate-200/90 ${packThemes.borderHover} shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden group hover:-translate-y-1`}
                       >
                         <div>
-                          {/* Top Header Pill Row */}
-                          <div className="flex items-center justify-between gap-2 mb-3">
-                            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border flex items-center gap-1.5 ${badgeConfig.pillBg}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${badgeConfig.dotBg}`}></span>
-                              {badgeConfig.label}
-                            </span>
-                            <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                              MOCK 0{bundle.testNumber}
-                            </span>
-                          </div>
-
-                          {/* Title & Description */}
-                          <h3 className="text-base font-extrabold text-neutral-900 group-hover:text-primary-600 transition-colors line-clamp-1">
-                            {bundle.title}
-                          </h3>
-                          <div className="text-[11px] font-semibold text-slate-400 mt-0.5">
-                            {bundle.subtitle}
-                          </div>
-                          <p className="text-xs text-neutral-500 leading-relaxed mt-2 mb-4 line-clamp-2">
-                            {bundle.description}
-                          </p>
-
-                          {/* Stats Strip */}
-                          <div className="flex items-center justify-between text-xs font-semibold text-neutral-600 bg-neutral-50 p-2.5 rounded-xl border border-neutral-100 mb-4">
-                            <span className="flex items-center gap-1.5">
-                              <Clock size={13} className="text-primary-600" />
-                              {bundle.totalTimeMinutes} Mins
-                            </span>
-                            <span className="text-neutral-300">•</span>
-                            <span className="flex items-center gap-1.5">
-                              <FileText size={13} className="text-primary-600" />
-                              {bundle.totalQuestions} Questions
-                            </span>
-                            <span className="text-neutral-300">•</span>
-                            <span className="text-emerald-600 font-bold">
-                              3 Rounds
-                            </span>
-                          </div>
-
-                          {/* 3-Stage Pipeline Breakdown */}
-                          <div className="space-y-2 mb-5 pt-3 border-t border-neutral-100">
-                            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider flex items-center justify-between">
-                              <span>Hiring Journey Stages</span>
-                              <span className="text-primary-600 font-medium">Standard Flow</span>
+                          {/* Top Pastel Header Area */}
+                          <div className={`h-36 ${packThemes.headerBg} p-3.5 flex flex-col justify-between relative`}>
+                            {/* Header Top Pills */}
+                            <div className="flex items-center justify-between">
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${packThemes.topPill} shadow-sm`}>
+                                {packThemes.topLabel}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-700 bg-white/70 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-slate-200/60 font-mono shadow-xs">
+                                Pack 0{bundle.testNumber}
+                              </span>
                             </div>
 
-                            <div className="space-y-1.5 text-xs">
-                              <div className="flex items-center justify-between p-2 rounded-lg bg-neutral-50/70 border border-neutral-100">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-5 h-5 rounded-md bg-blue-100 text-blue-700 font-bold text-[10px] flex items-center justify-center shrink-0">1</span>
-                                  <span className="font-semibold text-neutral-800">Round 1: Online Aptitude</span>
-                                </div>
-                                <span className="text-[11px] text-neutral-500 font-mono">54 Qs</span>
-                              </div>
+                            {/* Centered Illustrative Icon */}
+                            <div className="flex justify-center items-center pb-2">
+                              {packThemes.visual}
+                            </div>
+                          </div>
 
-                              <div className="flex items-center justify-between p-2 rounded-lg bg-neutral-50/70 border border-neutral-100">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-bold text-[10px] flex items-center justify-center shrink-0">2</span>
-                                  <span className="font-semibold text-neutral-800">Round 2: Technical Panel</span>
-                                </div>
-                                <span className="text-[11px] text-indigo-600 font-bold font-mono">{bundle.technicalPrompts.length} Qs</span>
-                              </div>
+                          {/* Overlapping Central Number Badge */}
+                          <div className="-mt-5 mx-auto w-11 h-11 rounded-full bg-white p-1 shadow-md border border-slate-100 flex items-center justify-center relative z-10 group-hover:scale-110 transition-transform duration-300">
+                            <div className={`w-full h-full rounded-full ${packThemes.circleBg} flex items-center justify-center text-white font-black text-sm shadow-inner`}>
+                              0{bundle.testNumber}
+                            </div>
+                          </div>
 
-                              <div className="flex items-center justify-between p-2 rounded-lg bg-neutral-50/70 border border-neutral-100">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 font-bold text-[10px] flex items-center justify-center shrink-0">3</span>
-                                  <span className="font-semibold text-neutral-800">Round 3: HR & Behavioral</span>
+                          {/* Title & Track Details */}
+                          <div className="px-5 pt-2 text-center">
+                            <h4 className={`text-base font-black text-slate-900 ${packThemes.titleHover} transition-colors line-clamp-1`}>
+                              {bundle.title}
+                            </h4>
+                            <div className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                              {bundle.subtitle}
+                            </div>
+                            <p className="text-[11px] text-slate-500 leading-relaxed mt-2 line-clamp-2 px-1">
+                              {bundle.description}
+                            </p>
+                          </div>
+
+                          {/* Stats Row (3 Columns: Questions, Duration, Pipeline) */}
+                          <div className="mx-4 mt-3 py-2.5 px-1 rounded-2xl bg-slate-50 border border-slate-100 grid grid-cols-3 text-center">
+                            <div>
+                              <span className="text-xs font-black text-slate-800 block">{bundle.totalQuestions} Qs</span>
+                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Aptitude</span>
+                            </div>
+                            <div className="border-x border-slate-200">
+                              <span className="text-xs font-black text-slate-800 block">{bundle.totalTimeMinutes}m</span>
+                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Time</span>
+                            </div>
+                            <div>
+                              <span className="text-xs font-black text-emerald-600 block">3 Rounds</span>
+                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Pipeline</span>
+                            </div>
+                          </div>
+
+                          {/* 3-Stage Pipeline Progression Indicators */}
+                          <div className="mx-4 mt-3 pt-2.5 border-t border-slate-100">
+                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                              <span>Hiring Pipeline</span>
+                              <span className="text-blue-600 font-bold">Standard Flow</span>
+                            </div>
+                            <div className="space-y-1.5 text-[11px] text-slate-600">
+                              <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50/80 border border-slate-100">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                                  <span className="font-semibold text-slate-700">R1: Online Aptitude</span>
                                 </div>
-                                <span className="text-[11px] text-emerald-600 font-bold font-mono">{bundle.hrPrompts.length} Qs</span>
+                                {/* Clearly showing 5 Sections instead of 5s / 5 Sec */}
+                                <span className="text-[10px] text-slate-600 font-bold font-mono">5 Sections</span>
+                              </div>
+                              <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50/80 border border-slate-100">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                                  <span className="font-semibold text-slate-700">R2: Technical Panel</span>
+                                </div>
+                                <span className="text-[10px] text-blue-600 font-mono font-bold">{bundle.technicalPrompts.length} Qs</span>
+                              </div>
+                              <div className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50/80 border border-slate-100">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                                  <span className="font-semibold text-slate-700">R3: HR & Managerial</span>
+                                </div>
+                                <span className="text-[10px] text-emerald-600 font-mono font-bold">{bundle.hrPrompts.length} Qs</span>
                               </div>
                             </div>
                           </div>
 
                           {/* Best Score Badge if candidate attempted before */}
                           {savedScore && (
-                            <div className="mb-4 p-2.5 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between">
+                            <div className="mx-4 mt-3 p-2 rounded-xl bg-slate-900 text-white text-[11px] flex items-center justify-between">
                               <div>
-                                <span className="text-slate-400 text-[10px] block">Your Best Score</span>
+                                <span className="text-slate-400 text-[9px] block">Your Best Score</span>
                                 <span className="font-bold text-emerald-400">{savedScore.score} / {savedScore.total_questions}</span>
                               </div>
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold ${
                                 savedScore.cleared ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                               }`}>
                                 {savedScore.cleared ? 'Cleared Cutoff' : 'Recorded'}
@@ -373,20 +427,16 @@ export const InfosysPrep: React.FC = () => {
                         </div>
 
                         {/* Action CTA Button */}
-                        <div>
+                        <div className="p-4 pt-3">
                           <button
                             onClick={() => {
-                              if (!user) {
-                                setShowSignInModal(true);
-                                return;
-                              }
                               setSelectedMockBundle(bundle);
                               setActiveRoundStep(1);
                             }}
-                            className={`w-full py-3 ${badgeConfig.btnBg} text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm hover:shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98]`}
+                            className={`w-full py-3 ${packThemes.btnBg} text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-md hover:shadow-lg flex items-center justify-center gap-1.5 transition-all active:scale-98`}
                           >
                             <Play size={13} className="fill-white" />
-                            Start Mock Drive 0{bundle.testNumber}
+                            Start Complete Drive 0{bundle.testNumber}
                             <ArrowRight size={13} />
                           </button>
                         </div>
@@ -852,13 +902,19 @@ export const InfosysPrep: React.FC = () => {
               onClick={async () => {
                 await signInWithGoogle();
               }}
-              className="w-full py-3.5 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all mb-3 active:scale-98"
+              className="w-full py-3.5 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all mb-2.5 active:scale-98"
             >
               <LogIn size={18} /> Sign In with Google
             </button>
             <button
               onClick={() => setShowSignInModal(false)}
-              className="text-xs text-slate-400 hover:text-white transition-colors py-2"
+              className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-2xl border border-slate-700 flex items-center justify-center gap-2 transition-all mb-3"
+            >
+              <UserCheck size={16} className="text-emerald-400" /> Continue as Guest (Practice Mode)
+            </button>
+            <button
+              onClick={() => setShowSignInModal(false)}
+              className="text-xs text-slate-400 hover:text-white transition-colors py-1"
             >
               Cancel
             </button>
