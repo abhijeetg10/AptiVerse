@@ -175,8 +175,22 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   const allSectionsCleared = sectionalReport.every(sec => sec.cleared);
   const failedSections = sectionalReport.filter(sec => !sec.cleared);
 
+  const handleExitTest = () => {
+    if (window.confirm("Are you sure you want to exit the assessment? Your progress in this attempt will be discarded.")) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.().catch(() => {});
+      }
+      setHasStarted(false);
+      setIsTestCompleted(false);
+    }
+  };
+
+  const containerClass = hasStarted && !isTestCompleted
+    ? "fixed inset-0 z-[100] bg-[#070b14] w-screen h-screen flex flex-col overflow-y-auto font-sans"
+    : "bg-white rounded-3xl border border-neutral-200/90 shadow-xl overflow-hidden font-sans relative";
+
   return (
-    <div className="bg-white rounded-3xl border border-neutral-200/90 shadow-xl overflow-hidden font-sans relative">
+    <div className={containerClass}>
       
       {/* Fullscreen Violation Alert Modal */}
       {showFullscreenAlert && (
@@ -231,10 +245,10 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
 
           {hasStarted && !isTestCompleted && (
             <button
-              onClick={requestFullscreen}
-              className="p-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 flex items-center gap-1.5"
+              onClick={handleExitTest}
+              className="p-2 rounded-xl text-xs font-semibold bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/40 flex items-center gap-1.5 transition-colors"
             >
-              <Maximize2 size={14} /> Fullscreen
+              Exit Assessment
             </button>
           )}
 

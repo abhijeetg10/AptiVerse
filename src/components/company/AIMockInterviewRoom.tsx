@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Video, VideoOff, Mic, Volume2, VolumeX, Play, RotateCcw, 
   ChevronRight, CheckCircle2, Award, Sparkles, BookOpen, Clock, 
-  HelpCircle, ArrowRight, ShieldCheck, Maximize2, AlertTriangle, Eye 
+  HelpCircle, ArrowRight, ShieldCheck, Maximize2, AlertTriangle, Eye, X 
 } from 'lucide-react';
 import { 
   TECHNICAL_INTERVIEW_PROMPTS, 
   HR_INTERVIEW_PROMPTS, 
   type InterviewPrompt 
 } from '../../data/infosysPrepData';
+import { TalkingRecruiterAvatar } from './TalkingRecruiterAvatar';
 
 interface AIMockInterviewRoomProps {
   initialRound?: 'technical' | 'hr';
@@ -36,7 +37,6 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
   const [notes, setNotes] = useState<{ [id: string]: string }>({});
   const [isFinished, setIsFinished] = useState(false);
   const [showAnswerGuide, setShowAnswerGuide] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFullscreenAlert, setShowFullscreenAlert] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -45,23 +45,36 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
 
   const currentQuestion: InterviewPrompt = questions[currentIdx] || questions[0];
 
+  // Recruiter personas with properly framed high-resolution portraits
+  const recruiter = activeRound === 'technical' ? {
+    name: 'Priya Sharma',
+    role: 'Lead Technical Architect',
+    unit: 'Infosys Cloud & Digital Systems',
+    img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+    gender: 'female'
+  } : {
+    name: 'Ananya Verma',
+    role: 'Senior Campus Talent Director',
+    unit: 'Infosys Global Recruitment',
+    img: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
+    gender: 'female'
+  };
+
   // Fullscreen management
   const requestFullscreen = async () => {
     try {
       if (!document.fullscreenElement) {
         await document.documentElement.requestFullscreen();
-        setIsFullscreen(true);
-        setShowFullscreenAlert(false);
       }
+      setShowFullscreenAlert(false);
     } catch (err) {
-      console.warn('Fullscreen request declined or unsupported:', err);
+      console.warn('Native fullscreen request ignored:', err);
     }
   };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isFull = !!document.fullscreenElement;
-      setIsFullscreen(isFull);
       if (!isFull && hasStarted && !isFinished) {
         setShowFullscreenAlert(true);
       } else {
@@ -82,12 +95,11 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     setHasStarted(false);
   }, [initialRound]);
 
-  // Request camera access with reliable element attachment
+  // Request camera access with callback ref binding
   const startCamera = async () => {
     try {
       setCameraError(null);
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // If stream already exists and is active, reuse it
         if (streamRef.current && streamRef.current.active) {
           if (videoRef.current) {
             videoRef.current.srcObject = streamRef.current;
@@ -103,13 +115,12 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
             height: { ideal: 720, min: 480 }, 
             facingMode: 'user' 
           },
-          audio: false
+          audio: false 
         });
         
         streamRef.current = stream;
         setIsCameraActive(true);
 
-        // Immediate assignment if videoRef is mounted
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => {
@@ -121,7 +132,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       }
     } catch (err: any) {
       console.warn('Camera access denied or unavailable:', err);
-      setCameraError('Camera access was not granted. You can still practice with simulated audio.');
+      setCameraError('Camera access was not granted. You can still practice with audio.');
       setIsCameraActive(false);
     }
   };
@@ -137,7 +148,6 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     setIsCameraActive(false);
   };
 
-  // Robustly bind video stream whenever active or mounted
   useEffect(() => {
     if (isCameraActive && streamRef.current && videoRef.current) {
       if (videoRef.current.srcObject !== streamRef.current) {
@@ -147,7 +157,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     }
   }, [isCameraActive, hasStarted]);
 
-  // Text-To-Speech Recruiter Voice
+  // Strictly select female voice to match Priya Sharma & Ananya Verma!
   const speakQuestion = (text: string) => {
     if (isMuted || !('speechSynthesis' in window)) return;
 
@@ -155,14 +165,20 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     const utterance = new SpeechSynthesisUtterance(text);
     
     const voices = window.speechSynthesis.getVoices();
-    const recruiterVoice = voices.find(v => 
-      (v.lang.includes('en-IN') || v.lang.includes('en-GB') || v.lang.includes('en-US')) && 
-      (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Neural'))
+    // Prioritize female English voices (Indian / UK / US)
+    const femaleVoice = voices.find(v => 
+      v.name.toLowerCase().includes('female') || 
+      v.name.toLowerCase().includes('zira') || 
+      v.name.toLowerCase().includes('samantha') || 
+      v.name.toLowerCase().includes('heera') || 
+      v.name.toLowerCase().includes('kavya') ||
+      v.name.toLowerCase().includes('veena') ||
+      v.name.toLowerCase().includes('google uk english female')
     ) || voices.find(v => v.lang.startsWith('en'));
 
-    if (recruiterVoice) utterance.voice = recruiterVoice;
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
+    if (femaleVoice) utterance.voice = femaleVoice;
+    utterance.rate = 0.94;
+    utterance.pitch = 1.05;
 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
@@ -177,10 +193,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     setElapsedTime(0);
     setIsFinished(false);
 
-    // Enforce fullscreen on starting test
-    requestFullscreen();
-
-    // Start user's camera
+    await requestFullscreen();
     await startCamera();
 
     const roundTitle = activeRound === 'technical' 
@@ -188,8 +201,8 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       : 'Infosys Systems Engineer HR and Behavioral Interview';
 
     setTimeout(() => {
-      speakQuestion(`Welcome to your ${roundTitle}. Let us begin with the first question. ${questions[0].question}`);
-    }, 600);
+      speakQuestion(`Welcome to your ${roundTitle}. I am ${recruiter.name}. Let us begin with your first question. ${questions[0].question}`);
+    }, 700);
   };
 
   useEffect(() => {
@@ -225,7 +238,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       
       const transitionPhrases = [
         "Thank you. Let's move on to the next question.",
-        "Understood. Here is the next technical prompt.",
+        "Understood. Here is your next prompt.",
         "Alright. Let's proceed to the next scenario.",
         "Good. Now please explain this."
       ];
@@ -248,40 +261,40 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     }
   };
 
+  const handleExitInterview = () => {
+    if (window.confirm("Are you sure you want to exit the interview session?")) {
+      stopCamera();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+      if (onClose) onClose();
+      else setHasStarted(false);
+    }
+  };
+
   const formatSeconds = (sec: number) => {
     const mins = Math.floor(sec / 60);
     const s = sec % 60;
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Recruiter persona details
-  const recruiter = activeRound === 'technical' ? {
-    name: 'Priya Sharma',
-    role: 'Lead Technical Architect',
-    unit: 'Infosys Cloud & Enterprise Engineering',
-    img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
-    experience: '8+ Years at Infosys'
-  } : {
-    name: 'Rajesh Nair',
-    role: 'Senior Campus Talent Acquisition Lead',
-    unit: 'Infosys Global Talent Development',
-    img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80',
-    experience: '12+ Years at Infosys'
-  };
+  // Full-screen takeover wrapper
+  const containerClass = hasStarted
+    ? "fixed inset-0 z-[100] bg-[#070b14] w-screen h-screen flex flex-col overflow-y-auto font-sans"
+    : "bg-slate-900 text-white rounded-3xl overflow-hidden border border-slate-800 shadow-2xl font-sans relative";
 
   return (
-    <div className="bg-slate-900 text-white rounded-3xl overflow-hidden border border-slate-800 shadow-2xl font-sans relative">
+    <div className={containerClass}>
       
-      {/* Fullscreen Proctoring Warning Modal */}
+      {/* Fullscreen Proctoring Violation Alert Modal */}
       {showFullscreenAlert && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
           <div className="bg-slate-900 border-2 border-red-500 rounded-3xl p-8 max-w-lg text-center shadow-2xl animate-bounce-short">
             <div className="w-16 h-16 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/40">
               <AlertTriangle size={32} />
             </div>
             <h3 className="text-xl font-extrabold text-white mb-2">Proctoring Alert: Fullscreen Exited</h3>
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
-              In an actual Infosys assessment & interview, exiting full screen or tab switching triggers an immediate test violation flag. Please re-enter full-screen mode to resume your session.
+              In an actual Infosys online interview, exiting full screen or tab switching triggers an immediate violation flag. Please re-enter full-screen mode to resume your session.
             </p>
             <button
               onClick={requestFullscreen}
@@ -293,8 +306,8 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
         </div>
       )}
 
-      {/* Header Bar */}
-      <div className="bg-slate-950 px-6 py-4 flex flex-wrap items-center justify-between border-b border-slate-800 gap-4">
+      {/* Top Header Bar */}
+      <div className="bg-slate-950 px-6 py-4 flex flex-wrap items-center justify-between border-b border-slate-800 gap-4 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md shadow-primary-600/30">
             <Sparkles size={20} />
@@ -343,15 +356,6 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
           )}
 
           <button
-            onClick={requestFullscreen}
-            className="p-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center gap-1.5"
-            title="Toggle Fullscreen"
-          >
-            <Maximize2 size={15} />
-            <span className="hidden sm:inline">Full Screen</span>
-          </button>
-
-          <button
             onClick={() => {
               setIsMuted(!isMuted);
               if (!isMuted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -363,59 +367,70 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
             }`}
           >
             {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-            <span className="hidden sm:inline">{isMuted ? 'Muted' : 'Voice On'}</span>
+            <span className="hidden sm:inline">{isMuted ? 'Muted' : 'Voice Active'}</span>
           </button>
+
+          {hasStarted && (
+            <button
+              onClick={handleExitInterview}
+              className="p-2 rounded-xl text-xs font-semibold bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/40 flex items-center gap-1.5 transition-colors"
+              title="Exit Fullscreen Interview"
+            >
+              <X size={15} />
+              <span>Exit Interview</span>
+            </button>
+          )}
         </div>
       </div>
 
       {!hasStarted ? (
         /* Pre-Interview Briefing */
-        <div className="p-8 lg:p-12 max-w-3xl mx-auto text-center">
+        <div className="p-8 lg:p-12 max-w-3xl mx-auto text-center my-auto">
           
-          {/* Recruiter Preview Profile */}
-          <div className="relative w-28 h-28 mx-auto mb-6">
+          <div className="relative w-28 h-28 mx-auto mb-5 rounded-3xl overflow-hidden border-2 border-primary-500 shadow-2xl">
             <img 
               src={recruiter.img} 
               alt={recruiter.name}
-              className="w-full h-full object-cover rounded-3xl border-2 border-primary-500 shadow-xl"
+              className="w-full h-full object-cover object-top"
             />
-            <span className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-full shadow-lg">
-              <CheckCircle2 size={16} />
+            <span className="absolute bottom-1 right-1 bg-emerald-500 text-white p-1 rounded-full shadow">
+              <CheckCircle2 size={14} />
             </span>
           </div>
 
-          <h2 className="text-3xl font-extrabold text-white mb-2">
+          <h2 className="text-3xl font-extrabold text-white mb-1.5">
             Meet Your Interviewer: {recruiter.name}
           </h2>
-          <p className="text-primary-300 text-xs font-semibold uppercase tracking-wider mb-3">
+          <p className="text-primary-300 text-xs font-semibold uppercase tracking-wider mb-4">
             {recruiter.role} • {recruiter.unit}
           </p>
-          <p className="text-slate-300 text-sm leading-relaxed mb-6">
+
+          <p className="text-slate-300 text-sm leading-relaxed mb-6 max-w-xl mx-auto">
             {activeRound === 'technical'
-              ? 'Priya will conduct your 1-on-1 technical evaluation. She will speak questions on Java, OOP principles, SQL queries, DBMS normalization, operating systems, and your project architecture.'
-              : 'Rajesh will conduct your behavioral and culture-fit discussion, evaluating your communication, willingness to relocate to any Infosys Development Center, and handling teamwork setbacks.'}
+              ? `${recruiter.name} will speak each question aloud in real time with animated speech responses. Answer her questions while observing your own live webcam feed for posture and eye contact.`
+              : `${recruiter.name} will conduct your behavioral and culture discussion, evaluating your adaptability to Infosys Development Centers and situational teamwork handling.`}
           </p>
 
-          {/* Privacy & Camera Notice Box */}
-          <div className="bg-slate-800/80 p-4 rounded-2xl border border-primary-500/30 text-xs text-left mb-6 flex items-start gap-3">
+          {/* Privacy Notice Box */}
+          <div className="bg-slate-800/80 p-4 rounded-2xl border border-primary-500/30 text-xs text-left mb-6 flex items-start gap-3 max-w-xl mx-auto">
             <ShieldCheck size={20} className="text-emerald-400 shrink-0 mt-0.5" />
             <div className="text-slate-300">
               <strong className="text-white block mb-0.5">100% Client-Side Privacy Notice:</strong>
-              Your webcam video is processed strictly on your local browser for self-composure and posture practice. AptiVerse <strong>does NOT capture, record, or save</strong> your video or audio to any server. You may also disable the camera at any moment.
+              Your webcam video is processed strictly inside your local browser. AptiVerse <strong>does NOT capture, record, or save</strong> your video or audio to any server. You can turn off the camera at any time.
             </div>
           </div>
 
           <button
             onClick={handleStartInterview}
-            className="w-full sm:w-auto px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition-all flex items-center justify-center gap-3 mx-auto text-base active:scale-95"
+            className="w-full sm:w-auto px-10 py-4 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition-all flex items-center justify-center gap-3 mx-auto text-base active:scale-95"
           >
             <Play size={20} className="fill-white" />
-            Enter Fullscreen & Start Live AI Interview
+            Launch Immersive Fullscreen AI Interview
           </button>
         </div>
       ) : isFinished ? (
         /* Evaluation Card */
-        <div className="p-8 lg:p-12 max-w-4xl mx-auto">
+        <div className="p-8 lg:p-12 max-w-4xl mx-auto my-auto">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl mx-auto flex items-center justify-center mb-4 border border-emerald-500/30">
               <Award size={32} />
@@ -434,7 +449,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
               Recruiter Evaluation Rubric & Ideal Answering Points
             </h3>
 
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            <div className="space-y-4 max-h-[380px] overflow-y-auto pr-2">
               {questions.map((q, idx) => (
                 <div key={q.id} className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-left">
                   <div className="flex items-center justify-between mb-1.5">
@@ -483,138 +498,89 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
               </button>
             )}
 
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl"
-              >
-                Return to Overview
-              </button>
-            )}
+            <button
+              onClick={handleExitInterview}
+              className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl"
+            >
+              Exit to Overview
+            </button>
           </div>
         </div>
       ) : (
-        /* Active Split-Screen Room: Recruiter Video Feed (Left) & Candidate Video Feed (Right) */
-        <div className="p-6 lg:p-8">
+        /* Active Split-Screen Room: AI Talking Recruiter (Left) & User Webcam (Right) */
+        <div className="p-4 sm:p-6 lg:p-8 flex-1 flex flex-col justify-between max-w-7xl mx-auto w-full">
           
-          {/* Privacy Disclaimer Bar */}
-          <div className="mb-6 p-3 bg-slate-950/80 rounded-2xl border border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          {/* Top Privacy & Status Strip */}
+          <div className="mb-4 p-3 bg-slate-950/80 rounded-2xl border border-slate-800 flex items-center justify-between text-xs text-slate-400">
             <div className="flex items-center gap-2">
-              <ShieldCheck size={16} className="text-emerald-400" />
-              <span>Practice Mode: Video stays 100% on your laptop. No data or stream is recorded or uploaded.</span>
+              <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
+              <span>Practice Mode: Camera stream stays 100% on your laptop. No data is stored or transmitted.</span>
             </div>
-            <span className="text-[11px] text-slate-500 hidden sm:inline font-mono">
-              Proctored Fullscreen Active
+            <span className="text-[11px] text-emerald-400 font-mono hidden sm:inline">
+              ● Fullscreen Proctored
             </span>
           </div>
 
-          <div className="grid lg:grid-cols-12 gap-6 items-start">
+          <div className="grid lg:grid-cols-12 gap-6 items-start flex-1">
             
-            {/* Left 6 cols: AI Recruiter Virtual Room */}
+            {/* Left 6 cols: Animated AI Recruiter */}
             <div className="lg:col-span-6 flex flex-col gap-4">
               
-              {/* Recruiter Simulated Video Conference Box */}
-              <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl relative">
-                
-                {/* Simulated Recruiter Video Stream */}
-                <div className="relative aspect-[16/10] bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center overflow-hidden">
-                  <img 
-                    src={recruiter.img} 
-                    alt={recruiter.name}
-                    className={`w-full h-full object-cover transition-transform duration-700 ${
-                      isSpeaking ? 'scale-105 filter brightness-110' : 'scale-100'
-                    }`}
-                  />
+              {/* Talking Avatar Component */}
+              <TalkingRecruiterAvatar
+                isSpeaking={isSpeaking}
+                recruiter={recruiter}
+              />
 
-                  {/* Gradient shadow overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40"></div>
-
-                  {/* Top Bar on Recruiter Feed */}
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-blue-600/90 backdrop-blur-md text-white text-[11px] font-bold shadow">
-                      Infosys Panelist
-                    </span>
-                    {isSpeaking && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold flex items-center gap-1 animate-pulse">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white"></span> SPEAKING
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Equalizer Audio Waves when speaking */}
-                  {isSpeaking && (
-                    <div className="absolute top-3 right-3 flex items-end gap-1 h-5 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg">
-                      <span className="w-1 bg-emerald-400 h-3 animate-pulse"></span>
-                      <span className="w-1 bg-emerald-400 h-5 animate-bounce"></span>
-                      <span className="w-1 bg-emerald-400 h-2 animate-pulse"></span>
-                      <span className="w-1 bg-emerald-400 h-4 animate-bounce"></span>
-                    </div>
-                  )}
-
-                  {/* Recruiter Subtitle / Nameplate */}
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
-                    <div>
-                      <div className="font-extrabold text-sm">{recruiter.name}</div>
-                      <div className="text-[11px] text-slate-300">{recruiter.role}</div>
-                    </div>
-
-                    <div className="text-[11px] bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-slate-700">
-                      Question {currentIdx + 1} of {questions.length}
-                    </div>
-                  </div>
+              {/* Spoken Question Statement Card */}
+              <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 shadow-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-950 text-primary-400 border border-primary-800/50">
+                    {currentQuestion.category}
+                  </span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                    {currentQuestion.tag}
+                  </span>
                 </div>
 
-                {/* Question Statement Box */}
-                <div className="p-5 bg-slate-900 border-t border-slate-800">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-950 text-primary-400 border border-primary-800/50">
-                      {currentQuestion.category}
-                    </span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                      {currentQuestion.tag}
-                    </span>
-                  </div>
+                <p className="text-base sm:text-lg font-bold text-white leading-relaxed mb-3">
+                  "{currentQuestion.question}"
+                </p>
 
-                  <p className="text-base font-bold text-white leading-relaxed mb-3">
-                    "{currentQuestion.question}"
-                  </p>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                  <button
+                    onClick={handleRepeatQuestion}
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 transition-colors"
+                  >
+                    <Volume2 size={13} /> Repeat Question
+                  </button>
 
-                  <div className="flex items-center justify-between pt-2">
-                    <button
-                      onClick={handleRepeatQuestion}
-                      className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors"
-                    >
-                      <Volume2 size={13} /> Repeat Prompt
-                    </button>
-
-                    <button
-                      onClick={() => setShowAnswerGuide(!showAnswerGuide)}
-                      className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/30 transition-colors"
-                    >
-                      <HelpCircle size={13} /> {showAnswerGuide ? 'Hide Talking Points' : 'Show Talking Points'}
-                    </button>
-                  </div>
-
-                  {showAnswerGuide && (
-                    <div className="mt-3 p-3.5 rounded-xl bg-slate-950 border border-amber-500/30 text-xs text-slate-300 animate-fadeIn">
-                      <div className="font-bold text-amber-300 mb-1 flex items-center gap-1">
-                        <Sparkles size={13} /> Interviewer Evaluation Expectations:
-                      </div>
-                      <ul className="list-disc list-inside space-y-1 mb-2 text-slate-200">
-                        {currentQuestion.expectedPoints.map((pt, i) => (
-                          <li key={i}>{pt}</li>
-                        ))}
-                      </ul>
-                      <div className="text-[11px] text-slate-400 italic">
-                        💡 Strategy: {currentQuestion.sampleAnswerGuide}
-                      </div>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => setShowAnswerGuide(!showAnswerGuide)}
+                    className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/30 transition-colors"
+                  >
+                    <HelpCircle size={13} /> {showAnswerGuide ? 'Hide Answering Tips' : 'Show Answering Tips'}
+                  </button>
                 </div>
 
+                {showAnswerGuide && (
+                  <div className="mt-3 p-3.5 rounded-xl bg-slate-900 border border-amber-500/30 text-xs text-slate-300 animate-fadeIn">
+                    <div className="font-bold text-amber-300 mb-1 flex items-center gap-1">
+                      <Sparkles size={13} /> What Infosys Interviewers Expect:
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 mb-2 text-slate-200">
+                      {currentQuestion.expectedPoints.map((pt, i) => (
+                        <li key={i}>{pt}</li>
+                      ))}
+                    </ul>
+                    <div className="text-[11px] text-slate-400 italic">
+                      💡 Tip: {currentQuestion.sampleAnswerGuide}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Navigation Button */}
+              {/* Navigation Controls */}
               <div className="flex items-center justify-between pt-1">
                 <button
                   disabled={currentIdx === 0}
@@ -626,27 +592,27 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                   }}
                   className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700"
                 >
-                  Previous Prompt
+                  Previous Question
                 </button>
 
                 <button
                   onClick={handleNextQuestion}
                   className="px-6 py-2.5 rounded-xl text-xs font-bold bg-primary-600 hover:bg-primary-500 text-white flex items-center gap-2 shadow-lg shadow-primary-600/30 transition-all active:scale-95"
                 >
-                  {currentIdx + 1 === questions.length ? 'Complete Round' : 'Next Prompt'}
+                  {currentIdx + 1 === questions.length ? 'Complete Round' : 'Next Question'}
                   <ChevronRight size={14} />
                 </button>
               </div>
 
             </div>
 
-            {/* Right 6 cols: Live Candidate Webcam Video Feed */}
+            {/* Right 6 cols: Live Candidate Webcam Stream */}
             <div className="lg:col-span-6 flex flex-col gap-4">
               
               <div className="bg-slate-950 rounded-2xl p-3 border border-slate-800 shadow-2xl relative overflow-hidden">
                 
-                {/* Webcam Video Container with Callback Ref and Direct Play Binding */}
-                <div className="relative aspect-[16/10] bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800">
+                {/* Webcam Container */}
+                <div className="relative aspect-[4/3] sm:aspect-[16/10] bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800">
                   <video
                     ref={(el) => {
                       videoRef.current = el;
