@@ -194,7 +194,7 @@ export const InfosysPrep: React.FC = () => {
                   <div className="text-xs text-neutral-600 space-y-1">
                     <div>• <strong>54 Questions • 100 Minutes</strong></div>
                     <div>• 5 Sections with individual countdown timers</div>
-                    <div>• <strong>Strict Sectional Cutoffs (60–65%)</strong></div>
+                    <div>• <strong>Infosys has section-wise cutoffs; prepare well for all sections</strong></div>
                   </div>
                   {activeRoundStep === 1 && (
                     <div className="mt-3 pt-2 border-t border-primary-200 text-xs font-bold text-primary-700 flex items-center gap-1">
@@ -273,11 +273,11 @@ export const InfosysPrep: React.FC = () => {
 
               </div>
 
-              {/* Strict Sectional Cutoff Summary Bar */}
+              {/* Section Cutoff Advisory Info */}
               <div className="mt-5 p-4 rounded-2xl bg-neutral-50 border border-neutral-200 flex flex-wrap items-center justify-between gap-4 text-xs">
-                <div className="flex items-center gap-2 text-neutral-700 font-medium">
+                <div className="flex items-center gap-2 text-neutral-800 font-semibold">
                   <ShieldCheck size={16} className="text-primary-600" />
-                  <span><strong>Official Round 1 Cutoffs:</strong> Reasoning (65%), Math (65%), Verbal (65%), Pseudocode (60%), Puzzle (50%)</span>
+                  <span>Infosys has section-wise cutoffs, so prepare well for all sections.</span>
                 </div>
                 <div className="text-neutral-500">
                   Total Questions: <strong>54</strong> | Total Time: <strong>100 mins</strong> | Negative Marking: <strong>None</strong>
@@ -352,9 +352,12 @@ export const InfosysPrep: React.FC = () => {
               <div className="flex items-center gap-2 text-primary-600 font-bold text-xs uppercase tracking-wider mb-2">
                 <FileText size={16} /> Format A Official Blueprint
               </div>
-              <h2 className="text-2xl font-extrabold text-neutral-900 mb-4">
-                Round 1 Sectional Breakdown & Cutoff Rules
+              <h2 className="text-2xl font-extrabold text-neutral-900 mb-2">
+                Round 1 Sectional Breakdown & Exam Structure
               </h2>
+              <p className="text-xs text-neutral-500 mb-4">
+                Infosys has section-wise cutoffs, so prepare well for all sections.
+              </p>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
@@ -363,8 +366,7 @@ export const InfosysPrep: React.FC = () => {
                       <th className="p-3.5">Section Name</th>
                       <th className="p-3.5">Questions</th>
                       <th className="p-3.5">Time Allotted</th>
-                      <th className="p-3.5">Cutoff Percentage</th>
-                      <th className="p-3.5">Min Questions to Pass</th>
+                      <th className="p-3.5">Section Evaluation</th>
                       <th className="p-3.5">Negative Marking</th>
                     </tr>
                   </thead>
@@ -374,8 +376,7 @@ export const InfosysPrep: React.FC = () => {
                         <td className="p-3.5 font-bold text-neutral-900">{sec.name}</td>
                         <td className="p-3.5 font-mono">{sec.questionCount} Qs</td>
                         <td className="p-3.5 font-mono">{sec.timeMinutes} mins</td>
-                        <td className="p-3.5 text-primary-700 font-bold">{sec.cutoffPercentage}%</td>
-                        <td className="p-3.5 font-bold text-emerald-700">≥ {sec.minCorrectRequired} Qs</td>
+                        <td className="p-3.5 text-primary-700 font-medium">Individual Sectional Cutoff Applies</td>
                         <td className="p-3.5 text-neutral-500">None (0)</td>
                       </tr>
                     ))}
@@ -383,8 +384,7 @@ export const InfosysPrep: React.FC = () => {
                       <td className="p-3.5">Total</td>
                       <td className="p-3.5 font-mono">54 Questions</td>
                       <td className="p-3.5 font-mono">100 Minutes</td>
-                      <td className="p-3.5 text-primary-700">All Sections Required</td>
-                      <td className="p-3.5 text-emerald-700">Pass Every Section</td>
+                      <td className="p-3.5 text-emerald-700">Must Clear All 5 Sections</td>
                       <td className="p-3.5 text-neutral-500">-</td>
                     </tr>
                   </tbody>

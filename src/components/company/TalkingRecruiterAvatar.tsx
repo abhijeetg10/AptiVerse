@@ -177,3 +177,4 @@ export const TalkingRecruiterAvatar: React.FC<TalkingRecruiterAvatarProps> = ({
     </div>
   );
 };
+

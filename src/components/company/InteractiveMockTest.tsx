@@ -296,9 +296,9 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
             </div>
             <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200">
               <div className="font-bold text-neutral-900 mb-1 flex items-center gap-1.5">
-                <ShieldCheck size={14} className="text-emerald-600" /> Sectional Cutoffs:
+                <ShieldCheck size={14} className="text-emerald-600" /> Section Evaluation:
               </div>
-              <div className="text-neutral-500">You must pass ALL 5 sections independently to qualify for the interview.</div>
+              <div className="text-neutral-500">Infosys has section-wise cutoffs, so prepare well for all sections.</div>
             </div>
           </div>
 
@@ -385,8 +385,8 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 text-[11px] text-neutral-400 pt-2 border-t border-neutral-200/60">
-                    <span>Section Cutoff: <strong className="text-neutral-700">{activeSectionConfig.cutoffPercentage}% (≥{activeSectionConfig.minCorrectRequired} correct)</strong></span>
+                  <div className="flex items-center gap-3 text-[11px] text-neutral-500 pt-2 border-t border-neutral-200/60">
+                    <span className="font-semibold text-primary-700">Infosys has section-wise cutoffs, so prepare well for all sections.</span>
                     <span>•</span>
                     <span>Source: <strong className="text-neutral-700">{currentQ.evidence}</strong></span>
                   </div>
@@ -504,10 +504,10 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
 
                 <div className="mt-5 p-3 rounded-xl bg-primary-50 border border-primary-100 text-xs text-primary-950">
                   <div className="font-bold mb-0.5 flex items-center gap-1.5 text-primary-800">
-                    <ShieldCheck size={14} /> Strict Cutoff Rule:
+                    <ShieldCheck size={14} /> Section Evaluation Rule:
                   </div>
                   <div>
-                    Infosys requires passing <strong>ALL 5 sections</strong> independently. Scoring high in Math will not compensate for failing Pseudocode or Verbal cutoffs.
+                    Infosys has section-wise cutoffs, so prepare well for all sections.
                   </div>
                 </div>
               </div>
@@ -614,7 +614,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                 </div>
 
                 <div className="text-xs text-neutral-600 mb-2">
-                  Score: <strong>{sec.scorePct}%</strong> (Req: {sec.cutoffPercentage}%)
+                  Accuracy: <strong>{sec.scorePct}%</strong>
                 </div>
 
                 <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
@@ -624,8 +624,8 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                   />
                 </div>
 
-                <div className="text-[10px] text-neutral-500 mt-2">
-                  Min to pass: {sec.minCorrectRequired} of {sec.questionCount} Qs
+                <div className="text-[10px] text-neutral-500 mt-2 font-medium">
+                  Section-wise cutoff applies
                 </div>
               </div>
             ))}
