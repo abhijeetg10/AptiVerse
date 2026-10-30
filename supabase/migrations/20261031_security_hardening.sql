@@ -314,7 +314,7 @@ BEGIN
   END IF;
 
   -- Server-side time elapsed validation
-  v_server_elapsed_seconds := pg_catalog.greatest(1, pg_catalog.extract(EPOCH FROM (pg_catalog.now() - v_attempt.started_at))::integer);
+  v_server_elapsed_seconds := pg_catalog.greatest(1, EXTRACT(EPOCH FROM (pg_catalog.now() - v_attempt.started_at))::integer);
   v_actual_time := pg_catalog.greatest(2, pg_catalog.coalesce(p_client_time_spent, v_server_elapsed_seconds));
 
   -- Minimum 2 seconds human completion anti-cheat guard
