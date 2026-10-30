@@ -1,13 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, Sparkles, ArrowRight, Clock, Video, CheckCircle2, Lock } from 'lucide-react';
+import { 
+  Building2, Sparkles, ArrowRight, Clock, Video, CheckCircle2, 
+  Lock, BookOpen, FileText, Award, Compass 
+} from 'lucide-react';
+import { Badge } from '../ui/Badge';
 
 export const CompanyCardsSection: React.FC = () => {
   return (
-    <section className="pt-16 pb-16 max-w-7xl mx-auto px-6 font-sans">
+    <section className="pt-16 pb-20 max-w-7xl mx-auto px-6 font-sans">
       
       {/* Header */}
-      <div className="flex flex-col items-center text-center mb-12">
+      <div className="flex flex-col items-center text-center mb-14">
         <div className="flex items-center gap-3 text-primary-600 font-bold text-xs tracking-wider uppercase mb-3">
           <div className="w-10 h-[2px] bg-primary-200"></div>
           <span className="flex items-center gap-1.5">
@@ -17,178 +21,181 @@ export const CompanyCardsSection: React.FC = () => {
         </div>
         
         <h2 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 tracking-tight mb-3">
-          Company-Specific Mock Tests & <span className="text-primary-600">AI Interviews</span>
+          Company Mock Tests & <span className="text-primary-600">AI Interviews</span>
         </h2>
         
         <p className="text-neutral-500 max-w-2xl text-sm lg:text-base leading-relaxed">
-          Prepare for real campus and off-campus recruitment drives with company-tailored assessment blueprints, full syllabus guides, and interactive AI recruiter interview panels.
+          Master company-specific hiring blueprints, pattern-accurate screening mocks, and simulated AI recruiter interviews tailored to top campus tech employers.
         </p>
       </div>
 
-      {/* Company Cards Grid */}
+      {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         
         {/* 1. INFOSYS - ACTIVE */}
         <Link 
           to="/company/infosys"
-          className="group relative bg-white rounded-3xl p-6 border-2 border-primary-500/80 hover:border-primary-600 shadow-lg shadow-primary-500/10 hover:shadow-xl hover:shadow-primary-600/20 transition-all flex flex-col justify-between overflow-hidden"
+          className="group bg-white rounded-2xl shadow-sm border border-neutral-200/80 hover:shadow-xl hover:border-primary-300 transition-all duration-300 flex flex-col overflow-hidden h-full"
         >
-          {/* Active Accent Gradient Top Bar */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary-600 via-indigo-500 to-blue-500"></div>
-
-          <div>
-            {/* Tag & Status */}
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                ACTIVE DRIVE
-              </span>
-              <span className="text-xs font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md">
-                3.6 LPA
-              </span>
+          {/* Visual Header */}
+          <div className="h-40 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-500/20 via-transparent to-transparent"></div>
+            
+            {/* Live Indicator */}
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-extrabold shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+              ACTIVE DRIVE
             </div>
 
-            {/* Logo / Monogram */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-900 to-indigo-950 flex items-center justify-center text-white font-extrabold text-lg shadow-md group-hover:scale-105 transition-transform">
+            <div className="absolute top-3 right-3 text-[10px] font-bold text-blue-200 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10">
+              3.6 LPA Ref.
+            </div>
+
+            {/* Visual Icon / Monogram */}
+            <div className="relative z-10 transform group-hover:scale-105 transition-transform duration-500 flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-white text-blue-950 font-black text-2xl flex items-center justify-center shadow-xl">
                 Infy
               </div>
-              <div>
-                <h3 className="font-extrabold text-lg text-neutral-900 group-hover:text-primary-600 transition-colors">
-                  Infosys
-                </h3>
-                <p className="text-xs text-neutral-500 font-medium">Systems Engineer (Trainee)</p>
-              </div>
-            </div>
-
-            {/* Features Bullet List */}
-            <div className="space-y-2 mb-6 text-xs text-neutral-600">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
-                <span>Pattern A (54 Qs) & Pattern B (60 Qs)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
-                <span>34 Practice MCQs with Step Solutions</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
-                <span className="text-indigo-600 font-semibold flex items-center gap-1">
-                  <Video size={12} /> AI Recruiter Mock Interview Room
-                </span>
-              </div>
+              <span className="text-white/80 font-semibold text-xs mt-2 tracking-wide">Systems Engineer</span>
             </div>
           </div>
 
-          {/* Action Button */}
-          <div className="pt-3 border-t border-neutral-100 flex items-center justify-between text-xs font-bold text-primary-600 group-hover:text-primary-700">
-            <span>Start Infosys Preparation</span>
-            <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+          {/* Body */}
+          <div className="p-5 flex-1 flex flex-col">
+            <h3 className="font-bold text-neutral-900 mb-1 group-hover:text-primary-600 transition-colors">
+              Infosys SE Preparation
+            </h3>
+            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
+              54–60 Qs blueprint, 34 practice MCQs with step solutions, and webcam AI recruiter mock interview.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-1.5 mb-4">
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-primary-50 text-primary-700 border border-primary-100 font-bold">
+                Pattern A & B
+              </Badge>
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-100">
+                <Video size={10} /> AI Interview
+              </Badge>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between">
+              <span className="text-[10px] text-primary-600 font-bold uppercase tracking-wider">Start Prep</span>
+              <div className="w-8 h-8 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-md shadow-primary-600/30 group-hover:bg-primary-700 transition-colors shrink-0">
+                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
           </div>
         </Link>
 
         {/* 2. TCS NQT - UPCOMING */}
-        <div className="relative bg-neutral-50/70 rounded-3xl p-6 border border-neutral-200/80 flex flex-col justify-between opacity-90 hover:opacity-100 transition-opacity">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                <Clock size={11} /> UPCOMING
-              </span>
-              <span className="text-[11px] font-semibold text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded">
-                Ninja & Digital
-              </span>
+        <div className="bg-neutral-50/70 rounded-2xl shadow-sm border border-neutral-200/80 flex flex-col overflow-hidden h-full opacity-90 hover:opacity-100 transition-opacity">
+          <div className="h-40 bg-neutral-800 flex items-center justify-center p-4 relative overflow-hidden">
+            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
+              <Clock size={10} /> UPCOMING
             </div>
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-neutral-800 flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
+            <div className="flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-neutral-700 text-white font-black text-xl flex items-center justify-center border border-neutral-600">
                 TCS
               </div>
-              <div>
-                <h3 className="font-extrabold text-base text-neutral-800">
-                  TCS NQT
-                </h3>
-                <p className="text-xs text-neutral-500 font-medium">National Qualifier Test</p>
-              </div>
+              <span className="text-neutral-300 font-semibold text-xs mt-2">National Qualifier Test</span>
             </div>
-
-            <p className="text-xs text-neutral-500 leading-relaxed mb-6">
-              Cognitive skills (Numerical, Reasoning, Verbal) and advanced programming hands-on coding tests.
-            </p>
           </div>
 
-          <div className="pt-3 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
-            <span className="flex items-center gap-1.5"><Lock size={12} /> In Progress</span>
-            <span className="text-[11px] bg-neutral-200/80 text-neutral-600 px-2 py-0.5 rounded font-semibold">Soon</span>
+          <div className="p-5 flex-1 flex flex-col">
+            <h3 className="font-bold text-neutral-800 mb-1">TCS NQT Preparation</h3>
+            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
+              Numerical, Verbal & Reasoning cognitive modules with Ninja and Digital track coding challenges.
+            </p>
+
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
+                Ninja & Digital
+              </Badge>
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
+                Cognitive + Code
+              </Badge>
+            </div>
+
+            <div className="mt-auto pt-4 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
+              <span className="flex items-center gap-1.5 text-[11px]"><Lock size={12} /> In Progress</span>
+              <span className="text-[10px] bg-neutral-200 text-neutral-600 px-2 py-0.5 rounded font-bold">Coming Soon</span>
+            </div>
           </div>
         </div>
 
         {/* 3. CAPGEMINI - UPCOMING */}
-        <div className="relative bg-neutral-50/70 rounded-3xl p-6 border border-neutral-200/80 flex flex-col justify-between opacity-90 hover:opacity-100 transition-opacity">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                <Clock size={11} /> UPCOMING
-              </span>
-              <span className="text-[11px] font-semibold text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded">
-                Analyst
-              </span>
+        <div className="bg-neutral-50/70 rounded-2xl shadow-sm border border-neutral-200/80 flex flex-col overflow-hidden h-full opacity-90 hover:opacity-100 transition-opacity">
+          <div className="h-40 bg-blue-900 flex items-center justify-center p-4 relative overflow-hidden">
+            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
+              <Clock size={10} /> UPCOMING
             </div>
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-700 flex items-center justify-center text-white font-extrabold text-xs shadow-sm">
+            <div className="flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-blue-800 text-white font-black text-xl flex items-center justify-center border border-blue-700">
                 CAP
               </div>
-              <div>
-                <h3 className="font-extrabold text-base text-neutral-800">
-                  Capgemini
-                </h3>
-                <p className="text-xs text-neutral-500 font-medium">Excellence Assessment</p>
-              </div>
+              <span className="text-blue-100 font-semibold text-xs mt-2">Excellence Assessment</span>
             </div>
-
-            <p className="text-xs text-neutral-500 leading-relaxed mb-6">
-              Game-based aptitude tests, pseudocode logic tracing, English communication and technical interview rounds.
-            </p>
           </div>
 
-          <div className="pt-3 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
-            <span className="flex items-center gap-1.5"><Lock size={12} /> In Progress</span>
-            <span className="text-[11px] bg-neutral-200/80 text-neutral-600 px-2 py-0.5 rounded font-semibold">Soon</span>
+          <div className="p-5 flex-1 flex flex-col">
+            <h3 className="font-bold text-neutral-800 mb-1">Capgemini Excellence</h3>
+            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
+              Game-based aptitude, pseudocode tracing, English communication and technical interview rounds.
+            </p>
+
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
+                Game Aptitude
+              </Badge>
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
+                Pseudocode
+              </Badge>
+            </div>
+
+            <div className="mt-auto pt-4 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
+              <span className="flex items-center gap-1.5 text-[11px]"><Lock size={12} /> In Progress</span>
+              <span className="text-[10px] bg-neutral-200 text-neutral-600 px-2 py-0.5 rounded font-bold">Coming Soon</span>
+            </div>
           </div>
         </div>
 
         {/* 4. ACCENTURE - UPCOMING */}
-        <div className="relative bg-neutral-50/70 rounded-3xl p-6 border border-neutral-200/80 flex flex-col justify-between opacity-90 hover:opacity-100 transition-opacity">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                <Clock size={11} /> UPCOMING
-              </span>
-              <span className="text-[11px] font-semibold text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded">
-                ASE / FSE
-              </span>
+        <div className="bg-neutral-50/70 rounded-2xl shadow-sm border border-neutral-200/80 flex flex-col overflow-hidden h-full opacity-90 hover:opacity-100 transition-opacity">
+          <div className="h-40 bg-purple-950 flex items-center justify-center p-4 relative overflow-hidden">
+            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
+              <Clock size={10} /> UPCOMING
             </div>
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-purple-700 flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
+            <div className="flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-purple-900 text-white font-black text-2xl flex items-center justify-center border border-purple-800">
                 &gt;
               </div>
-              <div>
-                <h3 className="font-extrabold text-base text-neutral-800">
-                  Accenture
-                </h3>
-                <p className="text-xs text-neutral-500 font-medium">Associate Software Engineer</p>
-              </div>
+              <span className="text-purple-200 font-semibold text-xs mt-2">ASE / FSE Track</span>
             </div>
-
-            <p className="text-xs text-neutral-500 leading-relaxed mb-6">
-              Cognitive & Technical assessments (Cloud, MS Office, Network Security), coding questions, and communication voice assessment.
-            </p>
           </div>
 
-          <div className="pt-3 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
-            <span className="flex items-center gap-1.5"><Lock size={12} /> In Progress</span>
-            <span className="text-[11px] bg-neutral-200/80 text-neutral-600 px-2 py-0.5 rounded font-semibold">Soon</span>
+          <div className="p-5 flex-1 flex flex-col">
+            <h3 className="font-bold text-neutral-800 mb-1">Accenture Assessment</h3>
+            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
+              Cognitive reasoning, technical assessment (Cloud, Security, MS Office) & coding problems.
+            </p>
+
+            <div className="flex items-center gap-2 mb-4">
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
+                Cognitive
+              </Badge>
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-200/60 text-neutral-600">
+                Technical MCQ
+              </Badge>
+            </div>
+
+            <div className="mt-auto pt-4 border-t border-neutral-200/70 flex items-center justify-between text-xs text-neutral-400 font-medium">
+              <span className="flex items-center gap-1.5 text-[11px]"><Lock size={12} /> In Progress</span>
+              <span className="text-[10px] bg-neutral-200 text-neutral-600 px-2 py-0.5 rounded font-bold">Coming Soon</span>
+            </div>
           </div>
         </div>
 

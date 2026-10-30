@@ -770,3 +770,4 @@ export const INTERVIEW_QUESTIONS: InterviewPrompt[] = [
     sampleAnswerGuide: 'Use the STAR framework (Situation, Task, Action, Result) to showcase mature interpersonal skills and team-first orientation.'
   }
 ];
+
