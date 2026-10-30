@@ -39,6 +39,10 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
   const [showAnswerGuide, setShowAnswerGuide] = useState(false);
   const [showFullscreenAlert, setShowFullscreenAlert] = useState(false);
 
+  // High-Quality Fluent Indian English Speech Synthesis state
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<any>(null);
@@ -157,28 +161,135 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     }
   }, [isCameraActive, hasStarted]);
 
-  // Strictly select female voice to match Priya Sharma & Ananya Verma!
+  // Load and score system voices, prioritizing fluent, confident Indian English
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) return;
+
+    const rateVoice = (v: SpeechSynthesisVoice) => {
+      const name = v.name.toLowerCase();
+      const lang = v.lang.toLowerCase();
+      let score = 0;
+
+      const isIndian = lang.includes('en-in') || lang.includes('en_in') || name.includes('india') || lang.includes('hi-in');
+      const isNatural = name.includes('natural') || name.includes('online') || name.includes('neural');
+      const isFemale = name.includes('female') || name.includes('neerja') || name.includes('swara') || name.includes('heera') || name.includes('veena') || name.includes('priya') || name.includes('kavya');
+
+      if (isIndian) {
+        score += 100;
+        if (isNatural) score += 60; // e.g. Microsoft Neerja Online (Natural) - English (India)
+        if (isFemale) score += 30;  // Matches recruiter persona
+        if (name.includes('neerja') || name.includes('swara')) score += 25;
+      } else if (lang.startsWith('en')) {
+        score += 20;
+        if (isNatural) score += 40; // High fidelity neural fallback
+        if (isFemale) score += 15;
+        if (name.includes('google uk english female') || name.includes('samantha')) score += 20;
+        if (name.includes('zira')) score -= 40; // Penalize mechanical legacy voice
+      }
+
+      return score;
+    };
+
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices || voices.length === 0) return;
+
+      const sorted = [...voices]
+        .filter(v => v.lang.startsWith('en') || v.lang.includes('IN') || v.lang.includes('in'))
+        .sort((a, b) => rateVoice(b) - rateVoice(a));
+
+      setAvailableVoices(sorted);
+      setSelectedVoice(prev => {
+        if (prev && sorted.some(v => v.voiceURI === prev.voiceURI)) return prev;
+        return sorted[0] || null;
+      });
+    };
+
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
+
+  // Text sanitization for natural, articulate recruiter speech delivery
+  const cleanSpeechText = (rawText: string) => {
+    return rawText
+      .replace(/["“”'‘’]/g, '')
+      .replace(/\bOOP\b/g, 'Object-Oriented Programming')
+      .replace(/\bSQL\b/g, 'S-Q-L')
+      .replace(/\bDBMS\b/g, 'D-B-M-S')
+      .replace(/\bREST API\b/g, 'REST A-P-I')
+      .replace(/\bREST APIs\b/g, 'REST A-P-Is')
+      .replace(/\bAPI\b/g, 'A-P-I')
+      .replace(/\bAPIs\b/g, 'A-P-Is')
+      .replace(/\bHR\b/g, 'H-R')
+      .replace(/\bSTAR\b/g, 'S-T-A-R')
+      .replace(/\bJVM\b/g, 'J-V-M')
+      .replace(/\bJDK\b/g, 'J-D-K')
+      .replace(/\bJRE\b/g, 'J-R-E')
+      .replace(/\bACID\b/g, 'A-C-I-D')
+      .replace(/\bHTML\b/g, 'H-T-M-L')
+      .replace(/\bCSS\b/g, 'C-S-S')
+      .replace(/\bSDLC\b/g, 'S-D-L-C')
+      .replace(/\bDC\b/g, 'Development Center')
+      .replace(/\bDCs\b/g, 'Development Centers')
+      .replace(/\bO\(1\)\b/g, 'Order of 1')
+      .replace(/\bO\(n\)\b/g, 'Order of n')
+      .replace(/\bO\(log n\)\b/g, 'Order of log n')
+      .replace(/\bvs\b/gi, 'versus')
+      .trim();
+  };
+
+  // Speaks interview questions in confident, articulate Indian English
   const speakQuestion = (text: string) => {
     if (isMuted || !('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    const voices = window.speechSynthesis.getVoices();
-    // Prioritize female English voices (Indian / UK / US)
-    const femaleVoice = voices.find(v => 
-      v.name.toLowerCase().includes('female') || 
-      v.name.toLowerCase().includes('zira') || 
-      v.name.toLowerCase().includes('samantha') || 
-      v.name.toLowerCase().includes('heera') || 
-      v.name.toLowerCase().includes('kavya') ||
-      v.name.toLowerCase().includes('veena') ||
-      v.name.toLowerCase().includes('google uk english female')
-    ) || voices.find(v => v.lang.startsWith('en'));
 
-    if (femaleVoice) utterance.voice = femaleVoice;
-    utterance.rate = 0.94;
-    utterance.pitch = 1.05;
+    // 120ms pause prevents audio buffer truncation
+    setTimeout(() => {
+      const sanitized = cleanSpeechText(text);
+      const utterance = new SpeechSynthesisUtterance(sanitized);
+      
+      const activeVoice = selectedVoice || availableVoices[0];
+      if (activeVoice) {
+        utterance.voice = activeVoice;
+        utterance.lang = activeVoice.lang;
+      }
+
+      // Professional, calm executive cadence
+      utterance.rate = 0.93;
+      utterance.pitch = 1.0;
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = (e) => {
+        console.warn('Speech error:', e);
+        setIsSpeaking(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }, 120);
+  };
+
+  const handleTestVoice = (customVoice?: SpeechSynthesisVoice) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    
+    const v = customVoice || selectedVoice || availableVoices[0];
+    const sample = `Hello, I am ${recruiter.name} from Infosys. I will be your interviewer for today. Are you ready to begin?`;
+    
+    const utterance = new SpeechSynthesisUtterance(cleanSpeechText(sample));
+    if (v) {
+      utterance.voice = v;
+      utterance.lang = v.lang;
+    }
+    utterance.rate = 0.93;
+    utterance.pitch = 1.0;
 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
@@ -355,6 +466,16 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
             </div>
           )}
 
+          {/* Quick Voice Test & Status in Top Bar */}
+          <button
+            onClick={() => handleTestVoice()}
+            className="p-2 px-3 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-850 text-slate-300 border border-slate-750 hover:border-slate-600 flex items-center gap-1.5 transition-colors"
+            title="Click to test recruiter voice greeting"
+          >
+            <Volume2 size={14} className="text-blue-400" />
+            <span className="hidden sm:inline">Test Voice</span>
+          </button>
+
           <button
             onClick={() => {
               setIsMuted(!isMuted);
@@ -405,6 +526,53 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
               ? `${recruiter.name} will speak each question aloud in real time with dynamic soundwave indicators. Answer while observing your own live webcam feed for posture and eye contact.`
               : `${recruiter.name} will conduct your behavioral and culture discussion, evaluating your adaptability to Infosys Development Centers and situational teamwork handling.`}
           </p>
+
+          {/* Recruiter Voice Customization & Preview */}
+          <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs text-left mb-4 max-w-xl mx-auto shadow-lg">
+            <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-800">
+              <div className="font-bold text-white flex items-center gap-1.5">
+                <Volume2 size={15} className="text-blue-400" />
+                Recruiter Voice & Speech Engine
+              </div>
+              <button
+                onClick={() => handleTestVoice()}
+                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] flex items-center gap-1 transition-all active:scale-95 shadow-sm"
+              >
+                <Play size={10} className="fill-white" /> Test Pronunciation
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="text-slate-400 text-[11px] leading-tight">
+                Current: <strong className="text-emerald-400 font-semibold">{selectedVoice?.name ? selectedVoice.name.replace(/Microsoft |Google /g, '') : 'Recruiter Voice'}</strong>
+                <span className="ml-1 text-slate-500 font-mono">({selectedVoice?.lang || 'en-IN'})</span>
+              </div>
+
+              {availableVoices.length > 1 && (
+                <select
+                  value={selectedVoice?.voiceURI || ''}
+                  onChange={(e) => {
+                    const chosen = availableVoices.find(v => v.voiceURI === e.target.value);
+                    if (chosen) {
+                      setSelectedVoice(chosen);
+                      handleTestVoice(chosen);
+                    }
+                  }}
+                  className="bg-slate-950 border border-slate-750 text-slate-200 text-[11px] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-sans"
+                >
+                  {availableVoices.map((v, i) => {
+                    const isIndian = v.lang.includes('IN') || v.name.toLowerCase().includes('india') || v.lang.includes('hi');
+                    return (
+                      <option key={i} value={v.voiceURI}>
+                        {isIndian ? '🇮🇳 ' : '🌐 '}
+                        {v.name.replace(/Microsoft |Google /g, '')}
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
+            </div>
+          </div>
 
           {/* Privacy Notice Box */}
           <div className="bg-slate-800/80 p-4 rounded-2xl border border-primary-500/30 text-xs text-left mb-6 flex items-start gap-3 max-w-xl mx-auto">

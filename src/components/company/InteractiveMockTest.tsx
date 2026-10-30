@@ -186,26 +186,26 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   };
 
   const containerClass = hasStarted && !isTestCompleted
-    ? "fixed inset-0 z-[100] bg-[#070b14] w-screen h-screen flex flex-col overflow-y-auto font-sans"
-    : "bg-white rounded-3xl border border-neutral-200/90 shadow-xl overflow-hidden font-sans relative";
+    ? "fixed inset-0 z-[100] bg-[#070b14] text-slate-100 w-screen h-screen flex flex-col overflow-y-auto font-sans antialiased"
+    : "bg-[#0b101e] text-slate-100 rounded-3xl border border-slate-800/90 shadow-2xl overflow-hidden font-sans relative antialiased";
 
   return (
     <div className={containerClass}>
       
       {/* Fullscreen Violation Alert Modal */}
       {showFullscreenAlert && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-white border-2 border-red-500 rounded-3xl p-8 max-w-lg text-center shadow-2xl animate-bounce-short">
-            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-200">
+        <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-[#11192e] border-2 border-red-500/80 rounded-3xl p-8 max-w-lg text-center shadow-2xl animate-bounce-short">
+            <div className="w-16 h-16 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/40 shadow-lg shadow-red-500/20">
               <AlertTriangle size={32} />
             </div>
-            <h3 className="text-xl font-extrabold text-neutral-900 mb-2">Proctoring Alert: Fullscreen Exited</h3>
-            <p className="text-neutral-600 text-sm leading-relaxed mb-6">
-              Compulsory Full-Screen is enforced for the Infosys Assessment. Your timer is paused. Exiting full-screen during a real placement exam terminates the session.
+            <h3 className="text-xl font-extrabold text-white mb-2">Proctoring Alert: Fullscreen Exited</h3>
+            <p className="text-slate-300 text-sm leading-relaxed mb-6">
+              Compulsory Full-Screen is enforced for the Infosys Assessment. Your timer is paused. Exiting full-screen during a real placement exam terminates the candidate session.
             </p>
             <button
               onClick={requestFullscreen}
-              className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold rounded-2xl shadow-xl shadow-red-600/30 transition-all flex items-center justify-center gap-2 active:scale-98"
             >
               <Maximize2 size={16} /> Re-Enter Fullscreen Assessment
             </button>
@@ -213,51 +213,62 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
         </div>
       )}
 
-      {/* Top Banner */}
-      <div className="bg-slate-950 text-white px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-base text-white">
-              Infosys Systems Engineer Assessment (Round 1)
-            </span>
-            <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-primary-600/30 text-primary-300 border border-primary-500/30">
-              Format A • 54 Questions • 100 Minutes
-            </span>
+      {/* Top Proctored Banner */}
+      <div className="bg-[#0b101e] px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800/90 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 font-black text-sm">
+            INF
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Section-by-section timed screening with strict sectional cutoff thresholds.
-          </p>
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="font-extrabold text-base text-white tracking-wide">
+                Infosys Systems Engineer Assessment
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                Format A • 54 Questions • 100 Min
+              </span>
+              {hasStarted && !isTestCompleted && (
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  Proctoring Active
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Section-by-section timed screening • Negative marking: None
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
           {hasStarted && !isTestCompleted && (
             <button
               onClick={() => setSpeedMode(!speedMode)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                 speedMode 
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' 
-                  : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-white'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' 
+                  : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
               }`}
             >
-              {speedMode ? '⚡ Fast Test (60s/sec)' : 'Normal Timers (100m)'}
+              {speedMode ? '⚡ Fast Test (60s/sec)' : 'Standard Time (100m)'}
             </button>
           )}
 
           {hasStarted && !isTestCompleted && (
             <button
               onClick={handleExitTest}
-              className="p-2 rounded-xl text-xs font-semibold bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-500/40 flex items-center gap-1.5 transition-colors"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-red-600/15 hover:bg-red-600/30 text-red-300 border border-red-500/40 flex items-center gap-1.5 transition-all shadow-sm"
             >
               Exit Assessment
             </button>
           )}
 
           {hasStarted && !isTestCompleted ? (
-            <div className="flex items-center gap-2 bg-slate-900 px-3.5 py-1.5 rounded-xl border border-slate-700">
+            <div className="flex items-center gap-2.5 bg-[#121a2d] px-4 py-2 rounded-xl border border-slate-750 shadow-inner">
               <Clock size={16} className={`text-amber-400 ${sectionTimeLeft < 180 ? 'animate-bounce text-red-400' : ''}`} />
-              <div className="text-xs">
-                <span className="text-slate-400 block text-[10px] leading-none">Section Time Left</span>
-                <span className="font-mono text-sm font-bold text-white leading-none">
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold leading-none mb-0.5">Section Time</span>
+                <span className="font-mono text-base font-extrabold text-white leading-none">
                   {formatTime(sectionTimeLeft)}
                 </span>
               </div>
@@ -265,7 +276,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
           ) : isTestCompleted ? (
             <button
               onClick={handleResetTest}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors border border-slate-700"
             >
               <RotateCcw size={14} /> Retake Assessment
             </button>
@@ -275,36 +286,36 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
 
       {/* PRE-TEST INSTRUCTIONS & FULLSCREEN LAUNCHER */}
       {!hasStarted && !isTestCompleted ? (
-        <div className="p-8 lg:p-12 max-w-3xl mx-auto text-center font-sans">
-          <div className="w-20 h-20 bg-primary-50 text-primary-600 rounded-3xl mx-auto flex items-center justify-center mb-6 border border-primary-100 shadow-inner">
+        <div className="p-8 lg:p-14 max-w-3xl mx-auto text-center font-sans">
+          <div className="w-20 h-20 bg-blue-500/10 text-blue-400 rounded-3xl mx-auto flex items-center justify-center mb-6 border border-blue-500/20 shadow-xl shadow-blue-500/10">
             <Maximize2 size={36} />
           </div>
 
-          <h2 className="text-3xl font-extrabold text-neutral-900 mb-2">
+          <h2 className="text-3xl font-extrabold text-white mb-2">
             Ready to Begin Official Infosys Assessment?
           </h2>
-          <p className="text-neutral-500 text-sm leading-relaxed mb-6 max-w-xl mx-auto">
+          <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-xl mx-auto">
             This test follows the authentic <strong>Format A blueprint</strong>: 54 questions, 100 minutes, and strict sectional cutoffs across all 5 sections.
           </p>
 
           <div className="grid sm:grid-cols-2 gap-4 text-left mb-8 max-w-xl mx-auto text-xs">
-            <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200">
-              <div className="font-bold text-neutral-900 mb-1 flex items-center gap-1.5">
-                <Maximize2 size={14} className="text-primary-600" /> Compulsory Full-Screen:
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
+              <div className="font-bold text-slate-100 mb-1 flex items-center gap-1.5">
+                <Maximize2 size={14} className="text-blue-400" /> Compulsory Full-Screen:
               </div>
-              <div className="text-neutral-500">Exiting full screen will trigger a proctoring violation warning.</div>
+              <div className="text-slate-400">Exiting full screen will trigger a proctoring violation warning.</div>
             </div>
-            <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200">
-              <div className="font-bold text-neutral-900 mb-1 flex items-center gap-1.5">
-                <ShieldCheck size={14} className="text-emerald-600" /> Section Evaluation:
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
+              <div className="font-bold text-slate-100 mb-1 flex items-center gap-1.5">
+                <ShieldCheck size={14} className="text-emerald-400" /> Section Evaluation:
               </div>
-              <div className="text-neutral-500">Infosys has section-wise cutoffs, so prepare well for all sections.</div>
+              <div className="text-slate-400">Infosys has section-wise cutoffs, so prepare well for all sections.</div>
             </div>
           </div>
 
           <button
             onClick={handleStartExam}
-            className="w-full sm:w-auto px-10 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition-all flex items-center justify-center gap-3 mx-auto text-base active:scale-95"
+            className="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-600/30 transition-all flex items-center justify-center gap-3 mx-auto text-base active:scale-95"
           >
             <Play size={20} className="fill-white" />
             Enter Fullscreen & Launch 54-Question Assessment
@@ -312,9 +323,9 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
         </div>
       ) : !isTestCompleted ? (
         /* TEST IN PROGRESS */
-        <div>
+        <div className="flex-1 flex flex-col">
           {/* Section Progress Stepper */}
-          <div className="bg-slate-900 px-6 py-3 border-b border-slate-800 flex items-center gap-2 overflow-x-auto text-xs">
+          <div className="bg-[#0b1120] px-6 py-2.5 border-b border-slate-800/80 flex items-center gap-2.5 overflow-x-auto text-xs">
             {INFOSYS_SECTIONS_CONFIG.map((sec, idx) => {
               const isCurrent = idx === currentSectionIdx;
               const isPast = idx < currentSectionIdx;
@@ -322,73 +333,83 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
               return (
                 <div 
                   key={sec.id}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-all ${
                     isCurrent 
-                      ? 'bg-primary-600 text-white font-bold shadow-md' 
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-md shadow-blue-600/25 border border-blue-400/40' 
                       : isPast 
-                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-medium' 
-                        : 'bg-slate-800 text-slate-400 border border-slate-700/60'
+                        ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 font-medium' 
+                        : 'bg-slate-900/70 text-slate-400 border border-slate-800/70'
                   }`}
                 >
                   <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    isCurrent ? 'bg-white text-primary-700' : isPast ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'
+                    isCurrent ? 'bg-white text-blue-700 shadow-sm' : isPast ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'
                   }`}>
                     {isPast ? '✓' : idx + 1}
                   </span>
                   <span>{sec.name}</span>
-                  <span className="text-[10px] opacity-75 font-mono">({sec.questionCount} Qs / {sec.timeMinutes}m)</span>
+                  <span className="text-[11px] opacity-75 font-mono">({sec.questionCount}Q • {sec.timeMinutes}m)</span>
                 </div>
               );
             })}
           </div>
 
-          <div className="p-6 lg:p-8">
-            <div className="grid lg:grid-cols-12 gap-8 items-start">
+          <div className="p-6 lg:p-8 flex-1">
+            <div className="grid lg:grid-cols-12 gap-6 items-start max-w-7xl mx-auto">
               
               {/* Left 8 cols: Active Question Canvas */}
-              <div className="lg:col-span-8 flex flex-col gap-6">
+              <div className="lg:col-span-8 flex flex-col gap-5">
                 
-                {/* Question Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-100 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-neutral-900 bg-neutral-100 px-3 py-1 rounded-lg">
-                      Section {currentSectionIdx + 1}: {activeSectionConfig.name}
-                    </span>
-                    <span className="text-primary-700 font-semibold bg-primary-50 px-2.5 py-1 rounded-lg">
-                      Question {activeQuestionInSecIdx + 1} of {sectionQuestions.length}
-                    </span>
-                    <span className="text-neutral-500 hidden sm:inline">• {currentQ.topic}</span>
+                {/* Question Card */}
+                <div className="bg-[#11192e] rounded-2xl border border-slate-800/90 shadow-2xl p-6 lg:p-8 relative">
+                  
+                  {/* Question Header Meta */}
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-800/80 mb-5 flex-wrap gap-2 text-xs">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-blue-300 bg-blue-500/10 px-3 py-1 rounded-lg border border-blue-500/20">
+                        Section {currentSectionIdx + 1}: {activeSectionConfig.name}
+                      </span>
+                      <span className="text-slate-300 font-semibold bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-700/60">
+                        Question {activeQuestionInSecIdx + 1} of {sectionQuestions.length}
+                      </span>
+                      <span className="text-slate-400 hidden sm:inline">• {currentQ.topic}</span>
+                    </div>
+
+                    <button
+                      onClick={handleToggleReview}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                        markedForReview[currentQ.id]
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
+                          : 'bg-slate-800/80 text-slate-400 border-slate-700/80 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
+                    >
+                      <Bookmark size={13} className={markedForReview[currentQ.id] ? "fill-amber-400 text-amber-400" : ""} />
+                      <span>{markedForReview[currentQ.id] ? 'Marked for Review' : 'Mark for Review'}</span>
+                    </button>
                   </div>
 
-                  <button
-                    onClick={handleToggleReview}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                      markedForReview[currentQ.id]
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                    }`}
-                  >
-                    <Bookmark size={13} />
-                    <span>{markedForReview[currentQ.id] ? 'Marked' : 'Mark for Review'}</span>
-                  </button>
-                </div>
-
-                {/* Question Box */}
-                <div className="bg-neutral-50/80 p-6 rounded-2xl border border-neutral-200/80">
-                  <p className="text-base text-neutral-900 font-medium leading-relaxed whitespace-pre-line mb-3">
+                  {/* Question Prompt */}
+                  <p className="text-lg text-white font-medium leading-relaxed whitespace-pre-line mb-4 select-text">
                     {currentQ.question}
                   </p>
 
+                  {/* Code Snippet if present */}
                   {currentQ.codeSnippet && (
-                    <div className="bg-[#0f172a] text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-neutral-800 my-3 shadow-inner">
-                      <pre>{currentQ.codeSnippet}</pre>
+                    <div className="bg-[#090d16] text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 my-4 shadow-inner">
+                      <div className="text-[10px] text-slate-500 uppercase tracking-wider pb-2 border-b border-slate-800/80 mb-2 font-sans font-bold flex items-center justify-between">
+                        <span>Code Reference</span>
+                        <span className="text-slate-600">Pseudocode</span>
+                      </div>
+                      <pre className="leading-relaxed">{currentQ.codeSnippet}</pre>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-3 text-[11px] text-neutral-500 pt-2 border-t border-neutral-200/60">
-                    <span className="font-semibold text-primary-700">Infosys has section-wise cutoffs, so prepare well for all sections.</span>
-                    <span>•</span>
-                    <span>Source: <strong className="text-neutral-700">{currentQ.evidence}</strong></span>
+                  {/* Section Evaluation Advisory */}
+                  <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-3 border-t border-slate-800/70">
+                    <span className="font-medium text-blue-400">
+                      💡 Infosys has section-wise cutoffs, so prepare well for all sections.
+                    </span>
+                    <span className="hidden sm:inline text-slate-600">•</span>
+                    <span className="hidden sm:inline text-slate-400">Topic: <strong className="text-slate-300">{currentQ.topic}</strong></span>
                   </div>
                 </div>
 
@@ -400,25 +421,29 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                       <button
                         key={optIdx}
                         onClick={() => handleSelectOption(optIdx)}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-sm ${
+                        className={`group w-full text-left p-4 rounded-xl border transition-all duration-150 flex items-center justify-between text-sm ${
                           isSelected
-                            ? 'border-primary-600 bg-primary-50/70 text-primary-950 font-medium shadow-sm'
-                            : 'border-neutral-200 bg-white hover:border-neutral-300 text-neutral-800'
+                            ? 'border-blue-500 bg-gradient-to-r from-blue-950/60 to-indigo-950/40 text-white ring-1 ring-blue-500/50 shadow-lg shadow-blue-500/10'
+                            : 'border-slate-800/90 bg-[#11192e]/80 hover:bg-[#16213c] hover:border-slate-700 text-slate-200'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center shrink-0 ${
-                            isSelected ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-neutral-600'
+                        <div className="flex items-center gap-3.5">
+                          <span className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 transition-colors ${
+                            isSelected 
+                              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' 
+                              : 'bg-slate-800 border border-slate-700/80 text-slate-400 group-hover:text-slate-200 group-hover:border-slate-600'
                           }`}>
                             {String.fromCharCode(65 + optIdx)}
                           </span>
-                          <span>{option}</span>
+                          <span className="font-normal leading-relaxed">{option}</span>
                         </div>
 
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          isSelected ? 'border-primary-600' : 'border-neutral-300'
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                          isSelected 
+                            ? 'border-blue-400 bg-blue-600 text-white' 
+                            : 'border-slate-700 bg-slate-900 group-hover:border-slate-500'
                         }`}>
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-primary-600" />}
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                         </div>
                       </button>
                     );
@@ -426,11 +451,11 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                 </div>
 
                 {/* Navigation Controls */}
-                <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800/80 mt-2">
                   <button
                     disabled={activeQuestionInSecIdx === 0}
                     onClick={() => setActiveQuestionInSecIdx(prev => prev - 1)}
-                    className="px-4 py-2.5 rounded-xl border border-neutral-200 text-neutral-700 font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-neutral-50"
+                    className="px-4 py-2.5 rounded-xl border border-slate-800 bg-[#11192e] text-slate-300 font-semibold text-xs flex items-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-800 hover:text-white transition-colors"
                   >
                     <ChevronLeft size={16} /> Previous
                   </button>
@@ -443,23 +468,23 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                           delete updated[currentQ.id];
                           setSelectedAnswers(updated);
                         }}
-                        className="text-xs text-neutral-400 hover:text-red-500 transition-colors"
+                        className="text-xs text-slate-400 hover:text-red-400 transition-colors px-2 py-1"
                       >
-                        Clear
+                        Clear Selection
                       </button>
                     )}
 
                     {activeQuestionInSecIdx + 1 < sectionQuestions.length ? (
                       <button
                         onClick={() => setActiveQuestionInSecIdx(prev => prev + 1)}
-                        className="px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-primary-600/20 transition-all active:scale-95"
+                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-blue-600/25 transition-all active:scale-95"
                       >
                         Save & Next Question <ChevronRight size={15} />
                       </button>
                     ) : (
                       <button
                         onClick={() => handleAdvanceSection(false)}
-                        className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all active:scale-95"
+                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 transition-all active:scale-95"
                       >
                         {currentSectionIdx + 1 === INFOSYS_SECTIONS_CONFIG.length ? 'Submit Final Assessment' : 'Submit Section & Move to Next'}
                         <ChevronRight size={15} />
@@ -471,30 +496,57 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
               </div>
 
               {/* Right 4 cols: Section Question Palette */}
-              <div className="lg:col-span-4 bg-neutral-50/70 p-5 rounded-2xl border border-neutral-200/80">
-                <div className="font-bold text-sm text-neutral-900 mb-2">
-                  {activeSectionConfig.name} Palette
+              <div className="lg:col-span-4 bg-[#11192e] p-5 rounded-2xl border border-slate-800/90 shadow-2xl">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-bold text-sm text-white">
+                    {activeSectionConfig.name} Palette
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {sectionQuestions.filter(q => selectedAnswers[q.id] !== undefined).length}/{sectionQuestions.length} Answered
+                  </span>
                 </div>
-                <p className="text-xs text-neutral-500 mb-4">
+
+                <p className="text-xs text-slate-400 mb-4 leading-relaxed">
                   Questions in this section ({sectionQuestions.length}). You must finish this section before the timer expires.
                 </p>
 
-                <div className="grid grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                {/* Legend */}
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 mb-4 pb-3 border-b border-slate-800/80">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-md bg-blue-600" />
+                    <span>Answered</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-md bg-amber-500" />
+                    <span>Marked Review</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-md border-2 border-blue-400 bg-slate-900" />
+                    <span>Current</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-md bg-slate-800 border border-slate-700" />
+                    <span>Unanswered</span>
+                  </div>
+                </div>
+
+                {/* Palette Grid */}
+                <div className="grid grid-cols-5 gap-2 max-h-[280px] overflow-y-auto pr-1">
                   {sectionQuestions.map((q, idx) => {
                     const isAnswered = selectedAnswers[q.id] !== undefined;
                     const isMarked = markedForReview[q.id];
                     const isCurrent = idx === activeQuestionInSecIdx;
 
-                    let style = 'bg-white text-neutral-700 border-neutral-200';
-                    if (isAnswered) style = 'bg-primary-600 text-white border-primary-600 font-bold';
-                    if (isMarked) style = 'bg-amber-400 text-neutral-900 border-amber-500 font-bold';
-                    if (isCurrent) style += ' ring-2 ring-primary-500 ring-offset-2';
+                    let btnStyle = 'bg-slate-800/80 text-slate-400 border-slate-750 hover:bg-slate-800 hover:text-white';
+                    if (isAnswered) btnStyle = 'bg-blue-600 text-white border-blue-500 font-bold shadow-sm shadow-blue-600/30';
+                    if (isMarked) btnStyle = 'bg-amber-500 text-slate-950 border-amber-400 font-bold';
+                    if (isCurrent) btnStyle += ' ring-2 ring-blue-400 ring-offset-2 ring-offset-[#11192e]';
 
                     return (
                       <button
                         key={q.id}
                         onClick={() => setActiveQuestionInSecIdx(idx)}
-                        className={`h-9 rounded-xl text-xs font-semibold border transition-all ${style}`}
+                        className={`h-9 rounded-xl text-xs font-semibold border transition-all ${btnStyle}`}
                       >
                         {idx + 1}
                       </button>
@@ -502,11 +554,11 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                   })}
                 </div>
 
-                <div className="mt-5 p-3 rounded-xl bg-primary-50 border border-primary-100 text-xs text-primary-950">
-                  <div className="font-bold mb-0.5 flex items-center gap-1.5 text-primary-800">
-                    <ShieldCheck size={14} /> Section Evaluation Rule:
+                <div className="mt-5 p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/20 text-xs text-blue-200">
+                  <div className="font-bold mb-1 flex items-center gap-1.5 text-blue-300">
+                    <ShieldCheck size={14} className="text-blue-400" /> Section Evaluation Rule:
                   </div>
-                  <div>
+                  <div className="text-slate-300 text-[11px] leading-relaxed">
                     Infosys has section-wise cutoffs, so prepare well for all sections.
                   </div>
                 </div>
@@ -581,50 +633,50 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
           </div>
 
           {/* Section-Wise Cutoff Breakdown Table */}
-          <h4 className="font-extrabold text-lg text-neutral-900 mb-4 flex items-center gap-2">
-            <Award size={20} className="text-primary-600" />
-            Official Infosys Section-Wise Cutoff Analysis
+          <h4 className="font-extrabold text-lg text-white mb-4 flex items-center gap-2">
+            <Award size={20} className="text-blue-400" />
+            Official Infosys Section-Wise Evaluation Analysis
           </h4>
 
           <div className="grid md:grid-cols-5 gap-4 mb-10">
             {sectionalReport.map((sec) => (
               <div 
                 key={sec.id}
-                className={`p-5 rounded-2xl border-2 transition-all ${
+                className={`p-5 rounded-2xl border transition-all ${
                   sec.cleared 
-                    ? 'bg-emerald-50/50 border-emerald-300/80' 
-                    : 'bg-red-50/50 border-red-300/80'
+                    ? 'bg-emerald-950/30 border-emerald-500/40' 
+                    : 'bg-red-950/30 border-red-500/40'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-xs text-neutral-900 truncate">{sec.name}</span>
+                  <span className="font-bold text-xs text-slate-200 truncate">{sec.name}</span>
                   {sec.cleared ? (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                       CLEARED
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-800">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">
                       FAILED
                     </span>
                   )}
                 </div>
 
-                <div className="text-2xl font-extrabold text-neutral-900 my-1">
+                <div className="text-2xl font-extrabold text-white my-1">
                   {sec.correctCount} / {sec.questionCount}
                 </div>
 
-                <div className="text-xs text-neutral-600 mb-2">
-                  Accuracy: <strong>{sec.scorePct}%</strong>
+                <div className="text-xs text-slate-300 mb-2">
+                  Accuracy: <strong className="text-white">{sec.scorePct}%</strong>
                 </div>
 
-                <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full rounded-full ${sec.cleared ? 'bg-emerald-600' : 'bg-red-600'}`}
+                    className={`h-full rounded-full transition-all duration-500 ${sec.cleared ? 'bg-emerald-500' : 'bg-red-500'}`}
                     style={{ width: `${Math.min(100, sec.scorePct)}%` }}
                   />
                 </div>
 
-                <div className="text-[10px] text-neutral-500 mt-2 font-medium">
+                <div className="text-[10px] text-slate-400 mt-2 font-medium">
                   Section-wise cutoff applies
                 </div>
               </div>
@@ -632,9 +684,9 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
           </div>
 
           {/* Complete Solutions List */}
-          <div className="pt-6 border-t border-neutral-200">
-            <h4 className="font-bold text-base text-neutral-900 mb-4 flex items-center gap-2">
-              <BookOpen size={18} className="text-primary-600" />
+          <div className="pt-6 border-t border-slate-800">
+            <h4 className="font-bold text-base text-white mb-4 flex items-center gap-2">
+              <BookOpen size={18} className="text-blue-400" />
               Complete Question Review & Step-by-Step Solutions (54 Questions)
             </h4>
 
@@ -649,34 +701,34 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                     key={q.id}
                     className={`p-5 rounded-2xl border transition-all ${
                       isCorrect 
-                        ? 'bg-emerald-50/20 border-emerald-200' 
+                        ? 'bg-[#111c2e] border-emerald-500/30' 
                         : isSkipped 
-                          ? 'bg-neutral-50 border-neutral-200' 
-                          : 'bg-red-50/20 border-red-200'
+                          ? 'bg-[#101726] border-slate-800' 
+                          : 'bg-[#1a1420] border-red-500/30'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-neutral-900">Q{idx + 1}</span>
-                        <span className="text-primary-700 font-semibold bg-primary-100/60 px-2 py-0.5 rounded">
+                        <span className="font-bold text-white">Q{idx + 1}</span>
+                        <span className="text-blue-300 font-semibold bg-blue-500/15 border border-blue-500/25 px-2.5 py-0.5 rounded">
                           {q.section}
                         </span>
-                        <span className="text-neutral-500">• {q.topic}</span>
+                        <span className="text-slate-400">• {q.topic}</span>
                       </div>
 
                       <span className={`font-bold px-2.5 py-0.5 rounded-full text-xs ${
-                        isCorrect ? 'bg-emerald-100 text-emerald-800' : isSkipped ? 'bg-neutral-200 text-neutral-700' : 'bg-red-100 text-red-800'
+                        isCorrect ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : isSkipped ? 'bg-slate-800 text-slate-400 border border-slate-700' : 'bg-red-500/20 text-red-300 border border-red-500/30'
                       }`}>
                         {isCorrect ? 'Correct (+1)' : isSkipped ? 'Skipped' : 'Incorrect (0)'}
                       </span>
                     </div>
 
-                    <p className="text-sm font-medium text-neutral-900 mb-2 leading-relaxed whitespace-pre-line">
+                    <p className="text-sm font-medium text-slate-200 mb-2 leading-relaxed whitespace-pre-line">
                       {q.question}
                     </p>
 
                     {q.codeSnippet && (
-                      <div className="bg-[#0f172a] text-emerald-400 p-3 rounded-xl font-mono text-xs overflow-x-auto my-2">
+                      <div className="bg-[#090d16] text-emerald-400 p-3.5 rounded-xl font-mono text-xs overflow-x-auto my-3 border border-slate-800">
                         <pre>{q.codeSnippet}</pre>
                       </div>
                     )}
@@ -686,22 +738,22 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                         const isThisCorrect = optIdx === q.correctAnswer;
                         const isUserPick = optIdx === userChoice;
 
-                        let badgeClass = 'bg-white border-neutral-200 text-neutral-700';
-                        if (isThisCorrect) badgeClass = 'bg-emerald-100 border-emerald-300 text-emerald-950 font-bold';
-                        else if (isUserPick) badgeClass = 'bg-red-100 border-red-300 text-red-950 font-bold';
+                        let badgeClass = 'bg-slate-900/80 border-slate-800 text-slate-300';
+                        if (isThisCorrect) badgeClass = 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 font-bold';
+                        else if (isUserPick) badgeClass = 'bg-red-950/60 border-red-500/60 text-red-200 font-bold';
 
                         return (
-                          <div key={optIdx} className={`p-2.5 rounded-xl border flex items-center justify-between ${badgeClass}`}>
+                          <div key={optIdx} className={`p-3 rounded-xl border flex items-center justify-between ${badgeClass}`}>
                             <span>{String.fromCharCode(65 + optIdx)}. {opt}</span>
-                            {isThisCorrect && <CheckCircle2 size={13} className="text-emerald-700 shrink-0" />}
-                            {isUserPick && !isThisCorrect && <XCircle size={13} className="text-red-700 shrink-0" />}
+                            {isThisCorrect && <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />}
+                            {isUserPick && !isThisCorrect && <XCircle size={14} className="text-red-400 shrink-0" />}
                           </div>
                         );
                       })}
                     </div>
 
-                    <div className="p-3 bg-white rounded-xl border border-neutral-200 text-xs text-neutral-700">
-                      <strong className="text-primary-700">Explanation: </strong>
+                    <div className="p-3.5 bg-slate-900/90 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
+                      <strong className="text-blue-400 font-bold">Explanation: </strong>
                       {q.explanation}
                     </div>
                   </div>
