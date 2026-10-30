@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   Building2, BookOpen, Award, Sparkles, Video, Clock, CheckCircle2, 
   MapPin, GraduationCap, ChevronRight, AlertCircle, FileText, ChevronDown, 
-  Search, ShieldCheck, ArrowRight, UserCheck, Play, Lock, LogIn, Target, Zap 
+  Search, ShieldCheck, ArrowRight, UserCheck, Play, Lock, LogIn, Target, Zap,
+  Code2, Trophy
 } from 'lucide-react';
 import { 
   INFOSYS_COMPANY_OVERVIEW, 
@@ -112,38 +113,38 @@ export const InfosysPrep: React.FC = () => {
             {/* Right: Training Center Showcase Card (5 Cols) */}
             <div className="lg:col-span-5">
               <div className="bg-slate-800/70 backdrop-blur-md rounded-3xl border border-slate-700/80 p-4 shadow-2xl hover:border-slate-600 transition-all duration-300">
-                {/* Mysore Campus Image */}
-                <div className="relative rounded-2xl overflow-hidden h-44 sm:h-48 w-full group">
+                {/* Mysore Campus Image - Increased height by 25-30% */}
+                <div className="relative rounded-2xl overflow-hidden h-60 sm:h-64 lg:h-72 w-full group shadow-inner">
                   <img 
                     src={gecMysoreImg} 
                     alt="Infosys Global Education Center (GEC) Mysuru" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
                   
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 flex items-center gap-1.5">
-                    <MapPin size={11} className="text-rose-400" />
+                  <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-bold border border-white/20 flex items-center gap-1.5 shadow-md">
+                    <MapPin size={12} className="text-rose-400" />
                     <span>Mysuru, Karnataka</span>
                   </div>
 
-                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <div className="absolute bottom-3 left-4 right-4 text-white">
                     <div className="text-[10px] font-black uppercase tracking-wider text-primary-300 mb-0.5">
                       Your Training Destination
                     </div>
-                    <div className="text-sm font-extrabold line-clamp-1">
+                    <div className="text-base font-extrabold line-clamp-1">
                       Infosys Global Education Center (GEC)
                     </div>
                   </div>
                 </div>
 
                 {/* Training Details Below Image */}
-                <div className="pt-3 px-1 space-y-2">
+                <div className="pt-3.5 px-1 space-y-2">
                   <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
                     <span className="flex items-center gap-1.5 text-slate-200">
-                      <GraduationCap size={14} className="text-primary-400" />
+                      <GraduationCap size={15} className="text-primary-400" />
                       Foundation Training Program
                     </span>
-                    <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                       19 – 23 Weeks
                     </span>
                   </div>
