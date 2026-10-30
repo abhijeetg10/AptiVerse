@@ -2,7 +2,7 @@ export interface InfosysQuestion {
   id: string;
   section: 'Reasoning Ability' | 'Mathematical Ability' | 'Verbal Ability' | 'Pseudocode' | 'Puzzle Solving';
   question: string;
-  codeSnippet?: string;
+  codeSnippet?: string | null;
   options: string[];
   correctAnswer: number; // 0-indexed
   explanation: string;

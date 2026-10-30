@@ -66,7 +66,7 @@ export const CompanyCardsSection: React.FC = () => {
               <div className="space-y-2 mb-4 text-xs text-neutral-600">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={13} className="text-primary-600 shrink-0" />
-                  <span>Round 1: 54 Qs • 100m (Sectional Cutoffs)</span>
+                  <span>Round 1: 4 Mocks (Sample, Easy, Moderate, Hard)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={13} className="text-primary-600 shrink-0" />

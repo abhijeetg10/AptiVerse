@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Building2, BookOpen, Award, Sparkles, Video, Clock, CheckCircle2, 
   MapPin, GraduationCap, ChevronRight, AlertCircle, FileText, ChevronDown, 
-  Search, ShieldCheck, ArrowRight, UserCheck, Play 
+  Search, ShieldCheck, ArrowRight, UserCheck, Play, Lock, LogIn, Target, Zap 
 } from 'lucide-react';
 import { 
   INFOSYS_COMPANY_OVERVIEW, 
@@ -12,12 +12,18 @@ import {
   HR_INTERVIEW_PROMPTS,
   type InterviewPrompt 
 } from '../../data/infosysPrepData';
+import { ALL_INFOSYS_MOCK_TESTS, type MockTestBundle } from '../../data/infosysMockTests';
+import { useAuth } from '../../context/AuthContext';
 import { InteractiveMockTest } from '../../components/company/InteractiveMockTest';
 import { AIMockInterviewRoom } from '../../components/company/AIMockInterviewRoom';
 import { AdBanner } from '../../components/ui/AdBanner';
 import infosysLogo from '../../assets/infosys-logo.jpg';
 
 export const InfosysPrep: React.FC = () => {
+  const { user, signInWithGoogle } = useAuth();
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [selectedMockBundle, setSelectedMockBundle] = useState<MockTestBundle | null>(null);
+
   // Primary view: 'timeline-test' (the mock test & hiring timeline), 'guide' (the blog/syllabus), or 'qbank'
   const [activeTab, setActiveTab] = useState<'timeline-test' | 'guide' | 'qbank'>('timeline-test');
   
@@ -288,9 +294,121 @@ export const InfosysPrep: React.FC = () => {
 
             {/* ACTIVE ROUND INTERFACE */}
             <div className="transition-all">
-              {activeRoundStep === 1 && (
+              {activeRoundStep === 1 && !selectedMockBundle && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <h3 className="text-xl font-extrabold text-neutral-900">
+                        Official & Full-Length Infosys Mock Assessments
+                      </h3>
+                      <p className="text-sm text-neutral-500">
+                        Select a test based on your target difficulty. Each test features round-wise timed sections, strict cutoff tracking, and proctoring.
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                      4 Active Mock Tests
+                    </span>
+                  </div>
+
+                  {/* 4 Cards Grid */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {ALL_INFOSYS_MOCK_TESTS.map((bundle) => {
+                      let tagClass = "bg-purple-50 text-purple-700 border-purple-200";
+                      if (bundle.tag === 'Easy') tagClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                      if (bundle.tag === 'Moderate') tagClass = "bg-amber-50 text-amber-800 border-amber-200";
+                      if (bundle.tag === 'Hard') tagClass = "bg-rose-50 text-rose-700 border-rose-200";
+
+                      let savedScore: any = null;
+                      if (user) {
+                        try {
+                          const raw = localStorage.getItem(`aptiverse_infosys_score_${user.id}_${bundle.id}`);
+                          if (raw) savedScore = JSON.parse(raw);
+                        } catch (e) {}
+                      }
+
+                      return (
+                        <div 
+                          key={bundle.id}
+                          className="bg-white rounded-3xl p-6 border border-neutral-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:border-primary-400"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${tagClass}`}>
+                                {bundle.tag === 'Official Sample' ? 'Sample Pattern' : bundle.tag}
+                              </span>
+                              <span className="text-xs font-mono font-bold text-neutral-400">
+                                Mock Test 0{bundle.testNumber}
+                              </span>
+                            </div>
+
+                            <h4 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
+                              {bundle.title}
+                            </h4>
+                            <p className="text-xs text-neutral-600 leading-relaxed mb-5">
+                              {bundle.description}
+                            </p>
+
+                            {/* Section Specs */}
+                            <div className="grid grid-cols-2 gap-2 text-xs mb-5">
+                              <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-150">
+                                <span className="text-[10px] text-neutral-400 block font-medium">Question Blueprint</span>
+                                <span className="font-bold text-neutral-900">{bundle.totalQuestions} Questions</span>
+                              </div>
+                              <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-150">
+                                <span className="text-[10px] text-neutral-400 block font-medium">Total Duration</span>
+                                <span className="font-bold text-neutral-900">{bundle.totalTimeMinutes} Minutes</span>
+                              </div>
+                              <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-150">
+                                <span className="text-[10px] text-neutral-400 block font-medium">Structure</span>
+                                <span className="font-bold text-neutral-900">5 Timed Sections</span>
+                              </div>
+                              <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-150">
+                                <span className="text-[10px] text-neutral-400 block font-medium">Negative Marking</span>
+                                <span className="font-bold text-emerald-600">None (0 Penalty)</span>
+                              </div>
+                            </div>
+
+                            {savedScore && (
+                              <div className="mb-4 p-3 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between">
+                                <div>
+                                  <span className="text-slate-400 text-[10px] block">Your Best Marks</span>
+                                  <span className="font-bold text-emerald-400">{savedScore.score} / {savedScore.total_questions}</span>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  savedScore.cleared ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                                }`}>
+                                  {savedScore.cleared ? 'Cleared Cutoff' : 'Attempt Recorded'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              if (!user) {
+                                setShowSignInModal(true);
+                                return;
+                              }
+                              setSelectedMockBundle(bundle);
+                            }}
+                            className="w-full py-3.5 bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm rounded-2xl shadow-md shadow-primary-600/20 flex items-center justify-center gap-2 transition-all active:scale-98 group-hover:bg-primary-700"
+                          >
+                            <Play size={16} className="fill-white" />
+                            Start Mock Test {bundle.testNumber}
+                            <ArrowRight size={15} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {activeRoundStep === 1 && selectedMockBundle && (
                 <InteractiveMockTest 
+                  bundle={selectedMockBundle}
                   onProceedToTechnicalInterview={() => setActiveRoundStep(2)}
+                  onBackToMockList={() => setSelectedMockBundle(null)}
                 />
               )}
 
@@ -577,6 +695,35 @@ export const InfosysPrep: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 mt-12 w-full">
         <AdBanner dataAdSlot="auto" />
       </div>
+
+      {/* Student Sign-In Compulsory Modal */}
+      {showSignInModal && (
+        <div className="fixed inset-0 z-[250] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md text-center shadow-2xl animate-fadeIn">
+            <div className="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-2xl mx-auto flex items-center justify-center mb-4 border border-blue-500/30">
+              <Lock size={32} />
+            </div>
+            <h3 className="text-xl font-extrabold text-white mb-2">Student Sign-In Required</h3>
+            <p className="text-slate-300 text-sm leading-relaxed mb-6">
+              Sign in with your student account to attempt the Infosys Mock Test and track your sectional cutoffs.
+            </p>
+            <button
+              onClick={async () => {
+                await signInWithGoogle();
+              }}
+              className="w-full py-3.5 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all mb-3 active:scale-98"
+            >
+              <LogIn size={18} /> Sign In with Google
+            </button>
+            <button
+              onClick={() => setShowSignInModal(false)}
+              className="text-xs text-slate-400 hover:text-white transition-colors py-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

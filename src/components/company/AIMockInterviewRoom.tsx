@@ -170,10 +170,12 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       const lang = v.lang.toLowerCase();
       let score = 0;
 
-      const isIndian = lang.includes('en-in') || lang.includes('en_in') || name.includes('india') || lang.includes('hi-in');
+      const isHindi = lang.includes('hi') || name.includes('हिन्दी') || name.includes('hindi');
+      const isIndian = isHindi || lang.includes('en-in') || lang.includes('en_in') || name.includes('india');
       const isNatural = name.includes('natural') || name.includes('online') || name.includes('neural');
       const isFemale = name.includes('female') || name.includes('neerja') || name.includes('swara') || name.includes('heera') || name.includes('veena') || name.includes('priya') || name.includes('kavya');
 
+      if (isHindi) score += 200; // Priya Sharma in Hindi / Indian voice prioritized
       if (isIndian) {
         score += 100;
         if (isNatural) score += 60; // e.g. Microsoft Neerja Online (Natural) - English (India)
@@ -407,12 +409,20 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
               In an actual Infosys online interview, exiting full screen or tab switching triggers an immediate violation flag. Please re-enter full-screen mode to resume your session.
             </p>
-            <button
-              onClick={requestFullscreen}
-              className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
-            >
-              <Maximize2 size={16} /> Re-Enter Fullscreen Mode
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={requestFullscreen}
+                className="flex-1 w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold rounded-2xl shadow-xl shadow-red-600/30 transition-all flex items-center justify-center gap-2 active:scale-98"
+              >
+                <Maximize2 size={16} /> Re-Enter Fullscreen Mode
+              </button>
+              <button
+                onClick={handleExitInterview}
+                className="w-full sm:w-auto px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold rounded-2xl border border-slate-700 transition-colors text-sm"
+              >
+                Exit Interview
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -466,16 +476,6 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
             </div>
           )}
 
-          {/* Quick Voice Test & Status in Top Bar */}
-          <button
-            onClick={() => handleTestVoice()}
-            className="p-2 px-3 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-850 text-slate-300 border border-slate-750 hover:border-slate-600 flex items-center gap-1.5 transition-colors"
-            title="Click to test recruiter voice greeting"
-          >
-            <Volume2 size={14} className="text-blue-400" />
-            <span className="hidden sm:inline">Test Voice</span>
-          </button>
-
           <button
             onClick={() => {
               setIsMuted(!isMuted);
@@ -527,51 +527,25 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
               : `${recruiter.name} will conduct your behavioral and culture discussion, evaluating your adaptability to Infosys Development Centers and situational teamwork handling.`}
           </p>
 
-          {/* Recruiter Voice Customization & Preview */}
-          <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs text-left mb-4 max-w-xl mx-auto shadow-lg">
-            <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-800">
-              <div className="font-bold text-white flex items-center gap-1.5">
-                <Volume2 size={15} className="text-blue-400" />
-                Recruiter Voice & Speech Engine
+          {/* Recruiter Persona Status Badge */}
+          <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs text-left mb-4 max-w-xl mx-auto shadow-lg flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                <Volume2 size={16} />
               </div>
-              <button
-                onClick={() => handleTestVoice()}
-                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] flex items-center gap-1 transition-all active:scale-95 shadow-sm"
-              >
-                <Play size={10} className="fill-white" /> Test Pronunciation
-              </button>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="text-slate-400 text-[11px] leading-tight">
-                Current: <strong className="text-emerald-400 font-semibold">{selectedVoice?.name ? selectedVoice.name.replace(/Microsoft |Google /g, '') : 'Recruiter Voice'}</strong>
-                <span className="ml-1 text-slate-500 font-mono">({selectedVoice?.lang || 'en-IN'})</span>
+              <div>
+                <div className="font-bold text-white flex items-center gap-2">
+                  <span>Priya Sharma (AI Recruiter)</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">
+                    Hindi / Indian Accent Locked
+                  </span>
+                </div>
+                <div className="text-slate-400 text-[11px] mt-0.5">
+                  Fluent verbal prompts • Native professional pronunciation
+                </div>
               </div>
-
-              {availableVoices.length > 1 && (
-                <select
-                  value={selectedVoice?.voiceURI || ''}
-                  onChange={(e) => {
-                    const chosen = availableVoices.find(v => v.voiceURI === e.target.value);
-                    if (chosen) {
-                      setSelectedVoice(chosen);
-                      handleTestVoice(chosen);
-                    }
-                  }}
-                  className="bg-slate-950 border border-slate-750 text-slate-200 text-[11px] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500 font-sans"
-                >
-                  {availableVoices.map((v, i) => {
-                    const isIndian = v.lang.includes('IN') || v.name.toLowerCase().includes('india') || v.lang.includes('hi');
-                    return (
-                      <option key={i} value={v.voiceURI}>
-                        {isIndian ? '🇮🇳 ' : '🌐 '}
-                        {v.name.replace(/Microsoft |Google /g, '')}
-                      </option>
-                    );
-                  })}
-                </select>
-              )}
             </div>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
           </div>
 
           {/* Privacy Notice Box */}
@@ -755,21 +729,8 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
               {/* Navigation Controls */}
               <div className="flex items-center justify-between pt-1">
                 <button
-                  disabled={currentIdx === 0}
-                  onClick={() => {
-                    if (currentIdx > 0) {
-                      setCurrentIdx(currentIdx - 1);
-                      setShowAnswerGuide(false);
-                    }
-                  }}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700"
-                >
-                  Previous Question
-                </button>
-
-                <button
                   onClick={handleExitInterview}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-red-950/40 hover:bg-red-900/50 text-red-300 border border-red-800/50 flex items-center gap-1.5 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-red-950/40 hover:bg-red-900/50 text-red-300 border border-red-800/50 flex items-center gap-1.5 transition-colors shadow-sm"
                 >
                   <X size={13} /> Exit Interview
                 </button>

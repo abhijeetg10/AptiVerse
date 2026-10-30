@@ -2,27 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { 
   Clock, CheckCircle2, XCircle, RotateCcw, AlertTriangle, 
   HelpCircle, ChevronRight, ChevronLeft, Bookmark, Award, BookOpen, 
-  ArrowRight, ShieldCheck, ShieldAlert, Sparkles, Video, Maximize2, Play 
+  ArrowRight, ShieldCheck, ShieldAlert, Sparkles, Video, Maximize2, Play, Lock, LogIn, ArrowLeft 
 } from 'lucide-react';
-import { 
-  OFFICIAL_54_QUESTIONS, 
-  INFOSYS_SECTIONS_CONFIG, 
-  type InfosysQuestion, 
-  type SectionConfig 
-} from '../../data/infosysPrepData';
+import type { InfosysQuestion, SectionConfig } from '../../data/infosysPrepData';
+import { MOCK_TEST_1, type MockTestBundle } from '../../data/infosysMockTests';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 interface InteractiveMockTestProps {
+  bundle?: MockTestBundle;
   onProceedToTechnicalInterview?: () => void;
+  onBackToMockList?: () => void;
 }
 
 export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({ 
-  onProceedToTechnicalInterview 
+  bundle = MOCK_TEST_1,
+  onProceedToTechnicalInterview,
+  onBackToMockList
 }) => {
+  const { user, signInWithGoogle } = useAuth();
+  const [showSignInModal, setShowSignInModal] = useState(false);
+
+  const activeBundle = bundle;
+  const sectionsConfig = activeBundle.sectionsConfig;
+  const allQuestions = activeBundle.questions;
+
   const [hasStarted, setHasStarted] = useState(false);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
-  const activeSectionConfig = INFOSYS_SECTIONS_CONFIG[currentSectionIdx];
+  const activeSectionConfig = sectionsConfig[currentSectionIdx] || sectionsConfig[0];
 
-  const sectionQuestions = OFFICIAL_54_QUESTIONS.filter(
+  const sectionQuestions = allQuestions.filter(
     q => q.section === activeSectionConfig.name
   );
 
@@ -75,7 +84,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
       setSectionTimeLeft(speedMode ? 60 : activeSectionConfig.timeMinutes * 60);
       setActiveQuestionInSecIdx(0);
     }
-  }, [currentSectionIdx, speedMode, hasStarted]);
+  }, [currentSectionIdx, speedMode, hasStarted, activeSectionConfig]);
 
   // Section countdown timer (pauses if fullscreen alert is showing)
   useEffect(() => {
@@ -95,6 +104,10 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   }, [currentSectionIdx, hasStarted, isTestCompleted, speedMode, showFullscreenAlert]);
 
   const handleStartExam = async () => {
+    if (!user) {
+      setShowSignInModal(true);
+      return;
+    }
     setHasStarted(true);
     setIsTestCompleted(false);
     setCurrentSectionIdx(0);
@@ -117,8 +130,63 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
     }));
   };
 
+  // Minimal student marks persistence (zero database bloat, no per-question timestamps)
+  const saveStudentMarks = async (finalAnswers: { [qId: string]: number }) => {
+    if (!user) return;
+    
+    let totalScore = 0;
+    const sectionalScores: { [secName: string]: number } = {};
+    
+    sectionsConfig.forEach(sec => {
+      const secQs = allQuestions.filter(q => q.section === sec.name);
+      const secCorrect = secQs.filter(q => finalAnswers[q.id] === q.correctAnswer).length;
+      totalScore += secCorrect;
+      sectionalScores[sec.name] = secCorrect;
+    });
+
+    const isAllCleared = sectionsConfig.every(sec => {
+      const secQs = allQuestions.filter(q => q.section === sec.name);
+      const secCorrect = secQs.filter(q => finalAnswers[q.id] === q.correctAnswer).length;
+      return secQs.length > 0 ? (secCorrect / secQs.length) * 100 >= sec.cutoffPercentage : true;
+    });
+
+    const record = {
+      user_id: user.id,
+      company: 'infosys',
+      test_id: activeBundle.id,
+      test_title: activeBundle.title,
+      score: totalScore,
+      total_questions: allQuestions.length,
+      sectional_scores: sectionalScores,
+      cleared: isAllCleared,
+      created_at: new Date().toISOString()
+    };
+
+    // 1. Cache to localStorage for fast instant access
+    try {
+      localStorage.setItem(`aptiverse_infosys_score_${user.id}_${activeBundle.id}`, JSON.stringify(record));
+    } catch (e) {
+      console.warn('LocalStorage save note:', e);
+    }
+
+    // 2. Minimal DB insert
+    try {
+      await supabase.from('company_mock_scores').insert([{
+        user_id: user.id,
+        company: 'infosys',
+        test_id: activeBundle.id,
+        score: totalScore,
+        total_questions: allQuestions.length,
+        sectional_scores: sectionalScores,
+        cleared: isAllCleared
+      }]);
+    } catch (err) {
+      console.warn('DB score save note (non-blocking):', err);
+    }
+  };
+
   const handleAdvanceSection = (isAuto: boolean = false) => {
-    if (currentSectionIdx + 1 < INFOSYS_SECTIONS_CONFIG.length) {
+    if (currentSectionIdx + 1 < sectionsConfig.length) {
       if (!isAuto) {
         const confirmMsg = `Are you sure you want to submit "${activeSectionConfig.name}"? You will NOT be able to return to this section once submitted.`;
         if (!window.confirm(confirmMsg)) return;
@@ -126,9 +194,10 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
       setCurrentSectionIdx(prev => prev + 1);
     } else {
       if (!isAuto) {
-        if (!window.confirm("This is the final section. Submit entire Infosys Round 1 assessment?")) return;
+        if (!window.confirm(`This is the final section. Submit entire ${activeBundle.title}?`)) return;
       }
       setIsTestCompleted(true);
+      saveStudentMarks(selectedAnswers);
       if (document.fullscreenElement) {
         document.exitFullscreen?.().catch(() => {});
       }
@@ -140,7 +209,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
     setMarkedForReview({});
     setCurrentSectionIdx(0);
     setActiveQuestionInSecIdx(0);
-    setSectionTimeLeft(INFOSYS_SECTIONS_CONFIG[0].timeMinutes * 60);
+    setSectionTimeLeft(sectionsConfig[0].timeMinutes * 60);
     setIsTestCompleted(false);
     setHasStarted(false);
   };
@@ -152,11 +221,11 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   };
 
   // Sectional Cutoff Evaluation
-  const sectionalReport = INFOSYS_SECTIONS_CONFIG.map(sec => {
-    const questions = OFFICIAL_54_QUESTIONS.filter(q => q.section === sec.name);
+  const sectionalReport = sectionsConfig.map(sec => {
+    const questions = allQuestions.filter(q => q.section === sec.name);
     const correctCount = questions.filter(q => selectedAnswers[q.id] === q.correctAnswer).length;
     const answeredCount = questions.filter(q => selectedAnswers[q.id] !== undefined).length;
-    const scorePct = Math.round((correctCount / questions.length) * 100);
+    const scorePct = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
     const cleared = scorePct >= sec.cutoffPercentage;
 
     return {
@@ -168,10 +237,10 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
     };
   });
 
-  const totalQuestions = OFFICIAL_54_QUESTIONS.length;
+  const totalQuestions = allQuestions.length;
   const totalCorrect = sectionalReport.reduce((acc, curr) => acc + curr.correctCount, 0);
   const totalAttempted = Object.keys(selectedAnswers).length;
-  const overallPercentage = Math.round((totalCorrect / totalQuestions) * 100);
+  const overallPercentage = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
   const allSectionsCleared = sectionalReport.every(sec => sec.cleared);
   const failedSections = sectionalReport.filter(sec => !sec.cleared);
 
@@ -182,6 +251,9 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
       }
       setHasStarted(false);
       setIsTestCompleted(false);
+      if (onBackToMockList) {
+        onBackToMockList();
+      }
     }
   };
 
@@ -192,7 +264,36 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   return (
     <div className={containerClass}>
       
-      {/* Fullscreen Violation Alert Modal */}
+      {/* Student Sign-In Compulsory Modal */}
+      {showSignInModal && (
+        <div className="fixed inset-0 z-[250] bg-black/85 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-[#11192e] border border-blue-500/40 rounded-3xl p-8 max-w-md text-center shadow-2xl animate-fadeIn">
+            <div className="w-16 h-16 bg-blue-500/10 text-blue-400 rounded-2xl mx-auto flex items-center justify-center mb-4 border border-blue-500/20">
+              <Lock size={32} />
+            </div>
+            <h3 className="text-xl font-extrabold text-white mb-2">Student Sign-In Required</h3>
+            <p className="text-slate-300 text-sm leading-relaxed mb-6">
+              Sign in with your student account to attempt the Infosys Mock Test and save your sectional cutoffs.
+            </p>
+            <button
+              onClick={async () => {
+                await signInWithGoogle();
+              }}
+              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-xl flex items-center justify-center gap-3 transition-all mb-3 active:scale-98"
+            >
+              <LogIn size={18} /> Sign In with Google
+            </button>
+            <button
+              onClick={() => setShowSignInModal(false)}
+              className="text-xs text-slate-400 hover:text-white transition-colors py-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Violation Alert Modal with BOTH Re-Enter and Exit Buttons */}
       {showFullscreenAlert && (
         <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
           <div className="bg-[#11192e] border-2 border-red-500/80 rounded-3xl p-8 max-w-lg text-center shadow-2xl animate-bounce-short">
@@ -203,12 +304,20 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
             <p className="text-slate-300 text-sm leading-relaxed mb-6">
               Compulsory Full-Screen is enforced for the Infosys Assessment. Your timer is paused. Exiting full-screen during a real placement exam terminates the candidate session.
             </p>
-            <button
-              onClick={requestFullscreen}
-              className="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold rounded-2xl shadow-xl shadow-red-600/30 transition-all flex items-center justify-center gap-2 active:scale-98"
-            >
-              <Maximize2 size={16} /> Re-Enter Fullscreen Assessment
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <button
+                onClick={requestFullscreen}
+                className="flex-1 w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold rounded-2xl shadow-xl shadow-red-600/30 transition-all flex items-center justify-center gap-2 active:scale-98"
+              >
+                <Maximize2 size={16} /> Re-Enter Fullscreen Assessment
+              </button>
+              <button
+                onClick={handleExitTest}
+                className="w-full sm:w-auto px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold rounded-2xl border border-slate-700 transition-colors text-sm"
+              >
+                Exit Assessment
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -222,10 +331,10 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="font-extrabold text-base text-white tracking-wide">
-                Infosys Systems Engineer Assessment
+                {activeBundle.title}
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                Format A • 54 Questions • 100 Min
+                {activeBundle.tag} • {activeBundle.totalQuestions} Questions • {activeBundle.totalTimeMinutes} Min
               </span>
               {hasStarted && !isTestCompleted && (
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
@@ -241,6 +350,15 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
+          {onBackToMockList && !hasStarted && !isTestCompleted && (
+            <button
+              onClick={onBackToMockList}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-750 flex items-center gap-1.5 transition-colors"
+            >
+              <ArrowLeft size={14} /> Back to Mock Tests
+            </button>
+          )}
+
           {hasStarted && !isTestCompleted && (
             <button
               onClick={() => setSpeedMode(!speedMode)}
@@ -250,7 +368,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                   : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
               }`}
             >
-              {speedMode ? '⚡ Fast Test (60s/sec)' : 'Standard Time (100m)'}
+              {speedMode ? '⚡ Fast Test (60s/sec)' : `Standard Time (${activeBundle.totalTimeMinutes}m)`}
             </button>
           )}
 
@@ -287,15 +405,24 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
       {/* PRE-TEST INSTRUCTIONS & FULLSCREEN LAUNCHER */}
       {!hasStarted && !isTestCompleted ? (
         <div className="p-8 lg:p-14 max-w-3xl mx-auto text-center font-sans">
+          {onBackToMockList && (
+            <button
+              onClick={onBackToMockList}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold mb-6 transition-colors"
+            >
+              <ArrowLeft size={14} /> Back to All 4 Mock Tests
+            </button>
+          )}
+
           <div className="w-20 h-20 bg-blue-500/10 text-blue-400 rounded-3xl mx-auto flex items-center justify-center mb-6 border border-blue-500/20 shadow-xl shadow-blue-500/10">
             <Maximize2 size={36} />
           </div>
 
           <h2 className="text-3xl font-extrabold text-white mb-2">
-            Ready to Begin Official Infosys Assessment?
+            Ready to Begin {activeBundle.title}?
           </h2>
           <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-xl mx-auto">
-            This test follows the authentic <strong>Format A blueprint</strong>: 54 questions, 100 minutes, and strict sectional cutoffs across all 5 sections.
+            {activeBundle.description} This assessment has <strong>{activeBundle.totalQuestions} questions</strong> across <strong>{sectionsConfig.length} timed sections</strong>.
           </p>
 
           <div className="grid sm:grid-cols-2 gap-4 text-left mb-8 max-w-xl mx-auto text-xs">
@@ -303,7 +430,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
               <div className="font-bold text-slate-100 mb-1 flex items-center gap-1.5">
                 <Maximize2 size={14} className="text-blue-400" /> Compulsory Full-Screen:
               </div>
-              <div className="text-slate-400">Exiting full screen will trigger a proctoring violation warning.</div>
+              <div className="text-slate-400">Exiting full screen will pause your timer and trigger a proctoring violation warning.</div>
             </div>
             <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
               <div className="font-bold text-slate-100 mb-1 flex items-center gap-1.5">
@@ -318,7 +445,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
             className="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-600/30 transition-all flex items-center justify-center gap-3 mx-auto text-base active:scale-95"
           >
             <Play size={20} className="fill-white" />
-            Enter Fullscreen & Launch 54-Question Assessment
+            Enter Fullscreen & Launch {activeBundle.totalQuestions}-Question Assessment
           </button>
         </div>
       ) : !isTestCompleted ? (
@@ -326,7 +453,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
         <div className="flex-1 flex flex-col">
           {/* Section Progress Stepper */}
           <div className="bg-[#0b1120] px-6 py-2.5 border-b border-slate-800/80 flex items-center gap-2.5 overflow-x-auto text-xs">
-            {INFOSYS_SECTIONS_CONFIG.map((sec, idx) => {
+            {sectionsConfig.map((sec, idx) => {
               const isCurrent = idx === currentSectionIdx;
               const isPast = idx < currentSectionIdx;
 
@@ -486,7 +613,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                         onClick={() => handleAdvanceSection(false)}
                         className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 transition-all active:scale-95"
                       >
-                        {currentSectionIdx + 1 === INFOSYS_SECTIONS_CONFIG.length ? 'Submit Final Assessment' : 'Submit Section & Move to Next'}
+                        {currentSectionIdx + 1 === sectionsConfig.length ? 'Submit Final Assessment' : 'Submit Section & Move to Next'}
                         <ChevronRight size={15} />
                       </button>
                     )}
@@ -687,11 +814,11 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
           <div className="pt-6 border-t border-slate-800">
             <h4 className="font-bold text-base text-white mb-4 flex items-center gap-2">
               <BookOpen size={18} className="text-blue-400" />
-              Complete Question Review & Step-by-Step Solutions (54 Questions)
+              Complete Question Review & Step-by-Step Solutions ({allQuestions.length} Questions)
             </h4>
 
             <div className="space-y-4">
-              {OFFICIAL_54_QUESTIONS.map((q, idx) => {
+              {allQuestions.map((q, idx) => {
                 const userChoice = selectedAnswers[q.id];
                 const isCorrect = userChoice === q.correctAnswer;
                 const isSkipped = userChoice === undefined;
