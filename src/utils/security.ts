@@ -61,8 +61,8 @@ export const initAntiTamperProtection = () => {
   const devToolsTrap = () => {
     try {
       const start = performance.now();
-      // Dynamically invokes debugger statement
-      Function('debugger')();
+      // Directly invokes debugger statement without unsafe eval/Function
+      debugger;
       const diff = performance.now() - start;
       if (diff > 100) {
         // DevTools was opened and hit debugger

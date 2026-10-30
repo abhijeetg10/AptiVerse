@@ -7,19 +7,26 @@ interface AdBannerProps {
 }
 
 export const AdBanner: React.FC<AdBannerProps> = ({ 
-  dataAdSlot = "1234567890", 
+  dataAdSlot, 
   dataAdFormat = "auto", 
   dataFullWidthResponsive = true 
 }) => {
+  const isValidSlot = Boolean(dataAdSlot && /^\d{8,12}$/.test(dataAdSlot));
+
   useEffect(() => {
+    if (!isValidSlot) return;
     try {
       if (typeof window !== "undefined") {
         ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
       }
     } catch (err) {
-      console.error('AdSense error:', err);
+      // Silently handle ad push errors to prevent console pollution
     }
-  }, []);
+  }, [isValidSlot]);
+
+  if (!isValidSlot) {
+    return null; // Don't render broken ins blocks before official ad unit creation
+  }
 
   return (
     <div className="w-full flex justify-center my-3 overflow-hidden">

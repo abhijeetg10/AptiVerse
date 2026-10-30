@@ -99,6 +99,7 @@ const Footer = () => {
           {/* Quick Links */}
           <div className="flex flex-col gap-3">
             <h3 className="font-bold text-slate-900 mb-2 tracking-tight">Platform</h3>
+            <Link to="/about" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors w-fit font-medium">About Us</Link>
             <Link to="/games" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors w-fit font-medium">Games</Link>
             <Link to="/progress" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors w-fit font-medium">Progress Tracking</Link>
             <Link to="/leaderboard" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors w-fit font-medium">Leaderboard</Link>
@@ -135,6 +136,7 @@ const Footer = () => {
           </div>
 
           <div className="flex items-center gap-6 font-medium text-slate-400">
+            <Link to="/about" className="hover:text-indigo-600 transition-colors">About Us</Link>
             <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-indigo-600 transition-colors">Terms of Service</Link>
           </div>

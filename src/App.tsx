@@ -7,6 +7,9 @@ import Dashboard from './pages/Dashboard';
 import Progress from './pages/Progress';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import AboutUs from './pages/AboutUs';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AdminRoute } from './components/auth/AdminRoute';
@@ -44,6 +47,9 @@ function App() {
               <Route path="progress" element={<Progress />} />
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="privacy" element={<PrivacyPolicy />} />
+              <Route path="terms" element={<TermsOfService />} />
+              <Route path="about" element={<AboutUs />} />
               
               {/* Admin Route */}
               <Route path="admin" element={

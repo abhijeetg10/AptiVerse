@@ -192,39 +192,9 @@ export const useGameSession = (gameId: string) => {
         return { success: false, error: rpcError.message };
       }
 
-      // Fallback: Direct table insert into game_sessions if RPC is unavailable or rejected
-      const { error: insertError } = await supabase.from('game_sessions').insert({
-        id: resolvedAttemptId,
-        user_id: userId,
-        game_id: normalizedGameId,
-        level: validLevel,
-        score: validScore,
-        accuracy: validAccuracy,
-        time_spent: validTimeSpent,
-        passed_distraction: passedDistraction
-      });
-
-      if (!insertError) {
-        savedAttemptsRef.current.add(resolvedAttemptId);
-        activeAttemptIdRef.current = null;
-        setStatus('saved');
-        setError(null);
-        isSavingRef.current = false;
-        return { success: true };
-      }
-
-      if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
-        savedAttemptsRef.current.add(resolvedAttemptId);
-        activeAttemptIdRef.current = null;
-        setStatus('saved');
-        setError(null);
-        isSavingRef.current = false;
-        return { success: true, alreadySaved: true };
-      }
-
-      // If both RPC and direct insert failed, report the error
-      const errorMsg = rpcError?.message || insertError?.message || 'Server error recording attempt';
-      console.error('Failed to complete game attempt:', { rpcError, insertError });
+      // If RPC failed, report the error directly without falling back to insecure direct client inserts
+      const errorMsg = rpcError?.message || 'Server error recording attempt';
+      console.error('Failed to complete game attempt:', { rpcError });
       setError(errorMsg);
       setStatus('error');
       isSavingRef.current = false;
