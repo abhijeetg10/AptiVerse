@@ -4,6 +4,7 @@ import { GameCard } from '../components/ui/GameCard';
 import { cn } from '../utils/cn';
 import { Link } from 'react-router-dom';
 import { AdBanner } from '../components/ui/AdBanner';
+import { CompanyCardsSection } from '../components/company/CompanyCardsSection';
 
 const Games = () => {
   return (
@@ -273,6 +274,9 @@ const Games = () => {
           </Link>
 
         </div>
+
+        {/* Company-Specific Placement Tests */}
+        <CompanyCardsSection />
       </div>
     </div>
   );

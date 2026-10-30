@@ -8,6 +8,7 @@ import { cn } from '../utils/cn';
 import FeedbackModal from '../components/ui/FeedbackModal';
 import { AdBanner } from '../components/ui/AdBanner';
 import { RatingBadge } from '../components/ui/RatingBadge';
+import { CompanyCardsSection } from '../components/company/CompanyCardsSection';
 
 const Home = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -365,6 +366,9 @@ const Home = () => {
           
         </div>
       </section>
+
+      {/* Target Company Mock Tests & AI Interviews */}
+      <CompanyCardsSection />
 
       {/* Ad placement 2 */}
       <AdBanner dataAdSlot="auto" />
