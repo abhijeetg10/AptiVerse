@@ -13,19 +13,25 @@ import { TalkingRecruiterAvatar } from './TalkingRecruiterAvatar';
 
 interface AIMockInterviewRoomProps {
   initialRound?: 'technical' | 'hr';
+  technicalQuestions?: InterviewPrompt[];
+  hrQuestions?: InterviewPrompt[];
+  driveTitle?: string;
   onClose?: () => void;
   onProceedToHR?: () => void;
 }
 
 export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({ 
   initialRound = 'technical', 
+  technicalQuestions = TECHNICAL_INTERVIEW_PROMPTS,
+  hrQuestions = HR_INTERVIEW_PROMPTS,
+  driveTitle = 'Infosys Systems Engineer',
   onClose,
   onProceedToHR
 }) => {
   const [activeRound, setActiveRound] = useState<'technical' | 'hr'>(initialRound);
   const questions: InterviewPrompt[] = activeRound === 'technical' 
-    ? TECHNICAL_INTERVIEW_PROMPTS 
-    : HR_INTERVIEW_PROMPTS;
+    ? technicalQuestions 
+    : hrQuestions;
 
   const [hasStarted, setHasStarted] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -442,7 +448,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                 Live AI Simulation
               </span>
             </div>
-            <p className="text-xs text-slate-400">Infosys Systems Engineer • Candidate Evaluation</p>
+            <p className="text-xs text-slate-400">{driveTitle} • Candidate Evaluation</p>
           </div>
         </div>
 
@@ -456,7 +462,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                   activeRound === 'technical' ? 'bg-primary-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Round 2: Technical ({TECHNICAL_INTERVIEW_PROMPTS.length} Qs)
+                Round 2: Technical ({technicalQuestions.length} Qs)
               </button>
               <button
                 onClick={() => setActiveRound('hr')}
@@ -464,7 +470,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                   activeRound === 'hr' ? 'bg-primary-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Round 3: HR ({HR_INTERVIEW_PROMPTS.length} Qs)
+                Round 3: HR ({hrQuestions.length} Qs)
               </button>
             </div>
           )}

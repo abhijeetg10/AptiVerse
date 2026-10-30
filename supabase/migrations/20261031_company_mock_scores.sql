@@ -32,3 +32,4 @@ CREATE POLICY "Users can view own mock scores"
 
 -- Create index for quick lookup by user and test
 CREATE INDEX IF NOT EXISTS idx_company_mock_scores_user ON public.company_mock_scores(user_id, company, test_id);
+

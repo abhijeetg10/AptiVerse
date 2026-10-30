@@ -151,238 +151,141 @@ export const InfosysPrep: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 pt-6 w-full">
         
         {/* =======================================================
-            TAB 1: COMPLETE RECRUITMENT DRIVE TIMELINE & ACTIVE ROUND
+            TAB 1: COMPLETE RECRUITMENT DRIVES & PIPELINES
            ======================================================= */}
         {activeTab === 'timeline-test' && (
           <div className="space-y-8 animate-fadeIn">
-            
-            {/* Visual Timeline Stepper Card */}
-            <div className="bg-white rounded-3xl p-6 border border-neutral-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <div>
-                  <span className="text-xs font-bold text-primary-600 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles size={14} /> OFFICIAL INFOSYS SE HIRING PIPELINE
-                  </span>
-                  <h2 className="text-xl font-extrabold text-neutral-900 mt-0.5">
-                    Stage-by-Stage Selection Process & Mock Rounds
+
+            {/* If NO mock bundle is selected: Show the 4 Designer Cards */}
+            {!selectedMockBundle ? (
+              <div className="space-y-8">
+                {/* Section Introduction */}
+                <div className="text-center max-w-3xl mx-auto">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold mb-3 border border-blue-200/60 shadow-sm">
+                    <Target size={14} className="text-blue-600" />
+                    COMPLETE INFOSYS HIRING BLUEPRINTS
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                    Choose Your Targeted Mock Recruitment Drive
                   </h2>
+                  <p className="text-slate-500 text-xs sm:text-sm leading-relaxed mt-2">
+                    Each pack is a complete, multi-round recruitment simulation: starting with the <strong>timed Online Aptitude Screening</strong>, flowing directly into the <strong>AI Technical Interview</strong>, and culminating in the <strong>HR & Managerial Discussion</strong> with specific questions from official fresher test blueprints.
+                  </p>
                 </div>
-                <span className="text-xs text-neutral-500 bg-neutral-100 px-3 py-1 rounded-full font-medium">
-                  Click any stage to practice that specific round
-                </span>
-              </div>
 
-              {/* 3-Step Interactive Timeline */}
-              <div className="grid md:grid-cols-3 gap-4">
-                
-                {/* Stage 1 Card */}
-                <button
-                  onClick={() => setActiveRoundStep(1)}
-                  className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${
-                    activeRoundStep === 1
-                      ? 'border-primary-600 bg-primary-50/50 shadow-md ring-2 ring-primary-500/20'
-                      : 'border-neutral-200 bg-neutral-50/60 hover:bg-neutral-100'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`w-7 h-7 rounded-full text-xs font-extrabold flex items-center justify-center ${
-                      activeRoundStep === 1 ? 'bg-primary-600 text-white' : 'bg-neutral-200 text-neutral-700'
-                    }`}>
-                      1
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
-                      Elimination Stage
-                    </span>
-                  </div>
-                  <h3 className="font-extrabold text-sm text-neutral-900 mb-1">
-                    Round 1: Online Assessment
-                  </h3>
-                  <div className="text-xs text-neutral-600 space-y-1">
-                    <div>• <strong>54 Questions • 100 Minutes</strong></div>
-                    <div>• 5 Sections with individual countdown timers</div>
-                    <div>• <strong>Infosys has section-wise cutoffs; prepare well for all sections</strong></div>
-                  </div>
-                  {activeRoundStep === 1 && (
-                    <div className="mt-3 pt-2 border-t border-primary-200 text-xs font-bold text-primary-700 flex items-center gap-1">
-                      <span>Currently Active Round</span> <ArrowRight size={13} />
-                    </div>
-                  )}
-                </button>
+                {/* 4 Cards Grid - Styled after Reference UI */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {ALL_INFOSYS_MOCK_TESTS.map((bundle) => {
+                    let savedScore: any = null;
+                    if (user) {
+                      try {
+                        const raw = localStorage.getItem(`aptiverse_infosys_score_${user.id}_${bundle.id}`);
+                        if (raw) savedScore = JSON.parse(raw);
+                      } catch (e) {}
+                    }
 
-                {/* Stage 2 Card */}
-                <button
-                  onClick={() => setActiveRoundStep(2)}
-                  className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${
-                    activeRoundStep === 2
-                      ? 'border-primary-600 bg-primary-50/50 shadow-md ring-2 ring-primary-500/20'
-                      : 'border-neutral-200 bg-neutral-50/60 hover:bg-neutral-100'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`w-7 h-7 rounded-full text-xs font-extrabold flex items-center justify-center ${
-                      activeRoundStep === 2 ? 'bg-primary-600 text-white' : 'bg-neutral-200 text-neutral-700'
-                    }`}>
-                      2
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 flex items-center gap-1">
-                      <Video size={10} /> AI Video Panel
-                    </span>
-                  </div>
-                  <h3 className="font-extrabold text-sm text-neutral-900 mb-1">
-                    Round 2: Technical Interview
-                  </h3>
-                  <div className="text-xs text-neutral-600 space-y-1">
-                    <div>• <strong>7 Core Questions</strong> with Recruiter Voice</div>
-                    <div>• Java & OOP, DBMS / SQL, OS, DSA</div>
-                    <div>• Project Architecture & Bug Defense</div>
-                  </div>
-                  {activeRoundStep === 2 && (
-                    <div className="mt-3 pt-2 border-t border-primary-200 text-xs font-bold text-primary-700 flex items-center gap-1">
-                      <span>Currently Active Round</span> <ArrowRight size={13} />
-                    </div>
-                  )}
-                </button>
-
-                {/* Stage 3 Card */}
-                <button
-                  onClick={() => setActiveRoundStep(3)}
-                  className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${
-                    activeRoundStep === 3
-                      ? 'border-primary-600 bg-primary-50/50 shadow-md ring-2 ring-primary-500/20'
-                      : 'border-neutral-200 bg-neutral-50/60 hover:bg-neutral-100'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`w-7 h-7 rounded-full text-xs font-extrabold flex items-center justify-center ${
-                      activeRoundStep === 3 ? 'bg-primary-600 text-white' : 'bg-neutral-200 text-neutral-700'
-                    }`}>
-                      3
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                      Final Selection
-                    </span>
-                  </div>
-                  <h3 className="font-extrabold text-sm text-neutral-900 mb-1">
-                    Round 3: HR & Behavioral
-                  </h3>
-                  <div className="text-xs text-neutral-600 space-y-1">
-                    <div>• <strong>4 Behavioral Scenarios</strong> with Recruiter Voice</div>
-                    <div>• Self Introduction & Relocation Confirmation</div>
-                    <div>• Conflict resolution & 5-Year Vision</div>
-                  </div>
-                  {activeRoundStep === 3 && (
-                    <div className="mt-3 pt-2 border-t border-primary-200 text-xs font-bold text-primary-700 flex items-center gap-1">
-                      <span>Currently Active Round</span> <ArrowRight size={13} />
-                    </div>
-                  )}
-                </button>
-
-              </div>
-
-              {/* Section Cutoff Advisory Info */}
-              <div className="mt-5 p-4 rounded-2xl bg-neutral-50 border border-neutral-200 flex flex-wrap items-center justify-between gap-4 text-xs">
-                <div className="flex items-center gap-2 text-neutral-800 font-semibold">
-                  <ShieldCheck size={16} className="text-primary-600" />
-                  <span>Infosys has section-wise cutoffs, so prepare well for all sections.</span>
-                </div>
-                <div className="text-neutral-500">
-                  Total Questions: <strong>54</strong> | Total Time: <strong>100 mins</strong> | Negative Marking: <strong>None</strong>
-                </div>
-              </div>
-
-            </div>
-
-            {/* ACTIVE ROUND INTERFACE */}
-            <div className="transition-all">
-              {activeRoundStep === 1 && !selectedMockBundle && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div>
-                      <h3 className="text-xl font-extrabold text-neutral-900">
-                        Official & Full-Length Infosys Mock Assessments
-                      </h3>
-                      <p className="text-sm text-neutral-500">
-                        Select a test based on your target difficulty. Each test features round-wise timed sections, strict cutoff tracking, and proctoring.
-                      </p>
-                    </div>
-                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                      4 Active Mock Tests
-                    </span>
-                  </div>
-
-                  {/* 4 Cards Grid */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {ALL_INFOSYS_MOCK_TESTS.map((bundle) => {
-                      let tagClass = "bg-purple-50 text-purple-700 border-purple-200";
-                      if (bundle.tag === 'Easy') tagClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
-                      if (bundle.tag === 'Moderate') tagClass = "bg-amber-50 text-amber-800 border-amber-200";
-                      if (bundle.tag === 'Hard') tagClass = "bg-rose-50 text-rose-700 border-rose-200";
-
-                      let savedScore: any = null;
-                      if (user) {
-                        try {
-                          const raw = localStorage.getItem(`aptiverse_infosys_score_${user.id}_${bundle.id}`);
-                          if (raw) savedScore = JSON.parse(raw);
-                        } catch (e) {}
-                      }
-
-                      return (
-                        <div 
-                          key={bundle.id}
-                          className="bg-white rounded-3xl p-6 border border-neutral-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:border-primary-400"
-                        >
-                          <div>
-                            <div className="flex items-center justify-between mb-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${tagClass}`}>
-                                {bundle.tag === 'Official Sample' ? 'Sample Pattern' : bundle.tag}
-                              </span>
-                              <span className="text-xs font-mono font-bold text-neutral-400">
-                                Mock Test 0{bundle.testNumber}
-                              </span>
-                            </div>
-
-                            <h4 className="text-lg font-bold text-neutral-900 mb-2 group-hover:text-primary-600 transition-colors">
-                              {bundle.title}
-                            </h4>
-                            <p className="text-xs text-neutral-600 leading-relaxed mb-5">
-                              {bundle.description}
-                            </p>
-
-                            {/* Section Specs */}
-                            <div className="grid grid-cols-2 gap-2 text-xs mb-5">
-                              <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-150">
-                                <span className="text-[10px] text-neutral-400 block font-medium">Question Blueprint</span>
-                                <span className="font-bold text-neutral-900">{bundle.totalQuestions} Questions</span>
-                              </div>
-                              <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-150">
-                                <span className="text-[10px] text-neutral-400 block font-medium">Total Duration</span>
-                                <span className="font-bold text-neutral-900">{bundle.totalTimeMinutes} Minutes</span>
-                              </div>
-                              <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-150">
-                                <span className="text-[10px] text-neutral-400 block font-medium">Structure</span>
-                                <span className="font-bold text-neutral-900">5 Timed Sections</span>
-                              </div>
-                              <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-150">
-                                <span className="text-[10px] text-neutral-400 block font-medium">Negative Marking</span>
-                                <span className="font-bold text-emerald-600">None (0 Penalty)</span>
-                              </div>
-                            </div>
-
-                            {savedScore && (
-                              <div className="mb-4 p-3 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between">
-                                <div>
-                                  <span className="text-slate-400 text-[10px] block">Your Best Marks</span>
-                                  <span className="font-bold text-emerald-400">{savedScore.score} / {savedScore.total_questions}</span>
-                                </div>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                  savedScore.cleared ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
-                                }`}>
-                                  {savedScore.cleared ? 'Cleared Cutoff' : 'Attempt Recorded'}
-                                </span>
-                              </div>
-                            )}
+                    return (
+                      <div 
+                        key={bundle.id}
+                        className="bg-white rounded-3xl border border-slate-200/80 shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col justify-between group hover:-translate-y-1.5"
+                      >
+                        <div>
+                          {/* Colored Top Header Banner (Inspired by Reference) */}
+                          <div className={`h-24 ${bundle.cardBannerColor} relative p-3 flex items-start justify-between text-white overflow-hidden`}>
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent pointer-events-none" />
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-sm">
+                              {bundle.tag === 'Official Sample' ? 'Sample Pattern' : `${bundle.tag} Pack`}
+                            </span>
+                            <span className="text-[10px] font-bold text-white/90 bg-black/25 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 font-mono">
+                              Pack 0{bundle.testNumber}
+                            </span>
                           </div>
 
+                          {/* Overlapping Central Crest / Avatar Badge */}
+                          <div className="-mt-8 mx-auto w-16 h-16 rounded-full bg-white p-1 shadow-xl border border-slate-100 flex items-center justify-center relative z-10 group-hover:scale-105 transition-transform duration-300">
+                            <div className={`w-full h-full rounded-full ${bundle.cardBannerColor} flex items-center justify-center text-white font-black text-base shadow-inner`}>
+                              0{bundle.testNumber}
+                            </div>
+                          </div>
+
+                          {/* Title & Track Details */}
+                          <div className="px-5 pt-2 text-center">
+                            <h4 className="text-base font-black text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                              {bundle.title}
+                            </h4>
+                            <div className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                              {bundle.subtitle}
+                            </div>
+                            <p className="text-[11px] text-slate-500 leading-relaxed mt-2 line-clamp-2 px-1">
+                              {bundle.description}
+                            </p>
+                          </div>
+
+                          {/* Stats Row (3 Columns: Questions, Duration, Pipeline) */}
+                          <div className="mx-4 mt-3 py-2.5 px-1 rounded-2xl bg-slate-50 border border-slate-100 grid grid-cols-3 text-center">
+                            <div>
+                              <span className="text-xs font-black text-slate-800 block">{bundle.totalQuestions} Qs</span>
+                              <span className="text-[9px] text-slate-400 font-semibold uppercase">Aptitude</span>
+                            </div>
+                            <div className="border-x border-slate-200">
+                              <span className="text-xs font-black text-slate-800 block">{bundle.totalTimeMinutes}m</span>
+                              <span className="text-[9px] text-slate-400 font-semibold uppercase">Time</span>
+                            </div>
+                            <div>
+                              <span className="text-xs font-black text-emerald-600 block">3 Rounds</span>
+                              <span className="text-[9px] text-slate-400 font-semibold uppercase">Pipeline</span>
+                            </div>
+                          </div>
+
+                          {/* 3-Stage Pipeline Progression Indicators (Dots row from Reference) */}
+                          <div className="mx-4 mt-3 pt-2.5 border-t border-slate-100">
+                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                              <span>Hiring Pipeline</span>
+                              <span className="text-blue-600 font-bold">Standard Flow</span>
+                            </div>
+                            <div className="space-y-1.5 text-[11px] text-slate-600">
+                              <div className="flex items-center justify-between p-1 rounded-lg bg-slate-50 border border-slate-100">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                                  <span className="font-semibold text-slate-700">R1: Online Aptitude</span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-mono">{bundle.sectionsConfig.length} Sec</span>
+                              </div>
+                              <div className="flex items-center justify-between p-1 rounded-lg bg-slate-50 border border-slate-100">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                                  <span className="font-semibold text-slate-700">R2: Technical Panel</span>
+                                </div>
+                                <span className="text-[10px] text-blue-600 font-mono font-bold">{bundle.technicalPrompts.length} Qs</span>
+                              </div>
+                              <div className="flex items-center justify-between p-1 rounded-lg bg-slate-50 border border-slate-100">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                                  <span className="font-semibold text-slate-700">R3: HR & Managerial</span>
+                                </div>
+                                <span className="text-[10px] text-emerald-600 font-mono font-bold">{bundle.hrPrompts.length} Qs</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Best Score Badge if candidate attempted before */}
+                          {savedScore && (
+                            <div className="mx-4 mt-3 p-2 rounded-xl bg-slate-900 text-white text-[11px] flex items-center justify-between">
+                              <div>
+                                <span className="text-slate-400 text-[9px] block">Your Best Score</span>
+                                <span className="font-bold text-emerald-400">{savedScore.score} / {savedScore.total_questions}</span>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold ${
+                                savedScore.cleared ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                              }`}>
+                                {savedScore.cleared ? 'Cleared Cutoff' : 'Attempt Recorded'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action CTA Button */}
+                        <div className="p-4 pt-3">
                           <button
                             onClick={() => {
                               if (!user) {
@@ -390,43 +293,193 @@ export const InfosysPrep: React.FC = () => {
                                 return;
                               }
                               setSelectedMockBundle(bundle);
+                              setActiveRoundStep(1);
                             }}
-                            className="w-full py-3.5 bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm rounded-2xl shadow-md shadow-primary-600/20 flex items-center justify-center gap-2 transition-all active:scale-98 group-hover:bg-primary-700"
+                            className={`w-full py-3 ${bundle.cardBannerColor} hover:brightness-110 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-98`}
                           >
-                            <Play size={16} className="fill-white" />
-                            Start Mock Test {bundle.testNumber}
-                            <ArrowRight size={15} />
+                            <Play size={13} className="fill-white" />
+                            Start Complete Drive 0{bundle.testNumber}
+                            <ArrowRight size={13} />
                           </button>
                         </div>
-                      );
-                    })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* DEDICATED RECRUITMENT PIPELINE FOR THE SELECTED MOCK TEST */
+              <div className="space-y-6">
+                
+                {/* Active Drive Navigation Header */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedMockBundle(null)}
+                      className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                    >
+                      <ChevronRight size={14} className="rotate-180" /> Back to All 4 Drives
+                    </button>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-black text-lg text-slate-900">
+                          {selectedMockBundle.title}
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold text-white ${selectedMockBundle.cardBannerColor}`}>
+                          {selectedMockBundle.tag}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {selectedMockBundle.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
+                    <ShieldCheck size={16} className="text-emerald-600" />
+                    <span>Infosys has section-wise cutoffs, so prepare well for all sections.</span>
                   </div>
                 </div>
-              )}
 
-              {activeRoundStep === 1 && selectedMockBundle && (
-                <InteractiveMockTest 
-                  bundle={selectedMockBundle}
-                  onProceedToTechnicalInterview={() => setActiveRoundStep(2)}
-                  onBackToMockList={() => setSelectedMockBundle(null)}
-                />
-              )}
+                {/* 3-Stage Pipeline Stepper for THIS specific test */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  {/* Round 1 Stepper */}
+                  <button
+                    onClick={() => setActiveRoundStep(1)}
+                    className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${
+                      activeRoundStep === 1
+                        ? 'border-blue-600 bg-blue-50/50 shadow-md ring-2 ring-blue-500/20'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`w-7 h-7 rounded-full text-xs font-extrabold flex items-center justify-center ${
+                        activeRoundStep === 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'
+                      }`}>
+                        1
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+                        Elimination Stage
+                      </span>
+                    </div>
+                    <h3 className="font-extrabold text-sm text-slate-900 mb-1">
+                      Round 1: Online Screening Test
+                    </h3>
+                    <div className="text-xs text-slate-600 space-y-1">
+                      <div>• <strong>{selectedMockBundle.totalQuestions} Questions • {selectedMockBundle.totalTimeMinutes} Minutes</strong></div>
+                      <div>• 5 Sections with individual countdown timers</div>
+                      <div>• Section-wise evaluation applies</div>
+                    </div>
+                    {activeRoundStep === 1 && (
+                      <div className="mt-3 pt-2 border-t border-blue-200 text-xs font-bold text-blue-700 flex items-center gap-1">
+                        <span>Currently Active Round</span> <ArrowRight size={13} />
+                      </div>
+                    )}
+                  </button>
 
-              {activeRoundStep === 2 && (
-                <AIMockInterviewRoom 
-                  initialRound="technical"
-                  onProceedToHR={() => setActiveRoundStep(3)}
-                  onClose={() => setActiveRoundStep(1)}
-                />
-              )}
+                  {/* Round 2 Stepper */}
+                  <button
+                    onClick={() => setActiveRoundStep(2)}
+                    className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${
+                      activeRoundStep === 2
+                        ? 'border-blue-600 bg-blue-50/50 shadow-md ring-2 ring-blue-500/20'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`w-7 h-7 rounded-full text-xs font-extrabold flex items-center justify-center ${
+                        activeRoundStep === 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'
+                      }`}>
+                        2
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 flex items-center gap-1">
+                        <Video size={10} /> AI Video Panel
+                      </span>
+                    </div>
+                    <h3 className="font-extrabold text-sm text-slate-900 mb-1">
+                      Round 2: Technical Interview
+                    </h3>
+                    <div className="text-xs text-slate-600 space-y-1">
+                      <div>• <strong>{selectedMockBundle.technicalPrompts.length} Specific Technical Prompts</strong></div>
+                      <div>• Spoken aloud by Priya Sharma in fluent recruiter voice</div>
+                      <div>• DSA, Architecture, Databases & Core Concepts</div>
+                    </div>
+                    {activeRoundStep === 2 && (
+                      <div className="mt-3 pt-2 border-t border-blue-200 text-xs font-bold text-blue-700 flex items-center gap-1">
+                        <span>Currently Active Round</span> <ArrowRight size={13} />
+                      </div>
+                    )}
+                  </button>
 
-              {activeRoundStep === 3 && (
-                <AIMockInterviewRoom 
-                  initialRound="hr"
-                  onClose={() => setActiveRoundStep(1)}
-                />
-              )}
-            </div>
+                  {/* Round 3 Stepper */}
+                  <button
+                    onClick={() => setActiveRoundStep(3)}
+                    className={`p-5 rounded-2xl border-2 text-left transition-all relative overflow-hidden ${
+                      activeRoundStep === 3
+                        ? 'border-blue-600 bg-blue-50/50 shadow-md ring-2 ring-blue-500/20'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`w-7 h-7 rounded-full text-xs font-extrabold flex items-center justify-center ${
+                        activeRoundStep === 3 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'
+                      }`}>
+                        3
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                        Final Selection
+                      </span>
+                    </div>
+                    <h3 className="font-extrabold text-sm text-slate-900 mb-1">
+                      Round 3: HR & Managerial
+                    </h3>
+                    <div className="text-xs text-slate-600 space-y-1">
+                      <div>• <strong>{selectedMockBundle.hrPrompts.length} Behavioral & Culture Scenarios</strong></div>
+                      <div>• Adaptability, Teamwork, Relocation & Mindset</div>
+                      <div>• Evaluated with ideal answering rubrics</div>
+                    </div>
+                    {activeRoundStep === 3 && (
+                      <div className="mt-3 pt-2 border-t border-blue-200 text-xs font-bold text-blue-700 flex items-center gap-1">
+                        <span>Currently Active Round</span> <ArrowRight size={13} />
+                      </div>
+                    )}
+                  </button>
+                </div>
+
+                {/* ACTIVE ROUND INTERFACE FOR THIS TEST */}
+                <div className="transition-all">
+                  {activeRoundStep === 1 && (
+                    <InteractiveMockTest 
+                      bundle={selectedMockBundle}
+                      onProceedToTechnicalInterview={() => setActiveRoundStep(2)}
+                      onBackToMockList={() => setSelectedMockBundle(null)}
+                    />
+                  )}
+
+                  {activeRoundStep === 2 && (
+                    <AIMockInterviewRoom 
+                      initialRound="technical"
+                      technicalQuestions={selectedMockBundle.technicalPrompts}
+                      hrQuestions={selectedMockBundle.hrPrompts}
+                      driveTitle={selectedMockBundle.title}
+                      onProceedToHR={() => setActiveRoundStep(3)}
+                      onClose={() => setSelectedMockBundle(null)}
+                    />
+                  )}
+
+                  {activeRoundStep === 3 && (
+                    <AIMockInterviewRoom 
+                      initialRound="hr"
+                      technicalQuestions={selectedMockBundle.technicalPrompts}
+                      hrQuestions={selectedMockBundle.hrPrompts}
+                      driveTitle={selectedMockBundle.title}
+                      onClose={() => setSelectedMockBundle(null)}
+                    />
+                  )}
+                </div>
+
+              </div>
+            )}
 
           </div>
         )}
