@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import {
   Building2, Sparkles, Clock, Lock, MapPin
 } from 'lucide-react';
@@ -32,7 +31,7 @@ export const CompanyCardsSection: React.FC = () => {
       {/* Cards Grid - Exact same structure, size, and layout as Game Cards on Home Page */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-        {/* 1. INFOSYS - COMING SOON / LAUNCHING 5TH SEPT */}
+        {/* 1. INFOSYS - LOCKED / LAUNCHING 5TH SEPT */}
         <div className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
           {/* Visual Header matching GameCard h-40 */}
           <div className="h-40 flex items-center justify-center relative overflow-hidden bg-slate-900">
@@ -85,27 +84,16 @@ export const CompanyCardsSection: React.FC = () => {
               </Badge>
             </div>
 
-            {/* Bottom Action Row - Coming Soon with subtle internal tester link */}
+            {/* Bottom Action Row - Locked, Zero Links */}
             <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between text-neutral-400">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                   Coming Soon
                 </span>
-                <Link 
-                  to="/company/infosys"
-                  className="text-[10px] text-primary-600 hover:text-primary-700 font-bold hover:underline"
-                  title="Direct internal preview for testing"
-                >
-                  (Tester Preview →)
-                </Link>
               </div>
-              <Link
-                to="/company/infosys"
-                className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-400 hover:bg-primary-50 hover:text-primary-600 flex items-center justify-center shrink-0 transition-colors"
-                title="Open tester preview"
-              >
+              <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center shrink-0">
                 <Lock size={13} />
-              </Link>
+              </div>
             </div>
           </div>
         </div>

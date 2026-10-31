@@ -21,6 +21,9 @@ import { AdBanner } from '../../components/ui/AdBanner';
 import infosysLogo from '../../assets/infosys-logo.jpg';
 import gecMysoreImg from '../../assets/gec-mysore.jpg';
 
+// SET TO TRUE ON 5TH SEPT TO UNLOCK PUBLIC ACCESS
+const IS_OFFICIALLY_LAUNCHED = false;
+
 export const InfosysPrep: React.FC = () => {
   const { user, signInWithGoogle } = useAuth();
   const [showSignInModal, setShowSignInModal] = useState(false);
@@ -170,7 +173,62 @@ export const InfosysPrep: React.FC = () => {
         </div>
       </div>
 
-      {/* Top Navigation Bar: Drive Flow vs Guide vs Question Bank */}
+      {/* LOCKED STATE VIEW UNTIL 5TH SEPT */}
+      {!IS_OFFICIALLY_LAUNCHED ? (
+        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+          <div className="bg-white rounded-3xl border border-neutral-200/80 shadow-xl p-8 sm:p-12 flex flex-col items-center">
+            
+            <div className="w-20 h-20 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-amber-600 mb-6 shadow-inner">
+              <Lock size={36} />
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider mb-4 border border-amber-200">
+              <Clock size={13} /> Official Launch on 5th September
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight mb-4">
+              Infosys Systems Engineer Mock Drive
+            </h2>
+
+            <p className="text-neutral-600 text-sm sm:text-base max-w-xl leading-relaxed mb-8">
+              We are currently completing pattern calibration, question banks, and AI interview simulations for the upcoming campus recruitment season. All mock tests and recruiter interview rounds will unlock for all students on <strong>5th September</strong>.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg mb-8 text-left">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Round 1</span>
+                <span className="text-sm font-bold text-slate-800">54 Qs Online Aptitude</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Round 2</span>
+                <span className="text-sm font-bold text-slate-800">AI Technical Panel</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Round 3</span>
+                <span className="text-sm font-bold text-slate-800">HR Discussion</span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <a
+                href="/games"
+                className="px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2"
+              >
+                Practice Aptitude Games <ArrowRight size={16} />
+              </a>
+              <a
+                href="/"
+                className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-all"
+              >
+                Back to Home
+              </a>
+            </div>
+
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Top Navigation Bar: Drive Flow vs Guide vs Question Bank */}
       <div className="sticky top-0 z-30 bg-white border-b border-neutral-200/90 shadow-sm backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between py-2.5">
           
@@ -891,6 +949,9 @@ export const InfosysPrep: React.FC = () => {
         )}
 
       </div>
+
+        </>
+      )}
 
       {/* Ad Placement */}
       <div className="max-w-7xl mx-auto px-6 mt-12 w-full">
