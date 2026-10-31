@@ -58,6 +58,11 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
   const [isDictationActive, setIsDictationActive] = useState(true);
   const [interimText, setInterimText] = useState('');
   const [isSttSupported, setIsSttSupported] = useState(true);
+
+  // Synchronized Audio-to-Text Question Typewriter State
+  const [displayedQuestionText, setDisplayedQuestionText] = useState('');
+  const [isTypingQuestion, setIsTypingQuestion] = useState(false);
+  const typingIntervalRef = useRef<any>(null);
   const recognitionRef = useRef<any>(null);
   const isDictationActiveRef = useRef(true);
   isDictationActiveRef.current = isDictationActive;
@@ -567,14 +572,39 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       .trim();
   };
 
-  // Speaks interview questions in confident Indian English
+  // Speaks interview questions in confident Indian English while typing the question in sync
   const speakQuestion = (text: string) => {
-    if (isMuted || !('speechSynthesis' in window)) return;
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
 
-    window.speechSynthesis.cancel();
+    setDisplayedQuestionText('');
+    setIsTypingQuestion(true);
+
+    const sanitized = cleanSpeechText(text);
+
+    // If muted or speech synthesis unsupported: run smooth typewriter fallback
+    if (isMuted || !('speechSynthesis' in window)) {
+      let charIdx = 0;
+      typingIntervalRef.current = setInterval(() => {
+        charIdx += 3;
+        if (charIdx >= text.length) {
+          setDisplayedQuestionText(text);
+          setIsTypingQuestion(false);
+          clearInterval(typingIntervalRef.current);
+          typingIntervalRef.current = null;
+        } else {
+          setDisplayedQuestionText(text.slice(0, charIdx));
+        }
+      }, 35);
+      return;
+    }
 
     setTimeout(() => {
-      const sanitized = cleanSpeechText(text);
       const utterance = new SpeechSynthesisUtterance(sanitized);
       
       const activeVoice = selectedVoice || availableVoices[0];
@@ -586,11 +616,54 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       utterance.rate = 0.93;
       utterance.pitch = 1.0;
 
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
+      let boundaryFired = false;
+      const words = text.split(' ');
+      let wordIdx = 0;
+
+      // 1. Precise sync using word boundary events
+      utterance.onboundary = (event: any) => {
+        boundaryFired = true;
+        if (event.name === 'word' || typeof event.charIndex === 'number') {
+          const charEnd = Math.min(text.length, event.charIndex + (event.charLength || 4));
+          setDisplayedQuestionText(text.slice(0, charEnd));
+        }
+      };
+
+      // 2. Fallback word-by-word pacer (if browser does not emit boundary events)
+      const wordDelay = 270;
+      typingIntervalRef.current = setInterval(() => {
+        if (!boundaryFired && isTypingQuestion) {
+          wordIdx++;
+          if (wordIdx <= words.length) {
+            setDisplayedQuestionText(words.slice(0, wordIdx).join(' '));
+          }
+        }
+      }, wordDelay);
+
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setIsTypingQuestion(true);
+      };
+
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setIsTypingQuestion(false);
+        setDisplayedQuestionText(text);
+        if (typingIntervalRef.current) {
+          clearInterval(typingIntervalRef.current);
+          typingIntervalRef.current = null;
+        }
+      };
+
       utterance.onerror = (e) => {
         console.warn('Speech error:', e);
         setIsSpeaking(false);
+        setIsTypingQuestion(false);
+        setDisplayedQuestionText(text);
+        if (typingIntervalRef.current) {
+          clearInterval(typingIntervalRef.current);
+          typingIntervalRef.current = null;
+        }
       };
 
       window.speechSynthesis.speak(utterance);
@@ -630,11 +703,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     await requestFullscreen();
     await startCamera();
 
-    const roundTitle = activeRound === 'technical' 
-      ? 'Infosys Systems Engineer Technical Interview' 
-      : 'Infosys Systems Engineer HR and Behavioral Interview';
-      
-    speakQuestion(`Welcome to your ${roundTitle}. I am ${recruiter.name}. Let us begin with your first question. ${currentQuestion.question}`);
+    speakQuestion(currentQuestion.question);
   };
 
   const handleNextQuestion = () => {
@@ -661,6 +730,10 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     }
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
+    }
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
     }
     stopCamera();
     if (recognitionRef.current) {
@@ -1042,9 +1115,14 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                   </span>
                 </div>
 
-                <p className="text-base sm:text-lg font-bold text-white leading-relaxed mb-3">
-                  "{currentQuestion.question}"
-                </p>
+                <div className="min-h-[4rem] mb-3 flex items-start">
+                  <p className="text-base sm:text-lg font-bold text-white leading-relaxed">
+                    "{isTypingQuestion ? displayedQuestionText : (displayedQuestionText || currentQuestion.question)}"
+                    {isTypingQuestion && (
+                      <span className="inline-block w-2 h-5 bg-primary-400 ml-1.5 animate-pulse align-middle rounded-sm shadow-sm shadow-primary-400" />
+                    )}
+                  </p>
+                </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
                   <button
