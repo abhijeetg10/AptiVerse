@@ -9,6 +9,7 @@ import FeedbackModal from '../components/ui/FeedbackModal';
 import { AdBanner } from '../components/ui/AdBanner';
 import { RatingBadge } from '../components/ui/RatingBadge';
 import { CompanyCardsSection } from '../components/company/CompanyCardsSection';
+import { LaunchEventBanner } from '../components/home/LaunchEventBanner';
 
 const Home = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -25,9 +26,18 @@ const Home = () => {
           
           {/* Left: Content */}
           <div className="flex flex-col items-start gap-6 relative z-10">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-primary-100 text-primary-600 text-xs font-semibold shadow-sm">
-              <Gamepad2 size={14} />
-              Gamified Aptitude Practice Platform
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-primary-100 text-primary-600 text-xs font-semibold shadow-sm">
+                <Gamepad2 size={14} />
+                Gamified Aptitude Practice Platform
+              </div>
+              <a 
+                href="#launch-event-banner"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-purple-500/10 border border-amber-300 text-amber-900 text-xs font-bold shadow-sm hover:bg-amber-100/60 transition-all cursor-pointer"
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <span>✨ Launching on 5th Sept • Live Poll & Ideas</span>
+              </a>
             </div>
             
             <h1 className="text-5xl lg:text-[64px] leading-[1.1] font-extrabold tracking-tight text-neutral-900">
@@ -367,8 +377,15 @@ const Home = () => {
         </div>
       </section>
 
+      {/* 5th Sept Launch Event Announcement & Community Poll */}
+      <div id="launch-event-banner">
+        <LaunchEventBanner />
+      </div>
+
       {/* Target Company Mock Tests & AI Interviews */}
-      <CompanyCardsSection />
+      <div id="target-company-drives">
+        <CompanyCardsSection />
+      </div>
 
       {/* Ad placement 2 */}
       <AdBanner dataAdSlot="auto" />

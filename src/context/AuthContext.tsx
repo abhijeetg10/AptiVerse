@@ -51,25 +51,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const metaName = session?.user?.user_metadata?.full_name || '';
 
     if (data && !error) {
+      const resolvedEmail = data.email || session?.user?.email || '';
+
+      // Auto-heal: If database profile email is missing, sync it from active auth session
+      if (session?.user?.email && (!data.email || data.email !== session.user.email)) {
+        supabase
+          .from('profiles')
+          .update({ email: session.user.email })
+          .eq('id', userId)
+          .then(
+            () => {},
+            (err) => console.warn('Email auto-sync non-blocking notice:', err)
+          );
+      }
+
       setUser({
         id: data.id,
         name: data.name || metaName || '',
         college: data.college || '',
         department: (data as any).department || metaDept || '',
-        email: data.email || session?.user?.email,
+        email: resolvedEmail,
         avatar_url: data.avatar_url || session?.user?.user_metadata?.avatar_url,
         role: data.role || 'user',
         is_blocked: data.is_blocked || false,
         warning_message: (data as any)?.warning_message || null,
       });
     } else {
-      // If profile doesn't exist yet, seed with auth user metadata
+      // If profile doesn't exist yet, seed with auth user metadata and auto-create
+      const resolvedEmail = session?.user?.email || '';
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            name: metaName,
+            email: resolvedEmail,
+            college: session.user.user_metadata?.college || '',
+            role: 'user',
+            is_blocked: false
+          })
+          .then(
+            () => {},
+            (err) => console.warn('Profile auto-seed notice:', err)
+          );
+      }
+
       setUser({
         id: userId,
         name: metaName,
         college: session?.user?.user_metadata?.college || '',
         department: metaDept || '',
-        email: session?.user?.email,
+        email: resolvedEmail,
         avatar_url: session?.user?.user_metadata?.avatar_url,
         role: 'user',
       });
@@ -169,6 +201,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .maybeSingle();
 
     const avatar_url = authUser?.user_metadata?.avatar_url || user?.avatar_url || null;
+    const userEmail = session?.user?.email || authUser?.email || user?.email;
 
     let error: any = null;
     const payloadWithDept: any = { 
@@ -177,6 +210,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       avatar_url, 
       updated_at: new Date().toISOString() 
     };
+    if (userEmail) payloadWithDept.email = userEmail;
     if (department) payloadWithDept.department = department;
 
     const isColumnMissingError = (err: any) => {

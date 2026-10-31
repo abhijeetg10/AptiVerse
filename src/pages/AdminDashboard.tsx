@@ -148,6 +148,35 @@ export const AdminDashboard = () => {
   const [bugReports, setBugReports] = useState<any[]>([]);
   const [colleges, setColleges] = useState<any[]>([]);
   const [copiedSql, setCopiedSql] = useState(false);
+  const [syncingEmails, setSyncingEmails] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ text: string; success: boolean } | null>(null);
+
+  const handleSyncEmails = async () => {
+    setSyncingEmails(true);
+    setSyncResult(null);
+    try {
+      const { data, error } = await supabase.rpc('sync_all_profile_emails');
+      if (error) {
+        setSyncResult({
+          text: 'Notice: Run migration 20261031_sync_registered_emails.sql in Supabase SQL editor to backfill all emails from auth.users.',
+          success: false
+        });
+      } else {
+        setSyncResult({
+          text: `Success! Synced ${data ?? 0} user email(s) from auth.users into profiles table.`,
+          success: true
+        });
+        fetchTabData();
+      }
+    } catch (err: any) {
+      setSyncResult({
+        text: 'Run 20261031_sync_registered_emails.sql in Supabase SQL editor to sync emails.',
+        success: false
+      });
+    } finally {
+      setSyncingEmails(false);
+    }
+  };
 
   // 1. Fetch exact KPI metrics from DB
   const fetchOverviewMetrics = useCallback(async () => {
@@ -596,17 +625,39 @@ export const AdminDashboard = () => {
           </button>
         </div>
         
-        <div className="relative w-full sm:w-64">
-           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-           <input 
-             type="text" 
-             placeholder="Search database..." 
-             value={searchTerm}
-             onChange={(e) => setSearchTerm(e.target.value)}
-             className="w-full pl-10 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-medium focus:outline-none focus:border-primary-500 focus:bg-white transition-colors" 
-           />
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {activeTab === 'users' && (
+            <button
+              onClick={handleSyncEmails}
+              disabled={syncingEmails}
+              className="flex items-center gap-1.5 px-3 py-2 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-xs font-semibold transition-colors border border-primary-200 disabled:opacity-50 shrink-0"
+              title="Synchronize registered student emails from auth into profiles table"
+            >
+              <RefreshCw size={13} className={syncingEmails ? 'animate-spin' : ''} />
+              {syncingEmails ? 'Syncing...' : 'Sync Registered Emails'}
+            </button>
+          )}
+
+          <div className="relative w-full sm:w-64">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <input 
+              type="text" 
+              placeholder="Search database..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-medium focus:outline-none focus:border-primary-500 focus:bg-white transition-colors" 
+            />
+          </div>
         </div>
       </div>
+
+      {/* Sync result notification banner */}
+      {syncResult && (
+        <div className={`p-3 rounded-xl text-xs font-medium flex items-center justify-between ${syncResult.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
+          <span>{syncResult.text}</span>
+          <button onClick={() => setSyncResult(null)} className="text-xs font-bold underline ml-2">Dismiss</button>
+        </div>
+      )}
 
       {/* Content Table Container */}
       <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden min-h-[400px] flex flex-col justify-between">
