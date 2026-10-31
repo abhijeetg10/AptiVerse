@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Building2, Sparkles, ArrowRight, Clock, Video, CheckCircle2,
-  Lock, BookOpen, FileText, Award, Compass, MapPin
+  Building2, Sparkles, Clock, Lock, MapPin
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import gecMysoreImg from '../../assets/gec-mysore.jpg';
@@ -33,26 +32,23 @@ export const CompanyCardsSection: React.FC = () => {
       {/* Cards Grid - Exact same structure, size, and layout as Game Cards on Home Page */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-        {/* 1. INFOSYS - ACTIVE (Uses Mysore GEC Training Center Image) */}
-        <Link
-          to="/company/infosys"
-          className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full"
-        >
+        {/* 1. INFOSYS - COMING SOON / LAUNCHING 5TH SEPT */}
+        <div className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
           {/* Visual Header matching GameCard h-40 */}
           <div className="h-40 flex items-center justify-center relative overflow-hidden bg-slate-900">
             {/* Mysore Training Center Photo */}
             <img 
               src={gecMysoreImg} 
               alt="Infosys GEC Mysuru Campus" 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-95"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-90"
             />
             {/* Subtle Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
 
-            {/* Live Indicator */}
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-extrabold shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-              ACTIVE DRIVE
+            {/* Launching 5th Sept Indicator */}
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/95 backdrop-blur-md text-white text-[10px] font-extrabold shadow-sm">
+              <Clock size={11} className="text-white" />
+              LAUNCHING 5TH SEPT
             </div>
 
             {/* Package Tag */}
@@ -62,17 +58,17 @@ export const CompanyCardsSection: React.FC = () => {
 
             {/* Training Center Caption */}
             <div className="absolute bottom-2.5 left-3 text-white text-xs font-bold drop-shadow flex items-center gap-1.5">
-              <MapPin size={12} className="text-rose-400" />
+              <MapPin size={12} className="text-amber-400" />
               <span>GEC Mysuru Campus</span>
             </div>
           </div>
 
           {/* White Card Body matching GameCard */}
           <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-900 mb-0.5 group-hover:text-primary-600 transition-colors">
+            <h3 className="font-bold text-neutral-900 mb-0.5 group-hover:text-amber-600 transition-colors">
               Infosys Systems Engineer
             </h3>
-            <span className="text-[11px] font-semibold text-primary-600 block mb-2">
+            <span className="text-[11px] font-semibold text-amber-600 block mb-2">
               On-Campus & Off-Campus 2025–2026
             </span>
             <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
@@ -81,27 +77,38 @@ export const CompanyCardsSection: React.FC = () => {
 
             {/* Badges Strip */}
             <div className="flex items-center gap-2 mb-4">
-              <Badge variant="success" className="text-[10px] px-2 py-0.5 font-bold">
+              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 font-bold bg-amber-50 text-amber-700 border border-amber-200">
                 54 Qs • 100m
               </Badge>
               <Badge variant="neutral" className="text-[10px] px-2 py-0.5 flex items-center gap-1">
-                <Sparkles size={11} className="text-primary-500" /> 4 Mock Packs + AI
+                <Sparkles size={11} className="text-amber-500" /> 4 Mock Packs + AI
               </Badge>
             </div>
 
-            {/* Bottom Action Row - Exactly matching GameCard */}
-            <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider group-hover:text-primary-600 transition-colors">
-                  Prepare Now
+            {/* Bottom Action Row - Coming Soon with subtle internal tester link */}
+            <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between text-neutral-400">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
+                  Coming Soon
                 </span>
+                <Link 
+                  to="/company/infosys"
+                  className="text-[10px] text-primary-600 hover:text-primary-700 font-bold hover:underline"
+                  title="Direct internal preview for testing"
+                >
+                  (Tester Preview →)
+                </Link>
               </div>
-              <div className="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-md shadow-primary-500/30 group-hover:bg-primary-600 transition-colors shrink-0">
-                <ArrowRight size={14} />
-              </div>
+              <Link
+                to="/company/infosys"
+                className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-400 hover:bg-primary-50 hover:text-primary-600 flex items-center justify-center shrink-0 transition-colors"
+                title="Open tester preview"
+              >
+                <Lock size={13} />
+              </Link>
             </div>
           </div>
-        </Link>
+        </div>
 
         {/* 2. TCS NQT - UPCOMING */}
         <div className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">

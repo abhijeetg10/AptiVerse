@@ -49,6 +49,16 @@ export const InfosysPrep: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans pb-24">
       
+      {/* Pre-Release Testing / Calibration Banner */}
+      <div className="bg-gradient-to-r from-amber-600 via-indigo-700 to-primary-700 text-white px-4 py-2 text-xs text-center font-medium shadow-sm flex items-center justify-center gap-2">
+        <span className="px-2 py-0.5 rounded bg-white/20 text-white font-bold uppercase text-[10px] tracking-wider">
+          Pre-Release Beta
+        </span>
+        <span>
+          Internal testing & difficulty calibration mode. Official public launch scheduled for <strong>5th September</strong>.
+        </span>
+      </div>
+
       {/* Hero Header */}
       <div className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white pt-8 pb-12 px-6 border-b border-slate-800 relative overflow-hidden">
         {/* Glow backdrop */}
@@ -927,3 +937,4 @@ export const InfosysPrep: React.FC = () => {
 };
 
 export default InfosysPrep;
+
