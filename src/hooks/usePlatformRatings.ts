@@ -12,14 +12,13 @@ let cachedRatings: { total: number; average: number } | null = null;
 
 export const usePlatformRatings = () => {
   const [ratings, setRatings] = useState<PlatformRatings>({
-    total: cachedRatings?.total ?? 417,
-    average: cachedRatings?.average ?? 4.2,
+    total: cachedRatings?.total ?? 0,
+    average: cachedRatings?.average ?? 5.0,
     loading: !cachedRatings,
   });
 
   useEffect(() => {
     if (cachedRatings) {
-      setRatings({ ...cachedRatings, loading: false });
       return;
     }
 
@@ -36,7 +35,7 @@ export const usePlatformRatings = () => {
           const valid = data.filter((d) => d.rating && d.rating > 0);
           const total = valid.length;
           const sum = valid.reduce((acc, curr) => acc + curr.rating, 0);
-          const average = total > 0 ? Number((sum / total).toFixed(1)) : 4.2;
+          const average = total > 0 ? Number((sum / total).toFixed(1)) : 5.0;
 
           const result = { total, average };
           cachedRatings = result;
@@ -44,12 +43,14 @@ export const usePlatformRatings = () => {
             setRatings({ total, average, loading: false });
           }
         } else {
-          if (isMounted) setRatings({ total: 417, average: 4.2, loading: false });
+          const result = { total: 0, average: 5.0 };
+          cachedRatings = result;
+          if (isMounted) setRatings({ total: 0, average: 5.0, loading: false });
         }
       } catch (err) {
         console.error('Error fetching platform ratings:', err);
         if (isMounted) {
-          setRatings({ total: 417, average: 4.2, loading: false });
+          setRatings({ total: 0, average: 5.0, loading: false });
         }
       }
     };

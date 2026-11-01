@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { 
-  Building2, BookOpen, Award, Sparkles, Video, Clock, CheckCircle2, 
-  MapPin, GraduationCap, ChevronRight, AlertCircle, FileText, ChevronDown, 
-  Search, ShieldCheck, ArrowRight, UserCheck, Play, Lock, LogIn, Target, Zap,
-  Code2, Trophy
+  Building2, BookOpen, Video, Clock, CheckCircle2, 
+  MapPin, GraduationCap, ChevronRight, FileText, ChevronDown, 
+  Search, ShieldCheck, ArrowRight, UserCheck, Play, Lock, LogIn, Target,
+  Code2, Trophy, Flame, Sparkles
 } from 'lucide-react';
 import { 
-  INFOSYS_COMPANY_OVERVIEW, 
-  INFOSYS_SECTIONS_CONFIG, 
-  INFOSYS_SYLLABUS, 
   TECHNICAL_INTERVIEW_PROMPTS, 
   HR_INTERVIEW_PROMPTS,
   type InterviewPrompt 
@@ -17,27 +14,24 @@ import { ALL_INFOSYS_MOCK_TESTS, type MockTestBundle } from '../../data/infosysM
 import { useAuth } from '../../context/AuthContext';
 import { InteractiveMockTest } from '../../components/company/InteractiveMockTest';
 import { AIMockInterviewRoom } from '../../components/company/AIMockInterviewRoom';
+import { InfosysGuideBlog } from '../../components/company/InfosysGuideBlog';
 import { AdBanner } from '../../components/ui/AdBanner';
+import { DailyChallengeModal } from '../../components/daily/DailyChallengeModal';
 import infosysLogo from '../../assets/infosys-logo.jpg';
 import gecMysoreImg from '../../assets/gec-mysore.jpg';
-
-// SET TO TRUE ON 5TH SEPT TO UNLOCK PUBLIC ACCESS
-const IS_OFFICIALLY_LAUNCHED = false;
 
 export const InfosysPrep: React.FC = () => {
   const { user, signInWithGoogle } = useAuth();
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [selectedMockBundle, setSelectedMockBundle] = useState<MockTestBundle | null>(null);
+  const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
 
-  // Primary view: 'timeline-test' (the mock test & hiring timeline), 'guide' (the blog/syllabus), or 'qbank'
-  const [activeTab, setActiveTab] = useState<'timeline-test' | 'guide' | 'qbank'>('timeline-test');
+  // Primary view: 'guide' (Recruitment Guide Blog first!), 'timeline-test' (Mock Tests), or 'qbank'
+  const [activeTab, setActiveTab] = useState<'guide' | 'timeline-test' | 'qbank'>('guide');
   
   // Hiring Journey Timeline Step (1: Round 1 Online Test, 2: Round 2 Tech Interview, 3: Round 3 HR Interview)
   const [activeRoundStep, setActiveRoundStep] = useState<1 | 2 | 3>(1);
 
-  // Guide search & accordion
-  const [syllabusSearch, setSyllabusSearch] = useState('');
-  const [expandedSection, setExpandedSection] = useState<string | null>(INFOSYS_SYLLABUS[0].section);
   const [selectedInterviewCategory, setSelectedInterviewCategory] = useState<string>('All');
 
   const allInterviewQuestions: InterviewPrompt[] = [
@@ -52,13 +46,13 @@ export const InfosysPrep: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans pb-24">
       
-      {/* Pre-Release Testing / Calibration Banner */}
-      <div className="bg-gradient-to-r from-amber-600 via-indigo-700 to-primary-700 text-white px-4 py-2 text-xs text-center font-medium shadow-sm flex items-center justify-center gap-2">
+      {/* Recruitment Guide & Prep Banner */}
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-primary-700 text-white px-4 py-2 text-xs text-center font-medium shadow-sm flex items-center justify-center gap-2">
         <span className="px-2 py-0.5 rounded bg-white/20 text-white font-bold uppercase text-[10px] tracking-wider">
-          Pre-Release Beta
+          Placement Track
         </span>
         <span>
-          Internal testing & difficulty calibration mode. Official public launch scheduled for <strong>5th September</strong>.
+          Complete recruitment blueprint: Start with the <strong>Syllabus & Pattern Guide</strong>, then take the <strong>Full Mock Test</strong>.
         </span>
       </div>
 
@@ -73,7 +67,7 @@ export const InfosysPrep: React.FC = () => {
           <div className="flex items-center gap-2 text-xs text-slate-400 mb-6">
             <a href="/" className="hover:text-white transition-colors">Home</a>
             <ChevronRight size={12} />
-            <a href="/games" className="hover:text-white transition-colors">Aptitude Games</a>
+            <a href="/games" className="hover:text-white transition-colors">Practice</a>
             <ChevronRight size={12} />
             <span className="text-primary-400 font-semibold">Infosys Systems Engineer Placement Drive</span>
           </div>
@@ -120,6 +114,42 @@ export const InfosysPrep: React.FC = () => {
                   <CheckCircle2 size={13} className="text-teal-400" />
                   <span>No Negative Marking</span>
                 </div>
+              </div>
+
+              {/* Primary Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setActiveTab('guide');
+                    const el = document.getElementById('company-tab-nav');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                    activeTab === 'guide'
+                      ? 'bg-white text-slate-900 shadow-md scale-102'
+                      : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                  }`}
+                >
+                  <BookOpen size={14} className="text-primary-500" />
+                  <span>1. Read Recruitment Guide</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTab('timeline-test');
+                    const el = document.getElementById('company-tab-nav');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                    activeTab === 'timeline-test'
+                      ? 'bg-primary-600 text-white shadow-md shadow-primary-600/30'
+                      : 'bg-primary-600/90 text-white hover:bg-primary-600 shadow-sm'
+                  }`}
+                >
+                  <Play size={14} className="fill-white" />
+                  <span>2. Take Mock Test & AI Interview</span>
+                  <ArrowRight size={13} />
+                </button>
               </div>
             </div>
 
@@ -173,80 +203,14 @@ export const InfosysPrep: React.FC = () => {
         </div>
       </div>
 
-      {/* LOCKED STATE VIEW UNTIL 5TH SEPT */}
-      {!IS_OFFICIALLY_LAUNCHED ? (
-        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
-          <div className="bg-white rounded-3xl border border-neutral-200/80 shadow-xl p-8 sm:p-12 flex flex-col items-center">
-            
-            <div className="w-20 h-20 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-amber-600 mb-6 shadow-inner">
-              <Lock size={36} />
-            </div>
-
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider mb-4 border border-amber-200">
-              <Clock size={13} /> Official Launch on 5th September
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight mb-4">
-              Infosys Systems Engineer Mock Drive
-            </h2>
-
-            <p className="text-neutral-600 text-sm sm:text-base max-w-xl leading-relaxed mb-8">
-              We are currently completing pattern calibration, question banks, and AI interview simulations for the upcoming campus recruitment season. All mock tests and recruiter interview rounds will unlock for all students on <strong>5th September</strong>.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg mb-8 text-left">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Round 1</span>
-                <span className="text-sm font-bold text-slate-800">54 Qs Online Aptitude</span>
-              </div>
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Round 2</span>
-                <span className="text-sm font-bold text-slate-800">AI Technical Panel</span>
-              </div>
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Round 3</span>
-                <span className="text-sm font-bold text-slate-800">HR Discussion</span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <a
-                href="/games"
-                className="px-6 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2"
-              >
-                Practice Aptitude Games <ArrowRight size={16} />
-              </a>
-              <a
-                href="/"
-                className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition-all"
-              >
-                Back to Home
-              </a>
-            </div>
-
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Top Navigation Bar: Drive Flow vs Guide vs Question Bank */}
-      <div className="sticky top-0 z-30 bg-white border-b border-neutral-200/90 shadow-sm backdrop-blur-md">
+      {/* Top Navigation Bar: Guide First, then Mock Test, then Question Bank */}
+      <div id="company-tab-nav" className="sticky top-0 z-30 bg-white border-b border-neutral-200/90 shadow-sm backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between py-2.5">
           
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('timeline-test')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                activeTab === 'timeline-test'
-                  ? 'bg-primary-600 text-white shadow-sm'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-              }`}
-            >
-              <Play size={14} className="fill-current" /> Complete Recruitment Drive & Mock Test
-            </button>
-
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setActiveTab('guide')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'guide'
                   ? 'bg-primary-600 text-white shadow-sm'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
@@ -256,8 +220,19 @@ export const InfosysPrep: React.FC = () => {
             </button>
 
             <button
+              onClick={() => setActiveTab('timeline-test')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'timeline-test'
+                  ? 'bg-primary-600 text-white shadow-sm'
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+              }`}
+            >
+              <Play size={14} className="fill-current" /> Complete Recruitment Drive & Mock Test
+            </button>
+
+            <button
               onClick={() => setActiveTab('qbank')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'qbank'
                   ? 'bg-primary-600 text-white shadow-sm'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
@@ -266,6 +241,14 @@ export const InfosysPrep: React.FC = () => {
               <FileText size={14} /> Interview Question Bank ({allInterviewQuestions.length})
             </button>
           </div>
+
+          <button
+            onClick={() => setIsDailyChallengeOpen(true)}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ml-2"
+          >
+            <Flame size={14} className="fill-white" />
+            <span className="hidden sm:inline">Today's</span> Daily Challenge
+          </button>
 
         </div>
       </div>
@@ -305,7 +288,7 @@ export const InfosysPrep: React.FC = () => {
                       const raw = localStorage.getItem(`aptiverse_infosys_score_${userKey}_${bundle.id}`) ||
                                   localStorage.getItem(`aptiverse_infosys_score_guest_${bundle.id}`);
                       if (raw) savedScore = JSON.parse(raw);
-                    } catch (e) {}
+                    } catch {}
 
                     // Pack Theme Config matching design reference
                     const packThemes = {
@@ -691,174 +674,16 @@ export const InfosysPrep: React.FC = () => {
         )}
 
         {/* =======================================================
-            TAB 2: RECRUITMENT GUIDE & SYLLABUS BLOG
+            TAB 1: RECRUITMENT GUIDE & SYLLABUS BLOG (FIRST VIEW)
            ======================================================= */}
         {activeTab === 'guide' && (
-          <div className="space-y-10 animate-fadeIn">
-            
-            {/* Overview */}
-            <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-sm">
-              <div className="flex items-center gap-2 text-primary-600 font-bold text-xs uppercase tracking-wider mb-2">
-                <Building2 size={16} /> Company & Role Overview
-              </div>
-              <h2 className="text-2xl font-extrabold text-neutral-900 mb-4">
-                Infosys Systems Engineer Recruitment Blueprint
-              </h2>
-              
-              <div className="prose prose-slate max-w-none text-neutral-600 text-sm leading-relaxed space-y-4">
-                <p>
-                  <strong>Infosys Limited</strong> is one of India's largest multinational technology consulting firms. Fresh engineering graduates (B.Tech, B.E., M.Tech) and MCA candidates join as <strong>Systems Engineer (Trainee)</strong> at a reference compensation of <strong>INR 3.6 LPA</strong>.
-                </p>
-                <p>
-                  The recruitment process is known for rigorous sectional filtering in Round 1: candidate performance is measured independently in each section, and failure to meet the cutoff in any one section results in elimination regardless of performance in other sections.
-                </p>
-              </div>
-
-              {/* Training at GEC Mysuru */}
-              <div className="mt-6 p-5 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-blue-900 leading-relaxed">
-                <div className="font-bold text-sm text-blue-950 mb-1 flex items-center gap-1.5">
-                  <GraduationCap size={16} className="text-blue-600" />
-                  Foundation Program at GEC Mysuru (19 to 23 Weeks)
-                </div>
-                {INFOSYS_COMPANY_OVERVIEW.trainingInfo} Selected freshers receive specialized instruction in enterprise full-stack software development, cloud infrastructure, automated testing, and agile workflows.
-              </div>
-            </div>
-
-            {/* Assessment Blueprint Comparison */}
-            <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-sm">
-              <div className="flex items-center gap-2 text-primary-600 font-bold text-xs uppercase tracking-wider mb-2">
-                <FileText size={16} /> Format A Official Blueprint
-              </div>
-              <h2 className="text-2xl font-extrabold text-neutral-900 mb-2">
-                Round 1 Sectional Breakdown & Exam Structure
-              </h2>
-              <p className="text-xs text-neutral-500 mb-4">
-                Infosys has section-wise cutoffs, so prepare well for all sections.
-              </p>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-neutral-100 text-neutral-700 font-bold border-b border-neutral-200">
-                      <th className="p-3.5">Section Name</th>
-                      <th className="p-3.5">Questions</th>
-                      <th className="p-3.5">Time Allotted</th>
-                      <th className="p-3.5">Section Evaluation</th>
-                      <th className="p-3.5">Negative Marking</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-200">
-                    {INFOSYS_SECTIONS_CONFIG.map(sec => (
-                      <tr key={sec.id} className="hover:bg-neutral-50">
-                        <td className="p-3.5 font-bold text-neutral-900">{sec.name}</td>
-                        <td className="p-3.5 font-mono">{sec.questionCount} Qs</td>
-                        <td className="p-3.5 font-mono">{sec.timeMinutes} mins</td>
-                        <td className="p-3.5 text-primary-700 font-medium">Individual Sectional Cutoff Applies</td>
-                        <td className="p-3.5 text-neutral-500">None (0)</td>
-                      </tr>
-                    ))}
-                    <tr className="bg-neutral-50 font-extrabold text-neutral-900">
-                      <td className="p-3.5">Total</td>
-                      <td className="p-3.5 font-mono">54 Questions</td>
-                      <td className="p-3.5 font-mono">100 Minutes</td>
-                      <td className="p-3.5 text-emerald-700">Must Clear All 5 Sections</td>
-                      <td className="p-3.5 text-neutral-500">-</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Searchable Topic Syllabus */}
-            <div className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                  <div className="flex items-center gap-2 text-primary-600 font-bold text-xs uppercase tracking-wider mb-1">
-                    <BookOpen size={16} /> Complete Syllabus
-                  </div>
-                  <h2 className="text-2xl font-extrabold text-neutral-900">
-                    Syllabus Topics Covered in AptiVerse
-                  </h2>
-                </div>
-
-                <div className="relative w-full sm:w-64">
-                  <Search size={14} className="absolute left-3 top-3 text-neutral-400" />
-                  <input
-                    type="text"
-                    value={syllabusSearch}
-                    onChange={(e) => setSyllabusSearch(e.target.value)}
-                    placeholder="Search topics (e.g. Loops, Seating)..."
-                    className="w-full pl-9 pr-3 py-2 bg-neutral-50 text-xs rounded-xl border border-neutral-200 focus:outline-none focus:border-primary-500"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {INFOSYS_SYLLABUS.map((sec: any) => {
-                  const isExpanded = expandedSection === sec.section;
-                  const filteredTopics = sec.topics.filter((t: string) => 
-                    t.toLowerCase().includes(syllabusSearch.toLowerCase())
-                  );
-
-                  if (syllabusSearch && filteredTopics.length === 0) return null;
-
-                  return (
-                    <div key={sec.section} className="border border-neutral-200 rounded-2xl overflow-hidden">
-                      <button
-                        onClick={() => setExpandedSection(isExpanded ? null : sec.section)}
-                        className="w-full p-4 bg-neutral-50/70 hover:bg-neutral-100 flex items-center justify-between text-left transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-xs">
-                            {sec.section.charAt(0)}
-                          </div>
-                          <div>
-                            <span className="font-bold text-sm text-neutral-900">{sec.section}</span>
-                            <span className="text-xs text-neutral-500 ml-2">({sec.topics.length} key concepts)</span>
-                          </div>
-                        </div>
-
-                        <ChevronDown size={18} className={`text-neutral-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                      </button>
-
-                      {isExpanded && (
-                        <div className="p-5 bg-white border-t border-neutral-200 grid sm:grid-cols-2 md:grid-cols-3 gap-3">
-                          {filteredTopics.map((topic: string, tIdx: number) => (
-                            <div key={tIdx} className="flex items-center gap-2 p-2.5 rounded-xl bg-neutral-50 border border-neutral-100 text-xs text-neutral-700">
-                              <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                              <span>{topic}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-8 p-6 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <h4 className="font-bold text-base">Ready to test these topics in the official 54-question format?</h4>
-                  <p className="text-xs text-slate-300 mt-0.5">Experience exact section timers and strict cutoff evaluations.</p>
-                </div>
-                <button
-                  onClick={() => {
-                    setActiveTab('timeline-test');
-                    setActiveRoundStep(1);
-                  }}
-                  className="px-6 py-2.5 bg-primary-600 hover:bg-primary-500 font-bold text-xs rounded-xl shadow transition-all active:scale-95 shrink-0"
-                >
-                  Start Round 1 Assessment
-                </button>
-              </div>
-
-            </div>
-
-            <div className="p-4 rounded-xl bg-neutral-100 border border-neutral-200 text-xs text-neutral-500 text-center">
-              {INFOSYS_COMPANY_OVERVIEW.disclaimer}
-            </div>
-
-          </div>
+          <InfosysGuideBlog
+            onStartMockTest={() => {
+              setActiveTab('timeline-test');
+              setActiveRoundStep(1);
+              window.scrollTo({ top: 380, behavior: 'smooth' });
+            }}
+          />
         )}
 
         {/* =======================================================
@@ -950,9 +775,6 @@ export const InfosysPrep: React.FC = () => {
 
       </div>
 
-        </>
-      )}
-
       {/* Ad Placement */}
       <div className="max-w-7xl mx-auto px-6 mt-12 w-full">
         <AdBanner dataAdSlot="auto" />
@@ -992,6 +814,12 @@ export const InfosysPrep: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Daily Hard Challenge Modal */}
+      <DailyChallengeModal
+        isOpen={isDailyChallengeOpen}
+        onClose={() => setIsDailyChallengeOpen(false)}
+      />
 
     </div>
   );

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Clock, CheckCircle2, XCircle, RotateCcw, AlertTriangle, 
-  HelpCircle, ChevronRight, ChevronLeft, Bookmark, Award, BookOpen, 
-  ArrowRight, ShieldCheck, ShieldAlert, Sparkles, Video, Maximize2, Play, Lock, LogIn, ArrowLeft, UserCheck 
+  ChevronRight, ChevronLeft, Bookmark, Award, BookOpen, 
+  ArrowRight, ShieldCheck, ShieldAlert, Sparkles, Video, Maximize2, Play, Lock, LogIn, ArrowLeft, UserCheck,
+  Printer, AlertCircle
 } from 'lucide-react';
-import type { InfosysQuestion, SectionConfig } from '../../data/infosysPrepData';
+import type { InfosysQuestion } from '../../data/infosysPrepData';
 import { MOCK_TEST_1, type MockTestBundle } from '../../data/infosysMockTests';
 import { useAuth } from '../../context/AuthContext';
+import { CompulsoryFeedbackModal } from './CompulsoryFeedbackModal';
 import { supabase } from '../../lib/supabase';
 
 interface InteractiveMockTestProps {
@@ -43,7 +45,16 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
 
   const [sectionTimeLeft, setSectionTimeLeft] = useState(activeSectionConfig.timeMinutes * 60);
   const [isTestCompleted, setIsTestCompleted] = useState(false);
+  const [hasSubmittedFeedback, setHasSubmittedFeedback] = useState(false);
+  const [savedScoreRecordId, setSavedScoreRecordId] = useState<string | null>(null);
   const [speedMode, setSpeedMode] = useState(false);
+
+  // In-app Section & Exit Confirmation Modals (Replaces window.confirm to preserve full-screen)
+  const [sectionConfirmModal, setSectionConfirmModal] = useState<{
+    isOpen: boolean;
+    isFinal: boolean;
+  }>({ isOpen: false, isFinal: false });
+  const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
 
   // Compulsory Fullscreen states
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -167,15 +178,24 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
     // 2. Minimal DB insert if authenticated
     if (user?.id) {
       try {
-        await supabase.from('company_mock_scores').insert([{
+        const pct = allQuestions.length > 0 ? Number(((totalScore / allQuestions.length) * 100).toFixed(2)) : 0;
+        const candidateName = user?.name || localStorage.getItem('aptiverse_interview_candidate_name') || 'Candidate';
+        const { data } = await supabase.from('company_mock_scores').insert([{
           user_id: user.id,
+          candidate_name: candidateName,
           company: 'infosys',
           test_id: activeBundle.id,
+          test_title: activeBundle.title,
           score: totalScore,
           total_questions: allQuestions.length,
+          percentage: pct,
           sectional_scores: sectionalScores,
           cleared: isAllCleared
-        }]);
+        }]).select('id').maybeSingle();
+
+        if (data?.id) {
+          setSavedScoreRecordId(data.id);
+        }
       } catch (err) {
         console.warn('DB score save note (non-blocking):', err);
       }
@@ -183,16 +203,22 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   };
 
   const handleAdvanceSection = (isAuto: boolean = false) => {
+    if (isAuto) {
+      executeAdvanceSection();
+    } else {
+      const isFinal = currentSectionIdx + 1 >= sectionsConfig.length;
+      setSectionConfirmModal({
+        isOpen: true,
+        isFinal
+      });
+    }
+  };
+
+  const executeAdvanceSection = () => {
+    setSectionConfirmModal({ isOpen: false, isFinal: false });
     if (currentSectionIdx + 1 < sectionsConfig.length) {
-      if (!isAuto) {
-        const confirmMsg = `Are you sure you want to submit "${activeSectionConfig.name}"? You will NOT be able to return to this section once submitted.`;
-        if (!window.confirm(confirmMsg)) return;
-      }
       setCurrentSectionIdx(prev => prev + 1);
     } else {
-      if (!isAuto) {
-        if (!window.confirm(`This is the final section. Submit entire ${activeBundle.title}?`)) return;
-      }
       setIsTestCompleted(true);
       saveStudentMarks(selectedAnswers);
       if (document.fullscreenElement) {
@@ -241,16 +267,26 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   const allSectionsCleared = sectionalReport.every(sec => sec.cleared);
   const failedSections = sectionalReport.filter(sec => !sec.cleared);
 
+  // Current section quick counts for in-app confirmation modal
+  const currentSecQuestions = allQuestions.filter(q => q.section === activeSectionConfig.name);
+  const currentSecAnsweredCount = currentSecQuestions.filter(q => selectedAnswers[q.id] !== undefined).length;
+  const currentSecReviewCount = currentSecQuestions.filter(q => markedForReview[q.id]).length;
+  const currentSecUnansweredCount = currentSecQuestions.length - currentSecAnsweredCount;
+  const candidateName = user?.name || localStorage.getItem('aptiverse_interview_candidate_name') || 'Candidate';
+
   const handleExitTest = () => {
-    if (window.confirm("Are you sure you want to exit the assessment? Your progress in this attempt will be discarded.")) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen?.().catch(() => {});
-      }
-      setHasStarted(false);
-      setIsTestCompleted(false);
-      if (onBackToMockList) {
-        onBackToMockList();
-      }
+    setShowExitConfirmModal(true);
+  };
+
+  const executeExitTest = () => {
+    setShowExitConfirmModal(false);
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
+    setHasStarted(false);
+    setIsTestCompleted(false);
+    if (onBackToMockList) {
+      onBackToMockList();
     }
   };
 
@@ -261,6 +297,24 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
   return (
     <div className={containerClass}>
       
+      {/* Compulsory Feedback Modal after Test */}
+      {isTestCompleted && !hasSubmittedFeedback && (
+        <CompulsoryFeedbackModal
+          testTitle={activeBundle.title}
+          testId={activeBundle.id}
+          recordId={savedScoreRecordId}
+          scoreData={{
+            score: totalCorrect,
+            totalQuestions: totalQuestions,
+            percentage: overallPercentage,
+            sectionalScores: sectionalReport.reduce((acc, sec) => ({ ...acc, [sec.name]: sec.correctCount }), {}),
+            cleared: allSectionsCleared
+          }}
+          contextType="mock_test"
+          onSubmitted={() => setHasSubmittedFeedback(true)}
+        />
+      )}
+
       {/* Student Sign-In Compulsory Modal */}
       {showSignInModal && (
         <div className="fixed inset-0 z-[250] bg-black/85 backdrop-blur-md flex items-center justify-center p-6">
@@ -322,6 +376,101 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                 className="w-full sm:w-auto px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold rounded-2xl border border-slate-700 transition-colors text-sm"
               >
                 Exit Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* In-App Section Transition Confirmation Modal (Preserves full-screen with no window blur) */}
+      {sectionConfirmModal.isOpen && (
+        <div className="fixed inset-0 z-[220] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+          <div className="bg-[#11192e] border border-blue-500/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-white shadow-2xl relative">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+                <AlertTriangle size={24} className="text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-extrabold text-white">
+                  {sectionConfirmModal.isFinal ? 'Submit Final Assessment?' : `Submit Section: ${activeSectionConfig.name}?`}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {sectionConfirmModal.isFinal 
+                    ? 'This is the final section. Submitting will conclude your examination.' 
+                    : 'You will NOT be able to return to this section once submitted.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Current Section Stats */}
+            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-6">
+              <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Section Progress Summary</div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block mb-0.5">Answered</span>
+                  <span className="font-extrabold text-emerald-400 text-sm">{currentSecAnsweredCount} / {currentSecQuestions.length}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block mb-0.5">For Review</span>
+                  <span className="font-extrabold text-amber-400 text-sm">{currentSecReviewCount}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block mb-0.5">Unattempted</span>
+                  <span className={`font-extrabold text-sm ${currentSecUnansweredCount > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                    {currentSecUnansweredCount}
+                  </span>
+                </div>
+              </div>
+              {currentSecUnansweredCount > 0 && (
+                <div className="mt-2.5 text-[11px] text-amber-300/90 flex items-center gap-1.5 bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
+                  <AlertCircle size={13} className="shrink-0 text-amber-400" />
+                  <span>Notice: You have {currentSecUnansweredCount} unattempted questions in this section.</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-end gap-3">
+              <button
+                onClick={() => setSectionConfirmModal({ isOpen: false, isFinal: false })}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
+              >
+                Keep Reviewing Section
+              </button>
+              <button
+                onClick={executeAdvanceSection}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold shadow-lg shadow-primary-600/30 transition-all flex items-center justify-center gap-1.5"
+              >
+                <span>{sectionConfirmModal.isFinal ? 'Submit Final Assessment' : 'Confirm & Proceed to Next Section'}</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* In-App Exit Assessment Confirmation Modal */}
+      {showExitConfirmModal && (
+        <div className="fixed inset-0 z-[220] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+          <div className="bg-[#11192e] border border-red-500/30 rounded-3xl p-6 sm:p-8 max-w-md w-full text-white shadow-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mb-4 border border-red-500/20">
+              <AlertTriangle size={24} />
+            </div>
+            <h3 className="text-xl font-extrabold text-white mb-2">Exit Assessment?</h3>
+            <p className="text-xs text-slate-300 leading-relaxed mb-6">
+              Are you sure you want to exit? Your progress and answered questions in this mock test attempt will be discarded.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowExitConfirmModal(false)}
+                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
+              >
+                Continue Assessment
+              </button>
+              <button
+                onClick={executeExitTest}
+                className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-colors"
+              >
+                Yes, Exit Assessment
               </button>
             </div>
           </div>
@@ -503,6 +652,9 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                       </span>
                       <span className="text-slate-300 font-semibold bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-700/60">
                         Question {activeQuestionInSecIdx + 1} of {sectionQuestions.length}
+                      </span>
+                      <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 text-[11px] flex items-center gap-1">
+                        <Sparkles size={11} className="text-emerald-400" /> Previously Asked in Infosys Exam
                       </span>
                       <span className="text-slate-400 hidden sm:inline">• {currentQ.topic}</span>
                     </div>
@@ -736,14 +888,24 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                     : `In official Infosys screening, candidates must clear every section. You scored ${overallPercentage}%, but missed cutoff in: ${failedSections.map(f => f.name).join(', ')}. Review the solutions below and re-test.`}
                 </p>
 
-                {onProceedToTechnicalInterview && (
+                <div className="flex flex-wrap items-center gap-3 mt-6">
+                  {onProceedToTechnicalInterview && (
+                    <button
+                      onClick={onProceedToTechnicalInterview}
+                      className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-emerald-500/30 flex items-center gap-2 transition-all active:scale-95"
+                    >
+                      <Video size={18} /> {allSectionsCleared ? 'Proceed to Round 2 (Technical AI Interview)' : 'Continue to Round 2 (Technical AI Interview)'} <ArrowRight size={16} />
+                    </button>
+                  )}
+
                   <button
-                    onClick={onProceedToTechnicalInterview}
-                    className="mt-6 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-emerald-500/30 flex items-center gap-2 transition-all active:scale-95"
+                    onClick={() => window.print()}
+                    className="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-sm rounded-2xl border border-slate-700 shadow-md flex items-center gap-2 transition-all cursor-pointer"
+                    title="Print or Save PDF of your diagnostic score breakdown"
                   >
-                    <Video size={18} /> {allSectionsCleared ? 'Proceed to Round 2 (Technical AI Interview)' : 'Continue to Round 2 (Technical AI Interview)'} <ArrowRight size={16} />
+                    <Printer size={16} /> Print / Save Diagnostic Scorecard (PDF)
                   </button>
-                )}
+                </div>
               </div>
 
               {/* Overall Score Dial */}
@@ -897,6 +1059,86 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
 
         </div>
       )}
+
+      {/* Client-Side Printable Diagnostic Scorecard (Active on window.print()) */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #infosys-printable-scorecard, #infosys-printable-scorecard * {
+            visibility: visible !important;
+          }
+          #infosys-printable-scorecard {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            background: white !important;
+            color: black !important;
+            padding: 24px !important;
+            display: block !important;
+            z-index: 99999 !important;
+          }
+        }
+      `}</style>
+      <div id="infosys-printable-scorecard" className="hidden">
+        <div className="border-b-2 border-blue-900 pb-4 mb-6 flex justify-between items-start">
+          <div>
+            <div className="text-2xl font-black text-blue-900 tracking-tight">INFOSYS CAMPUS HIRING ASSESSMENT</div>
+            <div className="text-xs text-gray-600 font-medium">Official Fresher Diagnostic Performance Evaluation</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs font-bold text-gray-700">Date: {new Date().toLocaleDateString()}</div>
+            <div className="text-[11px] font-semibold text-blue-800">AptiVerse Verified Diagnostic</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-xl border border-gray-300 text-xs text-gray-800">
+          <div><strong>Candidate Name:</strong> {candidateName}</div>
+          <div><strong>Assessment Title:</strong> {activeBundle.title}</div>
+          <div><strong>Total Score:</strong> {totalCorrect} / {totalQuestions} ({overallPercentage}%)</div>
+          <div>
+            <strong>Screening Decision: </strong>
+            <span className={allSectionsCleared ? "text-emerald-700 font-bold" : "text-red-700 font-bold"}>
+              {allSectionsCleared ? "QUALIFIED FOR ROUND 2 (TECHNICAL)" : "NOT CLEARED (Sectional Cutoff Missed)"}
+            </span>
+          </div>
+        </div>
+
+        <h4 className="font-bold text-sm mb-3 text-gray-900 uppercase tracking-wider">Section-Wise Performance Breakdown</h4>
+        <table className="w-full text-left border-collapse border border-gray-300 text-xs mb-6">
+          <thead>
+            <tr className="bg-gray-100 border-b border-gray-300 font-bold text-gray-800">
+              <th className="p-2.5 border-r border-gray-300">Section</th>
+              <th className="p-2.5 border-r border-gray-300">Questions</th>
+              <th className="p-2.5 border-r border-gray-300">Score</th>
+              <th className="p-2.5 border-r border-gray-300">Cutoff Required</th>
+              <th className="p-2.5 border-r border-gray-300">Accuracy</th>
+              <th className="p-2.5">Evaluation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sectionalReport.map((sec) => (
+              <tr key={sec.id} className="border-b border-gray-300 text-gray-800">
+                <td className="p-2.5 border-r border-gray-300 font-medium">{sec.name}</td>
+                <td className="p-2.5 border-r border-gray-300">{sec.questionCount}</td>
+                <td className="p-2.5 border-r border-gray-300 font-bold">{sec.correctCount}</td>
+                <td className="p-2.5 border-r border-gray-300">{sec.cutoffPercentage}%</td>
+                <td className="p-2.5 border-r border-gray-300 font-semibold">{sec.scorePct}%</td>
+                <td className={`p-2.5 font-bold ${sec.cleared ? "text-emerald-700" : "text-red-700"}`}>
+                  {sec.cleared ? "CLEARED" : "FAILED"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="mt-8 pt-4 border-t border-gray-300 flex justify-between text-[11px] text-gray-500">
+          <span>Official AptiVerse Systems Engineer Standard • Format A</span>
+          <span>Candidate Signature: _______________________</span>
+        </div>
+      </div>
 
     </div>
   );

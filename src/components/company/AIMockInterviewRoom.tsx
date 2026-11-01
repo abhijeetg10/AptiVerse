@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Video, VideoOff, Mic, MicOff, Volume2, VolumeX, Play, RotateCcw, 
   ChevronRight, CheckCircle2, Award, Sparkles, BookOpen, Clock, 
   HelpCircle, ArrowRight, ShieldCheck, Maximize2, AlertTriangle, Eye, X,
-  Smartphone, UserX, Users, ShieldAlert, Radio, AlertOctagon, RefreshCw
+  Smartphone, UserX, Users, ShieldAlert, Radio, AlertOctagon, RefreshCw,
+  UserCheck, User
 } from 'lucide-react';
 import { 
   TECHNICAL_INTERVIEW_PROMPTS, 
@@ -11,6 +13,7 @@ import {
   type InterviewPrompt 
 } from '../../data/infosysPrepData';
 import { TalkingRecruiterAvatar } from './TalkingRecruiterAvatar';
+import { CompulsoryFeedbackModal } from './CompulsoryFeedbackModal';
 
 interface AIMockInterviewRoomProps {
   initialRound?: 'technical' | 'hr';
@@ -37,12 +40,38 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
   onClose,
   onProceedToHR
 }) => {
+  const { user } = useAuth();
   const [activeRound, setActiveRound] = useState<'technical' | 'hr'>(initialRound);
+
+  // Candidate Name Intake & Personalization
+  const [candidateName, setCandidateName] = useState<string>(() => {
+    try {
+      return user?.name || localStorage.getItem('aptiverse_interview_candidate_name') || '';
+    } catch (e) {
+      return user?.name || '';
+    }
+  });
+
+  useEffect(() => {
+    if (user?.name && !candidateName) {
+      setCandidateName(user.name);
+    }
+  }, [user?.name]);
+
+  const candidateFirstName = useMemo(() => {
+    const trimmed = candidateName.trim();
+    if (trimmed) return trimmed.split(' ')[0];
+    if (user?.name) return user.name.trim().split(' ')[0];
+    return 'Candidate';
+  }, [candidateName, user?.name]);
+
+  // Standard Authentic Infosys Interview Questions
   const questions: InterviewPrompt[] = activeRound === 'technical' 
     ? technicalQuestions 
     : hrQuestions;
 
   const [hasStarted, setHasStarted] = useState(false);
+  const [hasSubmittedInterviewFeedback, setHasSubmittedInterviewFeedback] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -53,6 +82,20 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [showAnswerGuide, setShowAnswerGuide] = useState(false);
   const [showFullscreenAlert, setShowFullscreenAlert] = useState(false);
+
+  // Performance & Eloquence Metrics
+  const totalWordsSpoken = useMemo(() => {
+    return Object.values(notes).reduce((acc, text) => {
+      return acc + (text || '').trim().split(/\s+/).filter(Boolean).length;
+    }, 0);
+  }, [notes]);
+
+  const avgWordsPerQuestion = questions.length > 0 ? Math.round(totalWordsSpoken / questions.length) : 0;
+
+  const hasUsedStarMethod = useMemo(() => {
+    const joined = Object.values(notes).join(' ').toLowerCase();
+    return joined.includes('situation') || joined.includes('task') || joined.includes('action') || joined.includes('result');
+  }, [notes]);
 
   // Live Speech-to-Text (STT) State
   const [isDictationActive, setIsDictationActive] = useState(true);
@@ -85,18 +128,12 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
 
   const currentQuestion: InterviewPrompt = questions[currentIdx] || questions[0];
 
-  // Recruiter personas with properly framed high-resolution portraits
-  const recruiter = activeRound === 'technical' ? {
+  // Fixed common recruiter persona: Priya Sharma across both Technical and HR rounds
+  const recruiter = {
     name: 'Priya Sharma',
-    role: 'Lead Technical Architect',
-    unit: 'Infosys Cloud & Digital Systems',
+    role: activeRound === 'technical' ? 'Lead Technical Architect' : 'Senior Campus Talent Director',
+    unit: activeRound === 'technical' ? 'Infosys Cloud & Digital Systems' : 'Infosys Global Recruitment',
     img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
-    gender: 'female'
-  } : {
-    name: 'Ananya Verma',
-    role: 'Senior Campus Talent Director',
-    unit: 'Infosys Global Recruitment',
-    img: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=800&q=80',
     gender: 'female'
   };
 
@@ -508,13 +545,24 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       const name = (v.name || '').toLowerCase();
       const lang = (v.lang || '').toLowerCase();
 
-      if (lang === 'en-in' || lang === 'en_in') score += 100;
-      if (name.includes('priya') || name.includes('sharma')) score += 500;
-      if (name.includes('india') || uri.includes('india')) score += 80;
-      if (name.includes('natural') || name.includes('neural') || name.includes('online')) score += 70;
-      if (name.includes('neerja') || name.includes('prabhat')) score += 60;
-      if (name.includes('female') || name.includes('zira') || name.includes('samantha')) score += 20;
-      if (lang.startsWith('en')) score += 10;
+      // Highest Priority: Single common Indian female voice (Priya / Priya Sharma / Hindi / Indian accent)
+      if (name.includes('priya')) score += 10000;
+      if (name.includes('sharma')) score += 5000;
+
+      // Alternative Indian female voices
+      if (name.includes('neerja')) score += 3000;
+      if (name.includes('heera') || name.includes('swara') || name.includes('kalpana')) score += 2000;
+      if (name.includes('india') && (name.includes('female') || name.includes('natural') || name.includes('neural'))) score += 1500;
+
+      // Indian language regional models (en-IN, hi-IN)
+      if (lang === 'en-in' || lang === 'en_in') score += 1000;
+      if (lang === 'hi-in' || lang === 'hi_in') score += 950;
+      if (name.includes('india') || uri.includes('india')) score += 500;
+
+      // Natural speech enhancements
+      if (name.includes('natural') || name.includes('neural') || name.includes('online')) score += 200;
+      if (name.includes('female')) score += 100;
+      if (lang.startsWith('en')) score += 50;
       return score;
     };
 
@@ -523,14 +571,17 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       if (!voices || voices.length === 0) return;
 
       const sorted = [...voices]
-        .filter(v => v.lang.startsWith('en') || v.lang.includes('IN') || v.lang.includes('in'))
+        .filter(v => {
+          const l = (v.lang || '').toLowerCase();
+          const n = (v.name || '').toLowerCase();
+          return l.includes('in') || l.startsWith('hi') || l.startsWith('en') || n.includes('priya') || n.includes('india');
+        })
         .sort((a, b) => rateVoice(b) - rateVoice(a));
 
+      const singleCommonVoice = sorted[0] || voices[0] || null;
       setAvailableVoices(sorted);
-      setSelectedVoice(prev => {
-        if (prev && sorted.some(v => v.voiceURI === prev.voiceURI)) return prev;
-        return sorted[0] || null;
-      });
+      // Strictly lock to single common Indian female voice across all rounds
+      setSelectedVoice(singleCommonVoice);
     };
 
     loadVoices();
@@ -670,12 +721,38 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     }, 120);
   };
 
+  // Helper to dynamically personalize question delivery with candidate name
+  const getPersonalizedQuestionText = useCallback((qIndex: number): string => {
+    const q = questions[qIndex];
+    if (!q) return '';
+    const rawQuestion = q.question;
+    const name = candidateFirstName;
+
+    // First Question: Warm welcome greeting addressing the candidate
+    if (qIndex === 0) {
+      const roundName = activeRound === 'technical' ? 'Technical Interview' : 'HR & Behavioral Interview';
+      return `Hello ${name}, welcome to your Infosys ${roundName}. I am Priya Sharma, your interviewer today. Let us get started with your first question: ${rawQuestion}`;
+    }
+
+    // Mid-interview personal touch (Question 3)
+    if (qIndex === 2) {
+      return `Alright ${name}, moving on to our next question: ${rawQuestion}`;
+    }
+
+    // Final question personal touch
+    if (qIndex === questions.length - 1 && questions.length > 3) {
+      return `And lastly ${name}, for our final question: ${rawQuestion}`;
+    }
+
+    return rawQuestion;
+  }, [questions, candidateFirstName, activeRound]);
+
   const handleTestVoice = (customVoice?: SpeechSynthesisVoice) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     
     const v = customVoice || selectedVoice || availableVoices[0];
-    const sample = `Hello, I am ${recruiter.name} from Infosys. I will be your interviewer for today. Are you ready to begin?`;
+    const sample = `Hello ${candidateFirstName}, I am ${recruiter.name} from Infosys. I will be your interviewer for today. Are you ready to begin?`;
     
     const utterance = new SpeechSynthesisUtterance(cleanSpeechText(sample));
     if (v) {
@@ -700,10 +777,14 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
     setIntegrityScore(100);
     setViolations([]);
 
+    if (candidateName.trim()) {
+      localStorage.setItem('aptiverse_interview_candidate_name', candidateName.trim());
+    }
+
     await requestFullscreen();
     await startCamera();
 
-    speakQuestion(currentQuestion.question);
+    speakQuestion(getPersonalizedQuestionText(0));
   };
 
   const handleNextQuestion = () => {
@@ -712,7 +793,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       const nextIdx = currentIdx + 1;
       setCurrentIdx(nextIdx);
       setShowAnswerGuide(false);
-      speakQuestion(questions[nextIdx].question);
+      speakQuestion(getPersonalizedQuestionText(nextIdx));
     } else {
       setIsFinished(true);
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -721,7 +802,18 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
   };
 
   const handleRepeatQuestion = () => {
-    speakQuestion(currentQuestion.question);
+    speakQuestion(getPersonalizedQuestionText(currentIdx));
+  };
+
+  const handleReRecordAnswer = () => {
+    setNotes(prev => ({ ...prev, [currentQuestion.id]: '' }));
+    setInterimText('');
+    if (recognitionRef.current && isDictationActive) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+      setTimeout(() => {
+        try { recognitionRef.current.start(); } catch (e) {}
+      }, 150);
+    }
   };
 
   const handleExitInterview = () => {
@@ -757,6 +849,15 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
   return (
     <div className={containerClass}>
       
+      {/* Compulsory Interview Feedback Modal */}
+      {isFinished && !hasSubmittedInterviewFeedback && (
+        <CompulsoryFeedbackModal
+          testTitle={`${driveTitle} (${activeRound === 'technical' ? 'Technical Panel' : 'HR Panel'})`}
+          contextType="interview"
+          onSubmitted={() => setHasSubmittedInterviewFeedback(true)}
+        />
+      )}
+
       {/* Fullscreen Proctoring Violation Alert Modal */}
       {showFullscreenAlert && (
         <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
@@ -930,6 +1031,51 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
             </div>
           </div>
 
+          {/* Candidate Identification & Dynamic Personalization Card */}
+          <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 mb-8 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary-500/10 text-primary-400 flex items-center justify-center border border-primary-500/20 shrink-0">
+                  <UserCheck size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                    <span>Candidate Name & Profile</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      Dynamic AI Greeting
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Interviewer {recruiter.name} will greet you personally and address you naturally by name during your interview.
+                  </p>
+                </div>
+              </div>
+
+              <div className="w-full sm:w-72 shrink-0">
+                <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                  Candidate Name (Spoken by AI)
+                </label>
+                <input
+                  type="text"
+                  value={candidateName}
+                  onChange={(e) => {
+                    setCandidateName(e.target.value);
+                    localStorage.setItem('aptiverse_interview_candidate_name', e.target.value);
+                  }}
+                  placeholder="Enter your name (e.g., Rahul)"
+                  className="w-full bg-slate-900 text-white text-xs px-3.5 py-2.5 rounded-xl border border-slate-700 focus:outline-none focus:border-primary-500 transition-colors placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-slate-800 flex items-center gap-2 text-xs text-slate-400">
+              <Sparkles size={13} className="text-primary-400 shrink-0" />
+              <span>
+                Personalized Salutation Preview: Priya Sharma will begin with: <strong className="text-slate-200">"Hello {candidateFirstName}, welcome to your Infosys {activeRound === 'technical' ? 'Technical Interview' : 'HR & Behavioral Interview'}..."</strong>
+              </span>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={handleStartInterview}
@@ -957,6 +1103,61 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
           <p className="text-slate-400 text-sm max-w-md mx-auto mb-6">
             Congratulations on completing your interview simulation with {recruiter.name}. Review your spoken answers and proctoring evaluation below.
           </p>
+
+          {/* Priya Sharma Official Assessment & Readiness Card */}
+          <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 mb-6 text-left max-w-2xl mx-auto w-full shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4 mb-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-700 shrink-0">
+                  <img src={recruiter.img} alt={recruiter.name} className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-primary-400 uppercase tracking-wider">Recruiter Panel Evaluation</div>
+                  <h4 className="font-extrabold text-white text-base">{recruiter.name}</h4>
+                  <p className="text-xs text-slate-400">{recruiter.role} • {recruiter.unit}</p>
+                </div>
+              </div>
+
+              <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                integrityScore >= 80 && totalWordsSpoken >= 40
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                  : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+              }`}>
+                {integrityScore >= 80 && totalWordsSpoken >= 40 ? '✓ RECOMMENDED FOR HIRE' : '⚠️ PRACTICE RECOMMENDED'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-4 text-center">
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                <span className="text-[10px] text-slate-400 block mb-0.5">Integrity & Gaze</span>
+                <span className={`text-sm font-extrabold ${integrityScore >= 85 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {integrityScore}% Verified
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                <span className="text-[10px] text-slate-400 block mb-0.5">Eloquence & Detail</span>
+                <span className="text-sm font-extrabold text-white">
+                  {totalWordsSpoken} words
+                </span>
+                <span className="text-[10px] text-slate-500 block">(~{avgWordsPerQuestion} w/Q)</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                <span className="text-[10px] text-slate-400 block mb-0.5">Answering Structure</span>
+                <span className={`text-xs font-bold block mt-1 ${hasUsedStarMethod ? 'text-emerald-400' : 'text-slate-300'}`}>
+                  {hasUsedStarMethod ? 'STAR Framework' : 'Conversational'}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+              <span className="font-bold text-primary-300 block mb-1">Priya Sharma's Evaluation Note:</span>
+              <p className="italic text-slate-300">
+                {integrityScore >= 80 && totalWordsSpoken >= 40
+                  ? `"Candidate ${candidateFirstName} demonstrated confident posture, clear technical reasoning, and sustained eye contact. Responses met the benchmark expectations for the Infosys ${activeRound === 'technical' ? 'Technical Panel' : 'HR Panel'}."`
+                  : `"Candidate ${candidateFirstName} made a good attempt. For campus placement drives, aim to elaborate more on system design fundamentals and maintain continuous eye level with the camera."`}
+              </p>
+            </div>
+          </div>
 
           {/* AI Proctoring Audit Card */}
           <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 mb-6 text-left max-w-2xl mx-auto w-full">
@@ -1106,18 +1307,21 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
 
               {/* Spoken Question Statement Card */}
               <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 shadow-xl">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary-950 text-primary-400 border border-primary-800/50">
                     {currentQuestion.category}
                   </span>
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
                     Question {currentIdx + 1} of {questions.length}
                   </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                    <Sparkles size={10} className="text-emerald-400" /> Previously Asked in Infosys Drive
+                  </span>
                 </div>
 
                 <div className="min-h-[4rem] mb-3 flex items-start">
                   <p className="text-base sm:text-lg font-bold text-white leading-relaxed">
-                    "{isTypingQuestion ? displayedQuestionText : (displayedQuestionText || currentQuestion.question)}"
+                    "{isTypingQuestion ? displayedQuestionText : (displayedQuestionText || getPersonalizedQuestionText(currentIdx))}"
                     {isTypingQuestion && (
                       <span className="inline-block w-2 h-5 bg-primary-400 ml-1.5 animate-pulse align-middle rounded-sm shadow-sm shadow-primary-400" />
                     )}
@@ -1281,6 +1485,16 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                   </button>
 
                   <div className="flex items-center gap-3">
+                    {/* Live Audio Input Waveform Indicator */}
+                    {isDictationActive && (
+                      <div className="flex items-center gap-0.5 px-2 py-1 bg-emerald-500/10 rounded-xl border border-emerald-500/30 text-emerald-400" title="Microphone Active & Listening">
+                        <span className="w-1 h-3 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="w-1 h-4 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="w-1 h-2 bg-emerald-400 rounded-full animate-bounce"></span>
+                        <span className="text-[10px] font-mono ml-1 font-bold hidden sm:inline">AUDIO LIVE</span>
+                      </div>
+                    )}
+
                     <button
                       onClick={() => setIsDictationActive(!isDictationActive)}
                       className={`p-1.5 px-2.5 rounded-xl text-xs flex items-center gap-1.5 font-medium transition-colors border ${
@@ -1313,15 +1527,25 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                   <div className="flex items-center gap-2 text-[11px] text-slate-400">
                     <span>{currentAnswerWords} words</span>
                     {(notes[currentQuestion.id] || interimText) && (
-                      <button
-                        onClick={() => {
-                          setNotes({ ...notes, [currentQuestion.id]: '' });
-                          setInterimText('');
-                        }}
-                        className="text-[10px] text-slate-500 hover:text-red-400 underline ml-1"
-                      >
-                        Clear
-                      </button>
+                      <div className="flex items-center gap-1.5 ml-1">
+                        <button
+                          onClick={handleReRecordAnswer}
+                          className="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-amber-300 hover:text-white rounded-md border border-slate-700 text-[10px] font-semibold flex items-center gap-1 transition-colors"
+                          title="Clear transcribed answer and re-speak"
+                        >
+                          <RotateCcw size={10} className="text-amber-400" />
+                          <span>Re-Record</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setNotes({ ...notes, [currentQuestion.id]: '' });
+                            setInterimText('');
+                          }}
+                          className="text-[10px] text-slate-500 hover:text-red-400 underline"
+                        >
+                          Clear
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

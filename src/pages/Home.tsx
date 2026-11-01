@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowRight, BarChart2, Gamepad2, Users, Trophy, Briefcase, Zap, Target, Brain, LineChart, ChevronRight, Star, MessageSquare } from 'lucide-react';
+import { ArrowRight, Gamepad2, Users, Trophy, Zap, Target, Brain, LineChart, MessageSquare, Crown } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
 import { GameCard } from '../components/ui/GameCard';
 import { Link } from 'react-router-dom';
 import { cn } from '../utils/cn';
@@ -9,7 +8,6 @@ import FeedbackModal from '../components/ui/FeedbackModal';
 import { AdBanner } from '../components/ui/AdBanner';
 import { RatingBadge } from '../components/ui/RatingBadge';
 import { CompanyCardsSection } from '../components/company/CompanyCardsSection';
-import { LaunchEventBanner } from '../components/home/LaunchEventBanner';
 
 const Home = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -31,13 +29,10 @@ const Home = () => {
                 <Gamepad2 size={14} />
                 Gamified Aptitude Practice Platform
               </div>
-              <a 
-                href="#launch-event-banner"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-purple-500/10 border border-amber-300 text-amber-900 text-xs font-bold shadow-sm hover:bg-amber-100/60 transition-all cursor-pointer"
-              >
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                <span>✨ Launching on 5th Sept • Live Poll & Ideas</span>
-              </a>
+              <RatingBadge 
+                variant="pill" 
+                onFeedbackClick={() => setIsFeedbackOpen(true)} 
+              />
             </div>
             
             <h1 className="text-5xl lg:text-[64px] leading-[1.1] font-extrabold tracking-tight text-neutral-900">
@@ -52,7 +47,7 @@ const Home = () => {
             <div className="flex flex-wrap items-center gap-4 mt-2">
               <Link to="/games">
                 <Button size="lg" className="gap-2 text-sm px-8 h-12 rounded-xl bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-600/20">
-                  Start Playing <ArrowRight size={16} />
+                  Start Practice <ArrowRight size={16} />
                 </Button>
               </Link>
               <button
@@ -176,7 +171,7 @@ const Home = () => {
                <Gamepad2 size={24} />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-neutral-900 text-base">7 Interactive Games</span>
+              <span className="font-bold text-neutral-900 text-base">8 Interactive Games</span>
               <span className="text-sm text-neutral-500">All key aptitude types</span>
             </div>
           </div>
@@ -373,19 +368,54 @@ const Home = () => {
               </div>
             }
           />
+
+          <GameCard 
+            to="/games/queens"
+            bgClass="bg-amber-50/60"
+            title="Queens Challenge"
+            desc="Place one Queen per row, column, and colored region without adjacent touches."
+            difficulty="Hard"
+            category={{ label: "Logical Reasoning", icon: <Crown size={12}/> }}
+            visual={
+              <div className="w-[110px] h-[110px] bg-white rounded-xl border border-amber-200/80 shadow-md p-1.5 grid grid-cols-4 grid-rows-4 gap-0.5 overflow-hidden">
+                <div className="bg-indigo-100 rounded-sm flex items-center justify-center text-[10px]">👑</div>
+                <div className="bg-indigo-100 rounded-sm"></div>
+                <div className="bg-amber-100 rounded-sm"></div>
+                <div className="bg-amber-100 rounded-sm flex items-center justify-center text-[8px] text-slate-400">✕</div>
+
+                <div className="bg-indigo-100 rounded-sm flex items-center justify-center text-[8px] text-slate-400">✕</div>
+                <div className="bg-emerald-100 rounded-sm"></div>
+                <div className="bg-emerald-100 rounded-sm flex items-center justify-center text-[10px]">👑</div>
+                <div className="bg-amber-100 rounded-sm"></div>
+
+                <div className="bg-rose-100 rounded-sm"></div>
+                <div className="bg-emerald-100 rounded-sm flex items-center justify-center text-[8px] text-slate-400">✕</div>
+                <div className="bg-sky-100 rounded-sm"></div>
+                <div className="bg-sky-100 rounded-sm flex items-center justify-center text-[10px]">👑</div>
+
+                <div className="bg-rose-100 rounded-sm"></div>
+                <div className="bg-rose-100 rounded-sm flex items-center justify-center text-[10px]">👑</div>
+                <div className="bg-sky-100 rounded-sm flex items-center justify-center text-[8px] text-slate-400">✕</div>
+                <div className="bg-sky-100 rounded-sm"></div>
+              </div>
+            }
+          />
           
         </div>
       </section>
-
-      {/* 5th Sept Launch Event Announcement & Community Poll */}
-      <div id="launch-event-banner">
-        <LaunchEventBanner />
-      </div>
 
       {/* Target Company Mock Tests & AI Interviews */}
       <div id="target-company-drives">
         <CompanyCardsSection />
       </div>
+
+      {/* Real-time Student Feedback & Platform Rating */}
+      <section className="py-6 max-w-7xl mx-auto px-6 w-full">
+        <RatingBadge 
+          variant="card" 
+          onFeedbackClick={() => setIsFeedbackOpen(true)} 
+        />
+      </section>
 
       {/* Ad placement 2 */}
       <AdBanner dataAdSlot="auto" />

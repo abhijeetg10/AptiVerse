@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Target, Gamepad2, Flame, Clock, Brain, LayoutGrid, RotateCcw, PieChart, BookOpen, Boxes, Eye, Compass, Hash } from 'lucide-react';
+import { Trophy, Target, Gamepad2, Flame, Clock, Brain, LayoutGrid, RotateCcw, PieChart, BookOpen, Boxes, Eye, Compass, Hash, Crown } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -81,6 +81,7 @@ const Progress = () => {
       case 'switch': return <RotateCcw size={18} className="text-emerald-500" />;
       case 'di': return <PieChart size={18} className="text-pink-500" />;
       case 'rc': return <BookOpen size={18} className="text-violet-500" />;
+      case 'queens': return <Crown size={18} className="text-amber-500" />;
       default: return <Gamepad2 size={18} className="text-slate-500" />;
     }
   };
@@ -95,6 +96,7 @@ const Progress = () => {
       case 'switch': return "Switch Challenge";
       case 'di': return "Tab Based DI";
       case 'rc': return "Tab Based RC";
+      case 'queens': return "Queens Challenge";
       default: return "Unknown Game";
     }
   };

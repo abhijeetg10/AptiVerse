@@ -1,22 +1,24 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { Search, Sun, Bell, ChevronDown, Menu, X } from 'lucide-react';
+import { Search, ChevronDown, Menu, X, Flame } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../utils/cn';
 import { Logo } from '../components/ui/Logo';
 import { Bug } from 'lucide-react';
 import ReportBugModal from '../components/ui/ReportBugModal';
 import BetaNoticeModal from '../components/ui/BetaNoticeModal';
+import { DailyChallengeModal } from '../components/daily/DailyChallengeModal';
 
 const Navbar = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isBugModalOpen, setIsBugModalOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isDailyChallengeOpen, setIsDailyChallengeOpen] = React.useState(false);
   
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Games', path: '/games' },
+    { name: 'Practice', path: '/games' },
     { name: 'Leaderboard', path: '/leaderboard' },
     { name: 'My Progress', path: '/progress' },
   ];
@@ -74,6 +76,16 @@ const Navbar = () => {
             <kbd className="hidden sm:inline-block text-[10px] font-sans px-1.5 py-0.5 bg-white border border-neutral-300 rounded text-neutral-400">⌘K</kbd>
           </div>
           
+          {/* Daily Hard Challenge Nav Button */}
+          <button
+            onClick={() => setIsDailyChallengeOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-600 font-bold text-xs shadow-sm transition-all cursor-pointer active:scale-95"
+            title="Today's Hard Problem Challenge & Speed Leaderboard"
+          >
+            <Flame size={14} className="fill-orange-500 text-orange-500 animate-pulse" />
+            <span className="hidden sm:inline">Daily Challenge</span>
+          </button>
+
           <button 
             onClick={() => setIsBugModalOpen(true)}
             className="p-2 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors relative"
@@ -127,8 +139,24 @@ const Navbar = () => {
               {link.name}
             </NavLink>
           ))}
+          {/* Mobile Daily Challenge Button */}
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setIsDailyChallengeOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-3 rounded-lg text-base font-bold bg-orange-50 text-orange-600 border border-orange-200 text-left"
+          >
+            <Flame size={18} className="fill-orange-500 text-orange-500 animate-pulse" />
+            <span>Daily Hard Challenge 🔥</span>
+          </button>
         </div>
       )}
+
+      <DailyChallengeModal 
+        isOpen={isDailyChallengeOpen} 
+        onClose={() => setIsDailyChallengeOpen(false)} 
+      />
 
       <ReportBugModal 
         isOpen={isBugModalOpen}

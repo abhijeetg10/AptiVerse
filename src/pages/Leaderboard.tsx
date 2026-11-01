@@ -20,6 +20,7 @@ const GAME_OPTIONS = [
   { id: 'inductive', label: 'Inductive Challenge', icon: Eye, matchIds: ['inductive'] },
   { id: 'di', label: 'Tab Based DI', icon: PieChart, matchIds: ['di'] },
   { id: 'rc', label: 'Reading Comprehension', icon: BookOpen, matchIds: ['rc'] },
+  { id: 'queens', label: 'Queens Challenge', icon: Crown, matchIds: ['queens'] },
 ];
 
 const normalizeCollege = (name: string | null | undefined) => {

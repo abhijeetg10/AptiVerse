@@ -1,277 +1,378 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Building2, Sparkles, Clock, Lock, MapPin
+  Trophy, ArrowRight, Lock, Sparkles, Layers
 } from 'lucide-react';
-import { Badge } from '../ui/Badge';
-import gecMysoreImg from '../../assets/gec-mysore.jpg';
+import { 
+  InfosysBrandLogo, 
+  TcsNqtBrandLogo, 
+  CognizantBrandLogo, 
+  CapgeminiBrandLogo, 
+  AccentureBrandLogo, 
+  WiproBrandLogo 
+} from './CompanyLogos';
+
+interface CompanyTrack {
+  id: string;
+  name: string;
+  brandCategory: 'all' | 'infosys' | 'tcs' | 'cognizant' | 'capgemini' | 'others';
+  logoComponent: React.ReactNode;
+  bgGradient: string;
+  badgeStatus: 'active' | 'upcoming';
+  packageText: string;
+  title: string;
+  subtitle: string;
+  desc: string;
+  difficulty: 'Easy-Medium' | 'Medium' | 'Medium-Hard' | 'Hard';
+  domainTag: string;
+  linkTo?: string;
+}
+
+const COMPANY_TRACKS: CompanyTrack[] = [
+  {
+    id: 'infosys',
+    name: 'Infosys',
+    brandCategory: 'infosys',
+    logoComponent: <InfosysBrandLogo className="h-10" />,
+    bgGradient: 'from-slate-50/80 via-white to-white',
+    badgeStatus: 'active',
+    packageText: '3.6 - 9.5 LPA',
+    title: 'Infosys Mock Test Track',
+    subtitle: 'Springboard & InfyTQ',
+    desc: 'Mock rounds for Springboard, InfyTQ and general aptitude & coding pattern with live AI interview.',
+    difficulty: 'Easy-Medium',
+    domainTag: 'Aptitude + Technical',
+    linkTo: '/company/infosys'
+  },
+  {
+    id: 'tcs',
+    name: 'TCS NQT',
+    brandCategory: 'tcs',
+    logoComponent: <TcsNqtBrandLogo className="h-11" />,
+    bgGradient: 'from-slate-50/80 via-white to-white',
+    badgeStatus: 'upcoming',
+    packageText: '3.36 - 7 LPA',
+    title: 'TCS NQT Prep Series',
+    subtitle: 'Ninja & Digital Track',
+    desc: 'Full mock simulation of National Qualifier Test including cognitive, verbal & programming.',
+    difficulty: 'Medium',
+    domainTag: 'Full Mock Test'
+  },
+  {
+    id: 'cognizant',
+    name: 'Cognizant',
+    brandCategory: 'cognizant',
+    logoComponent: <CognizantBrandLogo className="h-8" />,
+    bgGradient: 'from-slate-50/80 via-white to-white',
+    badgeStatus: 'upcoming',
+    packageText: '4 - 6.75 LPA',
+    title: 'Cognizant GenC & Elevate',
+    subtitle: 'GenC, GenC Next & Elevate',
+    desc: 'Practise AMCAT-pattern aptitude, Automata coding and technical MCQ rounds.',
+    difficulty: 'Medium-Hard',
+    domainTag: 'Aptitude + Coding'
+  },
+  {
+    id: 'capgemini',
+    name: 'Capgemini',
+    brandCategory: 'capgemini',
+    logoComponent: <CapgeminiBrandLogo className="h-9" />,
+    bgGradient: 'from-slate-50/80 via-white to-white',
+    badgeStatus: 'upcoming',
+    packageText: '4.25 LPA',
+    title: 'Capgemini Exceller Test',
+    subtitle: 'Analyst & Senior Analyst',
+    desc: 'Covers game-based aptitude, behavioral profiling, and pseudocode challenges.',
+    difficulty: 'Medium',
+    domainTag: 'Game Aptitude + Pseudocode'
+  },
+  {
+    id: 'accenture',
+    name: 'Accenture',
+    brandCategory: 'others',
+    logoComponent: <AccentureBrandLogo className="h-8" />,
+    bgGradient: 'from-slate-50/80 via-white to-white',
+    badgeStatus: 'upcoming',
+    packageText: '4.5 - 6.5 LPA',
+    title: 'Accenture Assessment Series',
+    subtitle: 'Associate Software Engineer',
+    desc: 'Cognitive reasoning, technical MCQ (Cloud & Network), and coding assessment modules.',
+    difficulty: 'Medium-Hard',
+    domainTag: 'Cognitive + Technical'
+  },
+  {
+    id: 'wipro',
+    name: 'Wipro',
+    brandCategory: 'others',
+    logoComponent: <WiproBrandLogo className="h-11" />,
+    bgGradient: 'from-slate-50/80 via-white to-white',
+    badgeStatus: 'upcoming',
+    packageText: '3.5 - 6.5 LPA',
+    title: 'Wipro Elite NLTH Track',
+    subtitle: 'Project Engineer Drive',
+    desc: 'Quantitative aptitude, written communication test (WCT), and programming simulator.',
+    difficulty: 'Medium',
+    domainTag: 'Aptitude + WCT'
+  }
+];
 
 export const CompanyCardsSection: React.FC = () => {
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'popularity' | 'difficulty'>('popularity');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const filteredTracks = useMemo(() => {
+    let list = COMPANY_TRACKS;
+    if (activeCategory !== 'all') {
+      list = list.filter(t => t.brandCategory === activeCategory);
+    }
+    if (sortBy === 'difficulty') {
+      return [...list].sort((a, b) => a.difficulty.localeCompare(b.difficulty));
+    }
+    return list;
+  }, [activeCategory, sortBy]);
+
+  const showUpcomingNotice = (companyName: string) => {
+    setToastMessage(`${companyName} mock test drives are launching soon! Stay tuned.`);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
   return (
     <section className="pt-16 pb-20 max-w-7xl mx-auto px-6 font-sans">
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-neutral-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-neutral-700 text-xs font-semibold flex items-center gap-2 animate-bounce">
+          <Sparkles size={14} className="text-amber-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
-      {/* Header */}
-      <div className="flex flex-col items-center text-center mb-14">
-        <div className="flex items-center gap-3 text-primary-600 font-bold text-xs tracking-wider uppercase mb-3">
-          <div className="w-10 h-[2px] bg-primary-200"></div>
-          <span className="flex items-center gap-1.5">
-            <Building2 size={14} /> TARGET RECRUITMENT DRIVES
-          </span>
-          <div className="w-10 h-[2px] bg-primary-200"></div>
+      {/* Top Header Section matching user reference */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <div>
+          <div className="flex items-center gap-2 text-primary-600 font-extrabold text-xs tracking-wider uppercase mb-2">
+            <span className="w-5 h-5 rounded-md bg-primary-100 flex items-center justify-center text-primary-700">
+              <Layers size={12} />
+            </span>
+            <span>CHOOSE A COMPANY</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl font-black text-neutral-900 tracking-tight mb-2">
+            Recruitment <span className="text-primary-600">Practice</span>
+          </h2>
+
+          <p className="text-neutral-500 text-xs sm:text-sm max-w-2xl leading-relaxed">
+            Practice actual company-wise recruiting rounds. Access mock tests for aptitude, technical, coding, and game-based assessment Rounds.
+          </p>
         </div>
 
-        <h2 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 tracking-tight mb-3">
-          Company Mock Tests & <span className="text-primary-600">AI Interviews</span>
-        </h2>
-
-        <p className="text-neutral-500 max-w-2xl text-sm lg:text-base leading-relaxed">
-          Master company-specific hiring blueprints, pattern-accurate screening mocks, and simulated AI recruiter interviews tailored to top campus tech employers.
-        </p>
+        {/* Right Target Companies Pill Card */}
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-3.5 sm:px-5 sm:py-3.5 flex items-center gap-3.5 shadow-xs shrink-0 self-start lg:self-auto">
+          <div className="w-11 h-11 rounded-2xl bg-slate-950 text-amber-400 flex items-center justify-center shadow-md shadow-slate-950/20 shrink-0">
+            <Trophy size={20} className="animate-pulse" />
+          </div>
+          <div>
+            <div className="font-extrabold text-sm text-neutral-900 leading-tight">
+              7 Target Companies
+            </div>
+            <div className="text-[11px] text-neutral-500 max-w-[210px] leading-snug mt-0.5">
+              Prepare with actual exam patterns and latest previous year questions.
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Cards Grid - Exact same structure, size, and layout as Game Cards on Home Page */}
+      {/* Filter Tabs & Sort Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-4 border-b border-neutral-100">
+        
+        {/* Company Category Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto py-1 max-w-full no-scrollbar">
+          <button
+            onClick={() => setActiveCategory('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+              activeCategory === 'all'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/30'
+                : 'bg-white hover:bg-neutral-50 text-neutral-600 border border-neutral-200'
+            }`}
+          >
+            <span>All Companies</span>
+          </button>
+
+          <button
+            onClick={() => setActiveCategory('infosys')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+              activeCategory === 'infosys'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/30'
+                : 'bg-white hover:bg-neutral-50 text-neutral-600 border border-neutral-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span>Infosys</span>
+          </button>
+
+          <button
+            onClick={() => setActiveCategory('tcs')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+              activeCategory === 'tcs'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/30'
+                : 'bg-white hover:bg-neutral-50 text-neutral-600 border border-neutral-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500" />
+            <span>TCS NQT</span>
+          </button>
+
+          <button
+            onClick={() => setActiveCategory('cognizant')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+              activeCategory === 'cognizant'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/30'
+                : 'bg-white hover:bg-neutral-50 text-neutral-600 border border-neutral-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-cyan-600" />
+            <span>Cognizant</span>
+          </button>
+
+          <button
+            onClick={() => setActiveCategory('capgemini')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+              activeCategory === 'capgemini'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/30'
+                : 'bg-white hover:bg-neutral-50 text-neutral-600 border border-neutral-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-sky-600" />
+            <span>Capgemini</span>
+          </button>
+
+          <button
+            onClick={() => setActiveCategory('others')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+              activeCategory === 'others'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/30'
+                : 'bg-white hover:bg-neutral-50 text-neutral-600 border border-neutral-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-purple-500" />
+            <span>Others</span>
+          </button>
+        </div>
+
+        {/* Sort Filter */}
+        <div className="flex items-center gap-2 text-xs text-neutral-500">
+          <span className="text-neutral-400 font-medium">Sort by:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="bg-white border border-neutral-200 rounded-xl px-3 py-1.5 text-xs font-bold text-neutral-800 shadow-xs focus:outline-none focus:border-primary-500 cursor-pointer"
+          >
+            <option value="popularity">Popularity</option>
+            <option value="difficulty">Difficulty</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Modern Minimal Company Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredTracks.map((track) => {
+          const isInfosys = track.id === 'infosys';
 
-        {/* 1. INFOSYS - LOCKED / LAUNCHING 5TH SEPT */}
-        <div className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
-          {/* Visual Header matching GameCard h-40 */}
-          <div className="h-40 flex items-center justify-center relative overflow-hidden bg-slate-900">
-            {/* Mysore Training Center Photo */}
-            <img 
-              src={gecMysoreImg} 
-              alt="Infosys GEC Mysuru Campus" 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-90"
-            />
-            {/* Subtle Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
+          const CardInner = (
+            <div className="group bg-white rounded-2xl shadow-sm border border-neutral-200/80 hover:shadow-xl hover:border-primary-300 transition-all duration-300 flex flex-col overflow-hidden h-full">
+              
+              {/* Minimalist Logo Header Container */}
+              <div className={`h-40 flex items-center justify-center p-6 relative overflow-hidden bg-gradient-to-b ${track.bgGradient} border-b border-neutral-100`}>
+                
+                {/* Center Corporate Brand Logo */}
+                <div className="transform group-hover:scale-108 transition-transform duration-300 relative z-10">
+                  {track.logoComponent}
+                </div>
 
-            {/* Launching 5th Sept Indicator */}
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/95 backdrop-blur-md text-white text-[10px] font-extrabold shadow-sm">
-              <Clock size={11} className="text-white" />
-              LAUNCHING 5TH SEPT
-            </div>
+                {/* Status Badge Overlays */}
+                <div className="absolute top-3 left-3 z-20">
+                  {track.badgeStatus === 'active' ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      ACTIVE DRIVE
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500 text-white text-[10px] font-bold shadow-sm">
+                      <Lock size={10} /> UPCOMING
+                    </span>
+                  )}
+                </div>
 
-            {/* Package Tag */}
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-md border border-white/20 font-mono shadow-sm">
-              3.6 LPA
-            </div>
-
-            {/* Training Center Caption */}
-            <div className="absolute bottom-2.5 left-3 text-white text-xs font-bold drop-shadow flex items-center gap-1.5">
-              <MapPin size={12} className="text-amber-400" />
-              <span>GEC Mysuru Campus</span>
-            </div>
-          </div>
-
-          {/* White Card Body matching GameCard */}
-          <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-900 mb-0.5 group-hover:text-amber-600 transition-colors">
-              Infosys Systems Engineer
-            </h3>
-            <span className="text-[11px] font-semibold text-amber-600 block mb-2">
-              On-Campus & Off-Campus 2025–2026
-            </span>
-            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
-              Official pattern 54 questions screening test across 5 timed sections, followed by live camera AI Technical and HR interview panels.
-            </p>
-
-            {/* Badges Strip */}
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                54 Qs • 100m
-              </Badge>
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 flex items-center gap-1">
-                <Sparkles size={11} className="text-amber-500" /> 4 Mock Packs + AI
-              </Badge>
-            </div>
-
-            {/* Bottom Action Row - Locked, Zero Links */}
-            <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between text-neutral-400">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
-                  Coming Soon
-                </span>
+                {/* Package Tag */}
+                <div className="absolute top-3 right-3 z-20">
+                  <span className="text-[10px] font-mono font-bold text-neutral-700 bg-white/90 backdrop-blur-md px-2.5 py-0.5 rounded-md border border-neutral-200 shadow-xs">
+                    {track.packageText}
+                  </span>
+                </div>
               </div>
-              <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center shrink-0">
-                <Lock size={13} />
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* 2. TCS NQT - UPCOMING */}
-        <div className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
-          {/* Visual Header matching GameCard h-40 */}
-          <div className="h-40 flex items-center justify-center relative overflow-hidden bg-slate-900">
-            <img 
-              src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop" 
-              alt="TCS Campus" 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-90"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
+              {/* Clean Content Body */}
+              <div className="p-5 flex-1 flex flex-col">
+                <h3 className="font-bold text-neutral-900 text-base mb-1 group-hover:text-primary-600 transition-colors">
+                  {track.title}
+                </h3>
 
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
-              <Clock size={10} /> UPCOMING
-            </div>
+                <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
+                  {track.desc}
+                </p>
 
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-md border border-white/20 font-mono shadow-sm">
-              3.36 - 7 LPA
-            </div>
+                {/* Badges Strip */}
+                <div className="flex items-center gap-2 mb-4 mt-auto">
+                  <span className={`text-[10px] px-2.5 py-0.5 rounded-md font-bold ${
+                    track.difficulty === 'Easy-Medium'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                      : track.difficulty === 'Medium'
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                  }`}>
+                    {track.difficulty}
+                  </span>
 
-            <div className="absolute bottom-2.5 left-3 text-white text-xs font-bold drop-shadow">
-              Tata Consultancy Services
-            </div>
-          </div>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-md font-semibold bg-primary-50 text-primary-700 border border-primary-100 flex items-center gap-1">
+                    {track.domainTag}
+                  </span>
+                </div>
 
-          {/* White Card Body matching GameCard */}
-          <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-900 mb-0.5">
-              TCS NQT Preparation
-            </h3>
-            <span className="text-[11px] font-semibold text-neutral-400 block mb-2">
-              Ninja & Digital Track • TCS BPS
-            </span>
-            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
-              Numerical, Verbal & Reasoning cognitive modules with Ninja and Digital track coding challenges and interview rubrics.
-            </p>
+                {/* Bottom Practice Action Button */}
+                <div className="pt-4 border-t border-neutral-100 mt-auto">
+                  <div className={`w-full py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all shadow-xs ${
+                    isInfosys
+                      ? 'bg-primary-600 text-white group-hover:bg-primary-700 shadow-primary-600/20 group-hover:shadow-md'
+                      : 'bg-slate-900 text-white group-hover:bg-primary-600 group-hover:shadow-md'
+                  }`}>
+                    <span>Practice Now</span>
+                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
 
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-100 text-neutral-600">
-                Ninja & Digital
-              </Badge>
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-100 text-neutral-600">
-                Cognitive + Code
-              </Badge>
-            </div>
-
-            <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between text-neutral-400">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
-                  Coming Soon
-                </span>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center shrink-0">
-                <Lock size={13} />
               </div>
             </div>
-          </div>
-        </div>
+          );
 
-        {/* 3. CAPGEMINI - UPCOMING */}
-        <div className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
-          {/* Visual Header matching GameCard h-40 */}
-          <div className="h-40 flex items-center justify-center relative overflow-hidden bg-slate-900">
-            <img 
-              src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop" 
-              alt="Capgemini Campus" 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-90"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
+          if (isInfosys && track.linkTo) {
+            return (
+              <Link key={track.id} to={track.linkTo} className="block h-full">
+                {CardInner}
+              </Link>
+            );
+          }
 
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
-              <Clock size={10} /> UPCOMING
+          return (
+            <div 
+              key={track.id} 
+              onClick={() => showUpcomingNotice(track.name)}
+              className="cursor-pointer h-full"
+            >
+              {CardInner}
             </div>
-
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-md border border-white/20 font-mono shadow-sm">
-              4.25 LPA
-            </div>
-
-            <div className="absolute bottom-2.5 left-3 text-white text-xs font-bold drop-shadow">
-              Capgemini India
-            </div>
-          </div>
-
-          {/* White Card Body matching GameCard */}
-          <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-900 mb-0.5">
-              Capgemini Excellence
-            </h3>
-            <span className="text-[11px] font-semibold text-neutral-400 block mb-2">
-              Analyst & Senior Analyst Track
-            </span>
-            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
-              Game-based aptitude, pseudocode tracing, English communication and technical interview simulation.
-            </p>
-
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-100 text-neutral-600">
-                Game Aptitude
-              </Badge>
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-100 text-neutral-600">
-                Pseudocode
-              </Badge>
-            </div>
-
-            <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between text-neutral-400">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
-                  Coming Soon
-                </span>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center shrink-0">
-                <Lock size={13} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. ACCENTURE - UPCOMING */}
-        <div className="group bg-white rounded-2xl shadow-sm border border-neutral-100 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden h-full">
-          {/* Visual Header matching GameCard h-40 */}
-          <div className="h-40 flex items-center justify-center relative overflow-hidden bg-slate-900">
-            <img 
-              src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=800&auto=format&fit=crop" 
-              alt="Accenture Campus" 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-90"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
-
-            <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-bold shadow-sm">
-              <Clock size={10} /> UPCOMING
-            </div>
-
-            <div className="absolute top-3 right-3 text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-md border border-white/20 font-mono shadow-sm">
-              4.5 - 6.5 LPA
-            </div>
-
-            <div className="absolute bottom-2.5 left-3 text-white text-xs font-bold drop-shadow">
-              Accenture Technology
-            </div>
-          </div>
-
-          {/* White Card Body matching GameCard */}
-          <div className="p-5 flex-1 flex flex-col">
-            <h3 className="font-bold text-neutral-900 mb-0.5">
-              Accenture Assessment
-            </h3>
-            <span className="text-[11px] font-semibold text-neutral-400 block mb-2">
-              Associate Software Engineer (ASE)
-            </span>
-            <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">
-              Cognitive reasoning, technical MCQ (Cloud, Network, Security), and communication round practice.
-            </p>
-
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-100 text-neutral-600">
-                Cognitive + MCQ
-              </Badge>
-              <Badge variant="neutral" className="text-[10px] px-2 py-0.5 bg-neutral-100 text-neutral-600">
-                Cloud & Security
-              </Badge>
-            </div>
-
-            <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between text-neutral-400">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
-                  Coming Soon
-                </span>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-400 flex items-center justify-center shrink-0">
-                <Lock size={13} />
-              </div>
-            </div>
-          </div>
-        </div>
-
+          );
+        })}
       </div>
 
     </section>

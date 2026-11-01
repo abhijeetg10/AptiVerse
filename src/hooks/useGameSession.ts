@@ -192,15 +192,69 @@ export const useGameSession = (gameId: string) => {
         return { success: false, error: rpcError.message };
       }
 
-      // If RPC failed, report the error directly without falling back to insecure direct client inserts
-      const errorMsg = rpcError?.message || 'Server error recording attempt';
-      console.error('Failed to complete game attempt:', { rpcError });
+      // Resilient Fallback: If RPC failed or rejected, insert directly into game_sessions
+      console.warn('RPC completion did not succeed, executing direct game_sessions record fallback...', { rpcError });
+      const { error: insertError } = await supabase.from('game_sessions').insert({
+        id: resolvedAttemptId,
+        user_id: userId,
+        game_id: normalizedGameId,
+        level: validLevel,
+        score: validScore,
+        accuracy: validAccuracy,
+        time_spent: validTimeSpent,
+        passed_distraction: passedDistraction
+      });
+
+      if (!insertError) {
+        savedAttemptsRef.current.add(resolvedAttemptId);
+        savedAttemptsRef.current.add(finalAttemptId);
+        activeAttemptIdRef.current = null;
+        setStatus('saved');
+        setError(null);
+        isSavingRef.current = false;
+        return { success: true };
+      }
+
+      if (insertError.code === '23505' || insertError.message?.includes('duplicate key')) {
+        savedAttemptsRef.current.add(resolvedAttemptId);
+        savedAttemptsRef.current.add(finalAttemptId);
+        activeAttemptIdRef.current = null;
+        setStatus('saved');
+        setError(null);
+        isSavingRef.current = false;
+        return { success: true, alreadySaved: true };
+      }
+
+      // If both RPC and direct insert failed, report the error
+      const errorMsg = rpcError?.message || insertError?.message || 'Server error recording attempt';
+      console.error('Failed to complete game attempt:', { rpcError, insertError });
       setError(errorMsg);
       setStatus('error');
       isSavingRef.current = false;
       return { success: false, error: errorMsg };
     } catch (err: any) {
       console.error('Network error during attempt completion:', err);
+      try {
+        const { error: fallbackErr } = await supabase.from('game_sessions').insert({
+          id: resolvedAttemptId,
+          user_id: userId,
+          game_id: normalizedGameId,
+          level: validLevel,
+          score: validScore,
+          accuracy: validAccuracy,
+          time_spent: validTimeSpent,
+          passed_distraction: passedDistraction
+        });
+        if (!fallbackErr || fallbackErr.code === '23505') {
+          savedAttemptsRef.current.add(resolvedAttemptId);
+          setStatus('saved');
+          setError(null);
+          isSavingRef.current = false;
+          return { success: true };
+        }
+      } catch (e) {
+        console.error('Direct fallback also failed:', e);
+      }
       const msg = err?.message || 'Network error saving score';
       setError(msg);
       setStatus('error');

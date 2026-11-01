@@ -1,17 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { Play, Flame, Target, Trophy, Clock, Brain, Activity } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Play, Flame, Target, Trophy, Clock, Brain, Activity, Zap, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { DailyChallengeModal } from '../components/daily/DailyChallengeModal';
+import { fetchTodayGlobalChallenge, getISTMidnightCountdown, type DailyChallengeRecord } from '../services/dailyChallengeService';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
+  const [dailyChallenge, setDailyChallenge] = useState<DailyChallengeRecord | null>(null);
+  const [countdownStr, setCountdownStr] = useState(() => getISTMidnightCountdown().formatted);
+
+  useEffect(() => {
+    fetchTodayGlobalChallenge().then(setDailyChallenge).catch(console.warn);
+    const interval = setInterval(() => {
+      setCountdownStr(getISTMidnightCountdown().formatted);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [stats, setStats] = useState({
     accuracy: 0,
     games: 0,
     score: 0,
   });
+
+  const currentStreak = localStorage.getItem('aptiverse_daily_streak') || (stats.games > 0 ? '1' : '0');
 
   const [lastGame, setLastGame] = useState<{ id: string; name: string; path: string; level: number } | null>(null);
 
@@ -24,6 +40,7 @@ const Dashboard = () => {
     switch: { name: 'Switch Challenge', path: '/games/switch' },
     di: { name: 'Tab Based DI', path: '/games/di' },
     rc: { name: 'Tab Based RC', path: '/games/rc' },
+    queens: { name: 'Queens Challenge', path: '/games/queens' },
   };
 
   useEffect(() => {
@@ -108,6 +125,43 @@ const Dashboard = () => {
         <p className="text-neutral-500 text-lg">Ready for another round?</p>
       </div>
 
+      {/* Daily Hard Problem Challenge Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-primary-950 to-slate-900 rounded-3xl p-6 sm:p-7 border border-primary-500/30 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="absolute right-0 top-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="flex items-start gap-4 z-10">
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-500/30 shrink-0">
+            <Flame size={28} className="animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+              <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 uppercase tracking-wider">
+                DAILY HARD CHALLENGE
+              </span>
+              <span className="text-[11px] font-bold text-amber-300 bg-amber-500/15 px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                <Flame size={12} className="fill-amber-400" /> {currentStreak} Day Streak
+              </span>
+              <span className="text-xs text-slate-400 font-mono">Next in {countdownStr}</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              {dailyChallenge?.title || 'Daily Hard Problem Challenge'}
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl mt-1 leading-relaxed">
+              {dailyChallenge?.category || 'Aptitude & Spatial Reasoning'} • Solve today's globally synchronized challenge to claim your rank on the Speed Leaderboard!
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0 z-10">
+          <button
+            onClick={() => setIsDailyChallengeOpen(true)}
+            className="w-full sm:w-auto px-7 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-orange-500/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 cursor-pointer active:scale-95"
+          >
+            <Zap size={18} /> Solve Today's Challenge
+          </button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Main Action - Continue Practicing */}
@@ -149,13 +203,17 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="card p-5 flex flex-col items-start gap-3 bg-white">
-            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
-              <Flame size={20} />
+          <div 
+            onClick={() => setIsDailyChallengeOpen(true)}
+            className="card p-5 flex flex-col items-start gap-3 bg-white hover:border-orange-300 hover:shadow-md transition-all cursor-pointer group"
+            title="Click to view Daily Challenge & Streak"
+          >
+            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Flame size={20} className="animate-pulse" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-neutral-900">{stats.games > 0 ? 1 : 0} Days</div>
-              <div className="text-sm text-neutral-500 font-medium">Current Streak</div>
+              <div className="text-2xl font-bold text-neutral-900 group-hover:text-orange-600 transition-colors">{currentStreak} Days</div>
+              <div className="text-sm text-neutral-500 font-medium">Daily Streak 🔥</div>
             </div>
           </div>
           <div className="card p-5 flex flex-col items-start gap-3 bg-white">
@@ -187,6 +245,12 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Daily Challenge Modal */}
+      <DailyChallengeModal 
+        isOpen={isDailyChallengeOpen} 
+        onClose={() => setIsDailyChallengeOpen(false)} 
+      />
 
     </div>
   );

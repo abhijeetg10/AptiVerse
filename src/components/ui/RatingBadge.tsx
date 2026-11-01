@@ -25,7 +25,9 @@ export const RatingBadge: React.FC<RatingBadgeProps> = ({
           <span className="text-slate-400 text-[10px]">/5.0</span>
         </div>
         <span className="text-slate-300">•</span>
-        <span className="font-medium text-slate-500">{total}+ ratings</span>
+        <span className="font-medium text-slate-500">
+          {total > 0 ? `${total} student rating${total > 1 ? 's' : ''}` : 'Rate platform'}
+        </span>
       </div>
     );
   }
@@ -34,7 +36,7 @@ export const RatingBadge: React.FC<RatingBadgeProps> = ({
     return (
       <div
         className={cn(
-          "p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-amber-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4",
+          "p-4 sm:p-5 rounded-2xl bg-white/95 backdrop-blur-md border border-amber-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4",
           className
         )}
       >
@@ -62,7 +64,11 @@ export const RatingBadge: React.FC<RatingBadgeProps> = ({
               </div>
             </div>
             <span className="text-xs text-slate-500 font-medium">
-              Rated by <strong className="text-slate-800 font-bold">{total}+ students</strong> across universities
+              {total > 0 ? (
+                <>Rated by <strong className="text-slate-800 font-bold">{total} {total === 1 ? 'student' : 'students'}</strong> across universities</>
+              ) : (
+                <>Real-time verified student feedback & platform rating</>
+              )}
             </span>
           </div>
         </div>
@@ -70,7 +76,7 @@ export const RatingBadge: React.FC<RatingBadgeProps> = ({
         {onFeedbackClick && (
           <button
             onClick={onFeedbackClick}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-all shrink-0 cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
           >
             <MessageSquare size={13} /> Rate Platform
           </button>
@@ -109,7 +115,13 @@ export const RatingBadge: React.FC<RatingBadgeProps> = ({
       </div>
       <span className="text-slate-200">•</span>
       <span className="font-semibold text-slate-600">
-        <strong className="text-slate-900 font-bold">{total}+</strong> ratings
+        {total > 0 ? (
+          <>
+            <strong className="text-slate-900 font-bold">{total}</strong> {total === 1 ? 'student rating' : 'student ratings'}
+          </>
+        ) : (
+          <span className="text-slate-600 font-medium">Rate platform</span>
+        )}
       </span>
     </div>
   );

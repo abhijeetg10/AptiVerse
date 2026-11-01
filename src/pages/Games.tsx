@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Gamepad2, Brain, Eye, Compass, Hash, BookOpen, Star, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Trophy, Gamepad2, Brain, Eye, Compass, Hash, BookOpen, Star, ShieldCheck, ArrowRight, Crown } from 'lucide-react';
 import { GameCard } from '../components/ui/GameCard';
 import { cn } from '../utils/cn';
 import { Link } from 'react-router-dom';
@@ -18,13 +18,13 @@ const Games = () => {
           <div className="flex-1">
             <div className="flex items-center gap-4 text-primary-600 font-bold text-xs tracking-wider uppercase mb-3">
                <Gamepad2 size={16} />
-               CHOOSE A GAME
+               PRACTICE ARENA
             </div>
             <h1 className="text-4xl lg:text-5xl font-extrabold text-neutral-900 mb-4 tracking-tight">
-              Aptitude <span className="text-primary-600">Games</span>
+              Aptitude & Recruitment <span className="text-primary-600">Practice</span>
             </h1>
             <p className="text-neutral-500 max-w-xl text-base leading-relaxed">
-              Practice different cognitive skills through interactive challenges and improve your speed, accuracy, and problem-solving skills.
+              Master cognitive games, company-specific mock tests, and hiring assessments to build speed, accuracy, and confidence.
             </p>
           </div>
           
@@ -34,8 +34,8 @@ const Games = () => {
                    <Trophy size={20} className="text-amber-500" />
                 </div>
                 <div className="flex flex-col">
-                   <span className="font-bold text-neutral-900 text-sm">7 Interactive Games</span>
-                   <span className="text-xs text-neutral-500 leading-tight mt-1">Each game is designed to train a specific cognitive skill used in real hiring assessments.</span>
+                   <span className="font-bold text-neutral-900 text-sm">8 Cognitive Practice Tracks</span>
+                   <span className="text-xs text-neutral-500 leading-tight mt-1">Interactive modules designed to train specific cognitive and problem-solving skills tested in hiring drives.</span>
                 </div>
              </div>
              
@@ -248,31 +248,90 @@ const Games = () => {
             }
           />
 
-          {/* Promo Card: Improve Your Skills */}
-          <Link to="/progress" className="group bg-[#eff3ff] rounded-2xl p-6 border border-primary-100 flex flex-col items-center justify-center text-center relative overflow-hidden transition-shadow hover:shadow-xl">
-             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white via-transparent to-transparent opacity-50"></div>
-             
-             <div className="relative z-10 w-24 h-24 mb-6">
-                <div className="absolute inset-0 bg-primary-200 rounded-full blur-xl opacity-50 group-hover:scale-110 transition-transform"></div>
-                <div className="relative w-full h-full bg-primary-500 rounded-3xl rotate-45 flex items-center justify-center shadow-lg shadow-primary-500/30">
-                   <div className="-rotate-45">
-                      <Star size={40} className="text-amber-300 fill-amber-300" />
-                   </div>
+          <GameCard 
+            to="/games/queens"
+            bgClass="bg-amber-50/60"
+            title="Queens Challenge"
+            desc="Place one Queen per row, column, and colored region without adjacent touches."
+            difficulty="Medium"
+            category={{ label: "Logical Reasoning", icon: <Crown size={12}/> }}
+            visual={
+              <div className="w-[110px] h-[110px] bg-white rounded-xl border border-amber-200/80 shadow-md p-1.5 grid grid-cols-4 grid-rows-4 gap-0.5 overflow-hidden">
+                <div className="bg-indigo-100 rounded-sm flex items-center justify-center text-[10px]">👑</div>
+                <div className="bg-indigo-100 rounded-sm"></div>
+                <div className="bg-amber-100 rounded-sm"></div>
+                <div className="bg-amber-100 rounded-sm flex items-center justify-center text-[8px] text-slate-400">✕</div>
+
+                <div className="bg-indigo-100 rounded-sm flex items-center justify-center text-[8px] text-slate-400">✕</div>
+                <div className="bg-emerald-100 rounded-sm"></div>
+                <div className="bg-emerald-100 rounded-sm flex items-center justify-center text-[10px]">👑</div>
+                <div className="bg-amber-100 rounded-sm"></div>
+
+                <div className="bg-rose-100 rounded-sm"></div>
+                <div className="bg-emerald-100 rounded-sm flex items-center justify-center text-[8px] text-slate-400">✕</div>
+                <div className="bg-sky-100 rounded-sm"></div>
+                <div className="bg-sky-100 rounded-sm flex items-center justify-center text-[10px]">👑</div>
+
+                <div className="bg-rose-100 rounded-sm"></div>
+                <div className="bg-rose-100 rounded-sm flex items-center justify-center text-[10px]">👑</div>
+                <div className="bg-sky-100 rounded-sm flex items-center justify-center text-[8px] text-slate-400">✕</div>
+                <div className="bg-sky-100 rounded-sm"></div>
+              </div>
+            }
+          />
+
+        </div>
+
+        {/* Full-Width Large Rectangle Banner: Improve Your Skills */}
+        <div className="mt-8 mb-12 relative z-10">
+          <Link 
+            to="/progress" 
+            className="group block bg-gradient-to-r from-indigo-50/90 via-white to-purple-50/90 hover:from-indigo-100/90 hover:to-purple-100/90 rounded-3xl p-6 sm:p-8 border border-primary-200/80 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
+          >
+            {/* Ambient decorative glow */}
+            <div className="absolute top-0 right-1/4 w-80 h-80 bg-primary-200/30 rounded-full blur-3xl pointer-events-none -z-0"></div>
+
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              
+              {/* Left: Star Badge & Content */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+                <div className="relative shrink-0 w-20 h-20">
+                  <div className="absolute inset-0 bg-primary-200 rounded-full blur-xl opacity-60 group-hover:scale-110 transition-transform"></div>
+                  <div className="relative w-full h-full bg-gradient-to-br from-primary-500 to-indigo-600 rounded-3xl rotate-45 flex items-center justify-center shadow-lg shadow-primary-500/30">
+                    <div className="-rotate-45">
+                      <Star size={36} className="text-amber-300 fill-amber-300 drop-shadow-sm" />
+                    </div>
+                  </div>
+                  <div className="absolute -top-1 -right-1 bg-white w-6 h-6 rounded-lg rotate-12 shadow-sm flex items-center justify-center border border-slate-100">
+                    <ShieldCheck size={13} className="text-amber-500"/>
+                  </div>
+                  <div className="absolute bottom-0 -left-1 bg-white w-6 h-6 rounded-lg -rotate-12 shadow-sm flex items-center justify-center border border-slate-100">
+                    <ShieldCheck size={13} className="text-emerald-500"/>
+                  </div>
                 </div>
-                <div className="absolute -top-2 -right-2 bg-white w-6 h-6 rounded-lg rotate-12 shadow-sm flex items-center justify-center"><ShieldCheck size={12} className="text-amber-500"/></div>
-                <div className="absolute bottom-0 -left-2 bg-white w-6 h-6 rounded-lg -rotate-12 shadow-sm flex items-center justify-center"><ShieldCheck size={12} className="text-accent-500"/></div>
-             </div>
 
-             <h3 className="text-xl font-bold text-neutral-900 mb-2 relative z-10">Improve Your Skills</h3>
-             <p className="text-sm text-neutral-600 mb-6 leading-relaxed relative z-10">
-               Track your progress, beat your best scores, and get ready for top companies.
-             </p>
+                <div className="space-y-1.5 max-w-xl">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-primary-100/80 text-primary-700 text-[11px] font-bold uppercase tracking-wider">
+                    <Star size={11} className="fill-primary-600" /> Cognitive Performance Dashboard
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
+                    Improve Your Skills & Track Progress
+                  </h3>
+                  <p className="text-sm text-neutral-600 leading-relaxed">
+                    Track your progress, beat your best scores, and get ready for top product and service companies.
+                  </p>
+                </div>
+              </div>
 
-             <button className="relative z-10 w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-bold shadow-md shadow-primary-600/20 flex items-center justify-center gap-2 transition-colors">
-                View My Progress <ArrowRight size={16} />
-             </button>
+              {/* Right: CTA Button */}
+              <div className="shrink-0 w-full sm:w-auto">
+                <span className="w-full sm:w-auto px-7 py-3.5 bg-primary-600 group-hover:bg-primary-700 text-white rounded-2xl text-sm font-bold shadow-lg shadow-primary-600/25 flex items-center justify-center gap-2 transition-all transform group-hover:translate-x-1">
+                  View My Progress <ArrowRight size={17} />
+                </span>
+              </div>
+
+            </div>
           </Link>
-
         </div>
 
         {/* Company-Specific Placement Tests */}

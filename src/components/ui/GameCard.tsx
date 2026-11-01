@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Trophy, BarChart2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Badge } from './Badge';
 import { cn } from '../../utils/cn';
 
@@ -27,7 +27,7 @@ export const GameCard = ({ to, bgClass, visual, title, desc, difficulty, categor
         </div>
       </div>
       <div className="p-5 flex-1 flex flex-col">
-        <h3 className="font-bold text-neutral-900 mb-1">{title}</h3>
+        <h3 className="font-bold text-neutral-900 mb-1 group-hover:text-primary-600 transition-colors">{title}</h3>
         <p className="text-xs text-neutral-500 mb-4 line-clamp-2 leading-relaxed">{desc}</p>
         
         <div className="flex items-center gap-2 mb-4">
@@ -37,12 +37,10 @@ export const GameCard = ({ to, bgClass, visual, title, desc, difficulty, categor
           </Badge>
         </div>
 
-        <div className="mt-auto pt-4 border-t border-neutral-100 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Play Now</span>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-md shadow-primary-500/30 group-hover:bg-primary-600 transition-colors shrink-0">
-            <ArrowRight size={14} />
+        <div className="mt-auto pt-4 border-t border-neutral-100">
+          <div className="w-full py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all shadow-xs bg-slate-900 text-white group-hover:bg-primary-600 group-hover:shadow-md">
+            <span>Practice Now</span>
+            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
       </div>

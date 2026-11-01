@@ -2,7 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { 
   Shield, Trash2, Users, Gamepad2, Search, AlertTriangle, MessageSquare, 
   Star, Bug, Landmark, Mail, Edit3, BellRing, 
-  Copy, Check, AlertCircle, ChevronLeft, ChevronRight, RefreshCw 
+  Copy, Check, AlertCircle, ChevronLeft, ChevronRight, RefreshCw,
+  FileCheck2, CheckCircle2, XCircle, Flame
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
@@ -93,6 +94,20 @@ CREATE POLICY "Game sessions are viewable by everyone."
   ON public.game_sessions FOR SELECT
   USING ( true );
 
+-- Ensure foreign key constraint between game_sessions and profiles
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'fk_game_sessions_profiles'
+  ) THEN
+    ALTER TABLE public.game_sessions 
+    ADD CONSTRAINT fk_game_sessions_profiles 
+    FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
 -- 4. Global Leaderboard View: Pure cumulative scoring
 DROP VIEW IF EXISTS global_leaderboard CASCADE;
 CREATE VIEW global_leaderboard AS
@@ -109,6 +124,110 @@ FROM profiles p
 JOIN game_sessions s ON p.id = s.user_id
 WHERE (p.is_blocked IS NOT TRUE)
 GROUP BY p.id, p.name, p.college, p.avatar_url;
+
+-- 5. COMPANY MOCK TEST SCORES & CANDIDATE FEEDBACK
+CREATE TABLE IF NOT EXISTS public.company_mock_scores (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  candidate_name TEXT,
+  company TEXT NOT NULL DEFAULT 'infosys',
+  test_id TEXT NOT NULL,
+  test_title TEXT,
+  score INT NOT NULL,
+  total_questions INT NOT NULL,
+  percentage NUMERIC(5,2),
+  sectional_scores JSONB,
+  cleared BOOLEAN DEFAULT false,
+  feedback_rating INT,
+  feedback_comment TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.company_mock_scores ADD COLUMN IF NOT EXISTS candidate_name TEXT;
+ALTER TABLE public.company_mock_scores ADD COLUMN IF NOT EXISTS test_title TEXT;
+ALTER TABLE public.company_mock_scores ADD COLUMN IF NOT EXISTS percentage NUMERIC(5,2);
+ALTER TABLE public.company_mock_scores ADD COLUMN IF NOT EXISTS feedback_rating INT;
+ALTER TABLE public.company_mock_scores ADD COLUMN IF NOT EXISTS feedback_comment TEXT;
+
+ALTER TABLE public.company_mock_scores ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow mock test submissions" ON public.company_mock_scores;
+CREATE POLICY "Allow mock test submissions" ON public.company_mock_scores FOR INSERT TO public WITH CHECK (true);
+DROP POLICY IF EXISTS "Users can view own mock scores" ON public.company_mock_scores;
+CREATE POLICY "Users can view own mock scores" ON public.company_mock_scores FOR SELECT TO authenticated USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admins have full access to mock scores" ON public.company_mock_scores;
+CREATE POLICY "Admins have full access to mock scores" ON public.company_mock_scores FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+-- 6. DAILY HARD PROBLEM CHALLENGE SOLVERS & STREAK
+CREATE TABLE IF NOT EXISTS public.daily_challenge_solvers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  candidate_name TEXT NOT NULL,
+  college TEXT,
+  challenge_id TEXT NOT NULL,
+  challenge_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  time_taken_seconds NUMERIC(6,2) NOT NULL,
+  streak INT NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_solvers_date_speed ON public.daily_challenge_solvers(challenge_date, time_taken_seconds ASC);
+ALTER TABLE public.daily_challenge_solvers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public can view daily challenge solvers" ON public.daily_challenge_solvers;
+CREATE POLICY "Public can view daily challenge solvers" ON public.daily_challenge_solvers FOR SELECT TO public USING (true);
+DROP POLICY IF EXISTS "Allow daily challenge solver submissions" ON public.daily_challenge_solvers;
+CREATE POLICY "Allow daily challenge solver submissions" ON public.daily_challenge_solvers FOR INSERT TO public WITH CHECK (true);
+
+-- 7. PRODUCTION GLOBAL DAILY CHALLENGE SYSTEM (20261102)
+CREATE TABLE IF NOT EXISTS public.daily_challenges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  challenge_date DATE NOT NULL UNIQUE,
+  game_type TEXT NOT NULL,
+  game_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  difficulty TEXT NOT NULL DEFAULT 'Hard',
+  challenge_seed BIGINT NOT NULL,
+  challenge_config JSONB NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  starts_at TIMESTAMPTZ NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_challenges_date ON public.daily_challenges(challenge_date DESC);
+ALTER TABLE public.daily_challenges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public can view daily challenges" ON public.daily_challenges;
+CREATE POLICY "Public can view daily challenges" ON public.daily_challenges FOR SELECT TO public USING (true);
+
+CREATE TABLE IF NOT EXISTS public.daily_challenge_attempts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  daily_challenge_id UUID NOT NULL REFERENCES public.daily_challenges(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  candidate_name TEXT NOT NULL,
+  college TEXT,
+  avatar_url TEXT,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  submitted_at TIMESTAMPTZ,
+  completion_time_ms BIGINT,
+  score NUMERIC(5,2),
+  accuracy NUMERIC(5,2),
+  is_completed BOOLEAN NOT NULL DEFAULT false,
+  is_correct BOOLEAN NOT NULL DEFAULT false,
+  status TEXT NOT NULL DEFAULT 'in_progress',
+  attempt_metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT uq_daily_challenge_user UNIQUE (daily_challenge_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_attempts_challenge_user ON public.daily_challenge_attempts(daily_challenge_id, user_id);
+ALTER TABLE public.daily_challenge_attempts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own daily attempts" ON public.daily_challenge_attempts;
+CREATE POLICY "Users can read own daily attempts" ON public.daily_challenge_attempts FOR SELECT TO authenticated USING (auth.uid() = user_id OR is_completed = true);
+
+-- Clean any dummy/test solver records
+DELETE FROM public.daily_challenge_solvers 
+WHERE candidate_name IN ('Ananya Deshmukh', 'Rahul Kulkarni', 'Siddharth Roy', 'Sample Candidate', 'Test Candidate')
+   OR candidate_name ILIKE '%test%';
 
 NOTIFY pgrst, 'reload schema';`;
 
@@ -127,13 +246,16 @@ export const AdminDashboard = () => {
   // Global Overview KPI Counts
   const [totalUsersCount, setTotalUsersCount] = useState<number | null>(null);
   const [totalSessionsCount, setTotalSessionsCount] = useState<number | null>(null);
+  const [totalTestsCount, setTotalTestsCount] = useState<number | null>(null);
+  const [totalDailySolversCount, setTotalDailySolversCount] = useState<number | null>(null);
+  const [todayDailySolversCount, setTodayDailySolversCount] = useState<number | null>(null);
   const [activeUsersCount, setActiveUsersCount] = useState<number | null>(null);
   const [totalCollegesCount, setTotalCollegesCount] = useState<number | null>(null);
   const [kpiLoading, setKpiLoading] = useState(true);
   const [kpiError, setKpiError] = useState<string | null>(null);
 
   // Active Tab & Pagination
-  const [activeTab, setActiveTab] = useState<'users' | 'sessions' | 'reviews' | 'leaderboard' | 'bugs' | 'colleges'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'sessions' | 'tests' | 'reviews' | 'leaderboard' | 'bugs' | 'colleges' | 'daily'>('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [totalTabCount, setTotalTabCount] = useState(0);
@@ -143,6 +265,8 @@ export const AdminDashboard = () => {
   // Tab Data Buffers
   const [users, setUsers] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [testScores, setTestScores] = useState<any[]>([]);
+  const [dailySolvers, setDailySolvers] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [bugReports, setBugReports] = useState<any[]>([]);
@@ -196,6 +320,34 @@ export const AdminDashboard = () => {
         .select('id', { count: 'exact', head: true });
       if (sessionsErr) throw sessionsErr;
       setTotalSessionsCount(sessionsCount ?? 0);
+
+      // Exact Mock Tests Count
+      try {
+        const { count: testsCount } = await supabase
+          .from('company_mock_scores')
+          .select('id', { count: 'exact', head: true });
+        setTotalTestsCount(testsCount ?? 0);
+      } catch {
+        setTotalTestsCount(0);
+      }
+
+      // Exact Daily Challenge Solvers (Total and Today)
+      try {
+        const { count: dailyAllCount } = await supabase
+          .from('daily_challenge_solvers')
+          .select('id', { count: 'exact', head: true });
+        setTotalDailySolversCount(dailyAllCount ?? 0);
+
+        const todayKey = new Date().toISOString().split('T')[0];
+        const { count: dailyTodayCount } = await supabase
+          .from('daily_challenge_solvers')
+          .select('id', { count: 'exact', head: true })
+          .eq('challenge_date', todayKey);
+        setTodayDailySolversCount(dailyTodayCount ?? 0);
+      } catch {
+        setTotalDailySolversCount(0);
+        setTodayDailySolversCount(0);
+      }
 
       // Exact Active Players (on global leaderboard)
       const { count: activeCount, error: activeErr } = await supabase
@@ -270,43 +422,130 @@ export const AdminDashboard = () => {
         setTotalTabCount(count ?? 0);
       } 
       else if (activeTab === 'sessions') {
-        let query = supabase
+        let baseQuery = supabase
           .from('game_sessions')
-          .select(`
-            id, user_id, game_id, level, score, accuracy, time_spent, created_at,
-            profiles:user_id (name, email)
-          `, { count: 'exact' });
+          .select('id, user_id, game_id, level, score, accuracy, time_spent, created_at', { count: 'exact' });
 
         if (searchTerm.trim()) {
-          query = query.ilike('game_id', `%${searchTerm.trim()}%`);
+          baseQuery = baseQuery.ilike('game_id', `%${searchTerm.trim()}%`);
         }
 
-        const { data, count, error } = await query
+        const { data: rawSessions, count, error: sessErr } = await baseQuery
           .order('created_at', { ascending: false })
           .range(from, to);
 
-        if (error) throw error;
-        setSessions(data || []);
+        if (sessErr) throw sessErr;
+
+        if (rawSessions && rawSessions.length > 0) {
+          const userIds = Array.from(new Set(rawSessions.map((s: any) => s.user_id).filter(Boolean)));
+          const profileMap = new Map<string, { name?: string; email?: string }>();
+          if (userIds.length > 0) {
+            try {
+              const { data: profs } = await supabase
+                .from('profiles')
+                .select('id, name, email')
+                .in('id', userIds);
+              if (profs) {
+                profs.forEach((p: any) => profileMap.set(p.id, p));
+              }
+            } catch (pErr) {
+              console.warn('Could not load profiles for sessions:', pErr);
+            }
+          }
+          const enriched = rawSessions.map((s: any) => ({
+            ...s,
+            profiles: profileMap.get(s.user_id) || null
+          }));
+          setSessions(enriched);
+        } else {
+          setSessions([]);
+        }
+        setTotalTabCount(count ?? 0);
+      }
+      else if (activeTab === 'tests') {
+        let baseQuery = supabase
+          .from('company_mock_scores')
+          .select(`
+            id, user_id, candidate_name, company, test_id, test_title,
+            score, total_questions, percentage, sectional_scores, cleared,
+            feedback_rating, feedback_comment, created_at
+          `, { count: 'exact' });
+
+        if (searchTerm.trim()) {
+          baseQuery = baseQuery.or(`candidate_name.ilike.%${searchTerm.trim()}%,test_title.ilike.%${searchTerm.trim()}%,feedback_comment.ilike.%${searchTerm.trim()}%`);
+        }
+
+        const { data: rawScores, count, error: testErr } = await baseQuery
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+        if (testErr) throw testErr;
+
+        if (rawScores && rawScores.length > 0) {
+          const userIds = Array.from(new Set(rawScores.map((t: any) => t.user_id).filter(Boolean)));
+          const profileMap = new Map<string, { name?: string; email?: string; college?: string }>();
+          if (userIds.length > 0) {
+            try {
+              const { data: profs } = await supabase
+                .from('profiles')
+                .select('id, name, email, college')
+                .in('id', userIds);
+              if (profs) {
+                profs.forEach((p: any) => profileMap.set(p.id, p));
+              }
+            } catch (pErr) {
+              console.warn('Could not load profiles for mock tests:', pErr);
+            }
+          }
+          const enriched = rawScores.map((t: any) => ({
+            ...t,
+            profiles: profileMap.get(t.user_id) || null
+          }));
+          setTestScores(enriched);
+        } else {
+          setTestScores([]);
+        }
         setTotalTabCount(count ?? 0);
       }
       else if (activeTab === 'reviews') {
-        let query = supabase
+        let baseQuery = supabase
           .from('feedback')
-          .select(`
-            id, rating, tag, comment, created_at,
-            profiles:user_id (name, email)
-          `, { count: 'exact' });
+          .select('id, rating, tag, comment, created_at, user_id', { count: 'exact' });
 
         if (searchTerm.trim()) {
-          query = query.or(`tag.ilike.%${searchTerm.trim()}%,comment.ilike.%${searchTerm.trim()}%`);
+          baseQuery = baseQuery.or(`tag.ilike.%${searchTerm.trim()}%,comment.ilike.%${searchTerm.trim()}%`);
         }
 
-        const { data, count, error } = await query
+        const { data: rawReviews, count, error: revErr } = await baseQuery
           .order('created_at', { ascending: false })
           .range(from, to);
 
-        if (error) throw error;
-        setReviews(data || []);
+        if (revErr) throw revErr;
+
+        if (rawReviews && rawReviews.length > 0) {
+          const userIds = Array.from(new Set(rawReviews.map((r: any) => r.user_id).filter(Boolean)));
+          const profileMap = new Map<string, { name?: string; email?: string }>();
+          if (userIds.length > 0) {
+            try {
+              const { data: profs } = await supabase
+                .from('profiles')
+                .select('id, name, email')
+                .in('id', userIds);
+              if (profs) {
+                profs.forEach((p: any) => profileMap.set(p.id, p));
+              }
+            } catch (pErr) {
+              console.warn('Could not load profiles for reviews:', pErr);
+            }
+          }
+          const enriched = rawReviews.map((r: any) => ({
+            ...r,
+            profiles: profileMap.get(r.user_id) || null
+          }));
+          setReviews(enriched);
+        } else {
+          setReviews([]);
+        }
         setTotalTabCount(count ?? 0);
       }
       else if (activeTab === 'leaderboard') {
@@ -406,6 +645,23 @@ export const AdminDashboard = () => {
         setColleges(list.slice(from, to + 1));
         setTotalTabCount(list.length);
       }
+      else if (activeTab === 'daily') {
+        let query = supabase
+          .from('daily_challenge_solvers')
+          .select('id, user_id, candidate_name, college, challenge_id, challenge_date, time_taken_seconds, streak, created_at', { count: 'exact' });
+
+        if (searchTerm.trim()) {
+          query = query.or(`candidate_name.ilike.%${searchTerm.trim()}%,college.ilike.%${searchTerm.trim()}%,challenge_id.ilike.%${searchTerm.trim()}%`);
+        }
+
+        const { data, count, error } = await query
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+        if (error) throw error;
+        setDailySolvers(data || []);
+        setTotalTabCount(count ?? 0);
+      }
     } catch (err: any) {
       console.error(`Error loading tab data for ${activeTab}:`, err);
       setTabError(err.message || 'Failed to load table rows');
@@ -502,6 +758,19 @@ export const AdminDashboard = () => {
     }
   };
 
+  const deleteTestScore = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this test submission record?')) return;
+    try {
+      const { error } = await supabase.from('company_mock_scores').delete().eq('id', id);
+      if (error) throw error;
+      setTestScores(prev => prev.filter(t => t.id !== id));
+      setTotalTabCount(prev => Math.max(0, prev - 1));
+      setTotalTestsCount(prev => (prev !== null ? Math.max(0, prev - 1) : null));
+    } catch (err: any) {
+      alert(`Error deleting test record: ${err?.message || 'Unknown error'}`);
+    }
+  };
+
   const copySqlCleanup = () => {
     navigator.clipboard.writeText(SQL_CLEANUP_QUERY);
     setCopiedSql(true);
@@ -571,6 +840,29 @@ export const AdminDashboard = () => {
             <span className="text-[10px] text-primary-200 font-medium uppercase tracking-wider text-center">Total Sessions</span>
           </div>
 
+          {/* Mock Tests Taken Metric */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center min-w-[110px] border border-white/10">
+            {kpiLoading ? (
+              <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin my-1" />
+            ) : (
+              <span className="text-3xl font-bold">{totalTestsCount?.toLocaleString() ?? '—'}</span>
+            )}
+            <span className="text-[10px] text-primary-200 font-medium uppercase tracking-wider text-center">Tests Taken</span>
+          </div>
+
+          {/* Daily Challenge Solvers Metric */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center min-w-[110px] border border-white/10">
+            {kpiLoading ? (
+              <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin my-1" />
+            ) : (
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold">{todayDailySolversCount ?? 0}</span>
+                <span className="text-[10px] text-amber-300 font-mono">({totalDailySolversCount ?? 0} Total)</span>
+              </div>
+            )}
+            <span className="text-[10px] text-primary-200 font-medium uppercase tracking-wider text-center">Daily Solvers</span>
+          </div>
+
           {/* Retry KPI button if error */}
           {kpiError && (
             <button 
@@ -598,6 +890,18 @@ export const AdminDashboard = () => {
             className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'sessions' ? 'bg-primary-50 text-primary-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
           >
             <Gamepad2 size={16} /> Sessions
+          </button>
+          <button 
+            onClick={() => setActiveTab('tests')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'tests' ? 'bg-primary-50 text-primary-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
+          >
+            <FileCheck2 size={16} /> Tests
+          </button>
+          <button 
+            onClick={() => setActiveTab('daily')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'daily' ? 'bg-orange-50 text-orange-700' : 'text-neutral-500 hover:bg-neutral-50'}`}
+          >
+            <Flame size={16} className="text-orange-600" /> Daily Challenges
           </button>
           <button 
             onClick={() => setActiveTab('colleges')}
@@ -823,6 +1127,167 @@ export const AdminDashboard = () => {
               </tbody>
             </table>
           </div>
+        ) : activeTab === 'tests' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  <th className="p-4 pl-6 w-16">#</th>
+                  <th className="p-4">Candidate</th>
+                  <th className="p-4">Test Given</th>
+                  <th className="p-4">Score & Cutoffs</th>
+                  <th className="p-4">Candidate Feedback</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4 text-right pr-6">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {testScores.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-12 text-center text-neutral-500">
+                      <FileCheck2 size={36} className="mx-auto mb-2 text-neutral-300" />
+                      <p className="font-semibold text-slate-700">No mock test submissions recorded yet.</p>
+                      <p className="text-xs text-neutral-400 mt-1">Candidate mock test attempts and written feedback will appear here in real-time.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  testScores.map((item, i) => {
+                    const studentName = item.candidate_name || item.profiles?.name || 'Candidate';
+                    const studentEmail = item.profiles?.email || null;
+                    const studentCollege = item.profiles?.college ? normalizeCollege(item.profiles.college) : null;
+                    const pct = item.percentage ?? (item.total_questions > 0 ? Math.round((item.score / item.total_questions) * 100) : 0);
+
+                    return (
+                      <tr key={item.id} className="hover:bg-neutral-50/50 transition-colors">
+                        <td className="p-4 pl-6 font-bold text-neutral-400 text-xs">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                        
+                        {/* Candidate */}
+                        <td className="p-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs shrink-0">
+                              {studentName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="font-bold text-neutral-900 text-sm flex items-center gap-1.5">
+                                <span>{studentName}</span>
+                                {!item.user_id && (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 font-semibold border border-slate-200">
+                                    Guest
+                                  </span>
+                                )}
+                              </div>
+                              {studentEmail && (
+                                <div className="text-xs text-neutral-500">{studentEmail}</div>
+                              )}
+                              {studentCollege && studentCollege !== '-' && (
+                                <div className="text-[11px] text-slate-500 font-medium">{studentCollege}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Test Given */}
+                        <td className="p-4">
+                          <div className="flex flex-col gap-1">
+                            <span className="font-semibold text-slate-800 text-sm">
+                              {item.test_title || item.test_id || 'Infosys Mock Assessment'}
+                            </span>
+                            <span className="inline-flex items-center gap-1 w-fit text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                              {item.company}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Score & Cutoffs */}
+                        <td className="p-4">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-black text-slate-900">
+                                {item.score} / {item.total_questions}
+                              </span>
+                              <span className="text-xs font-bold text-neutral-500">
+                                ({pct}%)
+                              </span>
+                            </div>
+
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded w-fit ${
+                              item.cleared 
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            }`}>
+                              {item.cleared ? (
+                                <><CheckCircle2 size={11} /> Cutoff Cleared</>
+                              ) : (
+                                <><XCircle size={11} /> Below Cutoff</>
+                              )}
+                            </span>
+
+                            {item.sectional_scores && Object.keys(item.sectional_scores).length > 0 && (
+                              <div className="text-[10px] text-neutral-500 flex flex-wrap gap-1 mt-0.5">
+                                {Object.entries(item.sectional_scores).map(([sec, s]) => (
+                                  <span key={sec} className="bg-neutral-100 px-1.5 py-0.2 rounded font-mono">
+                                    {sec.split(' ')[0]}: {String(s)}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Candidate Feedback */}
+                        <td className="p-4 max-w-xs">
+                          {item.feedback_rating || item.feedback_comment ? (
+                            <div className="flex flex-col gap-1">
+                              {item.feedback_rating && (
+                                <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
+                                  {Array.from({ length: 5 }).map((_, starI) => (
+                                    <Star 
+                                      key={starI} 
+                                      size={12} 
+                                      className={starI < item.feedback_rating! ? "fill-amber-400 text-amber-400" : "text-neutral-200"} 
+                                    />
+                                  ))}
+                                  <span className="text-slate-600 font-semibold ml-1">({item.feedback_rating}/5)</span>
+                                </div>
+                              )}
+                              {item.feedback_comment ? (
+                                <p className="text-xs text-slate-700 leading-snug line-clamp-3 bg-neutral-50 p-2 rounded-lg border border-neutral-100 italic">
+                                  "{item.feedback_comment}"
+                                </p>
+                              ) : (
+                                <span className="text-xs text-neutral-400 italic">Rating only</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-neutral-400 italic">No written feedback</span>
+                          )}
+                        </td>
+
+                        {/* Date */}
+                        <td className="p-4 text-xs text-neutral-500 whitespace-nowrap">
+                          {new Date(item.created_at).toLocaleDateString()}
+                          <div className="text-[10px] text-neutral-400">
+                            {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="p-4 pr-6 text-right">
+                          <button
+                            onClick={() => deleteTestScore(item.id)}
+                            className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Mock Test Submission"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         ) : activeTab === 'reviews' ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -1010,6 +1475,68 @@ export const AdminDashboard = () => {
                       </tr>
                     );
                   })
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : activeTab === 'daily' ? (
+          <div className="overflow-x-auto">
+            {/* Summary Bar */}
+            <div className="p-4 bg-orange-50/60 border-b border-orange-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <Flame size={18} className="text-orange-600 fill-orange-500" />
+                <span className="font-extrabold text-neutral-900">Daily Hard Problem Challenges</span>
+                <span className="text-neutral-500">• All student attempts and speeds recorded in database</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs font-semibold">
+                <span className="bg-white px-3 py-1.5 rounded-lg border border-orange-200 text-orange-800 shadow-sm">
+                  Today's Solvers: <strong>{todayDailySolversCount ?? 0}</strong>
+                </span>
+                <span className="bg-white px-3 py-1.5 rounded-lg border border-neutral-200 text-neutral-700 shadow-sm">
+                  Total Solvers: <strong>{totalDailySolversCount ?? 0}</strong>
+                </span>
+              </div>
+            </div>
+
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  <th className="p-4 pl-6">#</th>
+                  <th className="p-4">Candidate Name</th>
+                  <th className="p-4">College</th>
+                  <th className="p-4">Challenge ID</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4">Solve Speed</th>
+                  <th className="p-4">Streak</th>
+                  <th className="p-4 text-right pr-6">Solved At</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {dailySolvers.length === 0 ? (
+                  <tr><td colSpan={8} className="p-8 text-center text-neutral-500">No daily challenge attempts recorded yet.</td></tr>
+                ) : (
+                  dailySolvers.map((s, i) => (
+                    <tr key={s.id} className="hover:bg-neutral-50/50 transition-colors">
+                      <td className="p-4 pl-6 font-bold text-neutral-400 text-xs">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                      <td className="p-4 font-bold text-neutral-900 text-sm">{s.candidate_name || 'Anonymous'}</td>
+                      <td className="p-4 text-sm text-neutral-600">{s.college || '—'}</td>
+                      <td className="p-4">
+                        <span className="text-xs font-mono font-semibold text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">
+                          {s.challenge_id}
+                        </span>
+                      </td>
+                      <td className="p-4 text-sm font-medium text-neutral-700">{s.challenge_date}</td>
+                      <td className="p-4 font-mono font-bold text-emerald-600 text-sm">{s.time_taken_seconds}s</td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200">
+                          <Flame size={12} className="fill-orange-600" /> {s.streak || 1}d
+                        </span>
+                      </td>
+                      <td className="p-4 pr-6 text-right text-xs text-neutral-400 font-mono">
+                        {new Date(s.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>

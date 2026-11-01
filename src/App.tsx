@@ -25,6 +25,7 @@ const SwitchChallenge = lazy(() => import('./games/switch/SwitchChallenge'));
 const InductiveChallenge = lazy(() => import('./games/inductive/InductiveChallenge'));
 const DIChallenge = lazy(() => import('./games/di/DIChallenge'));
 const RCChallenge = lazy(() => import('./games/rc/RCChallenge'));
+const QueensChallenge = lazy(() => import('./games/queens/QueensChallenge'));
 const InfosysPrep = lazy(() => import('./pages/company/InfosysPrep'));
 
 const RouteLoadingFallback = () => (
@@ -70,6 +71,7 @@ function App() {
               <Route path="/games/inductive" element={<InductiveChallenge />} />
               <Route path="/games/di" element={<DIChallenge />} />
               <Route path="/games/rc" element={<RCChallenge />} />
+              <Route path="/games/queens" element={<QueensChallenge />} />
             </Route>
             
             {/* Fallback */}
