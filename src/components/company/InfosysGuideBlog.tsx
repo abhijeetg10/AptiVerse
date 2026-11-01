@@ -72,10 +72,10 @@ export const InfosysGuideBlog: React.FC<InfosysGuideBlogProps> = ({ onStartMockT
               <Sparkles size={11} /> 2025–2026 Campus Drive Blueprint
             </div>
             <h3 className="text-base sm:text-lg font-extrabold text-white">
-              Complete Infosys Systems Engineer Preparation Guide
+              Complete Infosys Practice Test, PYQ & Mock Interview Guide
             </h3>
             <p className="text-xs text-slate-300 mt-0.5">
-              Read the comprehensive syllabus, cutoff rules, and interview questions below or jump directly into the full timed mock test.
+              Read the comprehensive syllabus, sectional cutoff rules, and interview questions below or jump directly into the full timed Infosys mock practice test.
             </p>
           </div>
         </div>
@@ -84,7 +84,7 @@ export const InfosysGuideBlog: React.FC<InfosysGuideBlogProps> = ({ onStartMockT
           onClick={onStartMockTest}
           className="px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-primary-600/25 transition-all flex items-center gap-2 shrink-0 cursor-pointer hover:scale-105 active:scale-95 whitespace-nowrap"
         >
-          <span>Take Full Mock Test</span>
+          <span>Take Infosys Practice Test (PYQs)</span>
           <ArrowRight size={14} />
         </button>
       </div>

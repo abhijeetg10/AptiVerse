@@ -5,10 +5,17 @@ import { cn } from '../utils/cn';
 import { Link } from 'react-router-dom';
 import { AdBanner } from '../components/ui/AdBanner';
 import { CompanyCardsSection } from '../components/company/CompanyCardsSection';
+import { SEOHead } from '../components/seo/SEOHead';
 
 const Games = () => {
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans pb-20">
+      <SEOHead
+        title="Gamified Apti & Gaming Aptitude Challenges | Infosys Mock Interview & Practice Tests"
+        description="Play 8 authentic gamified aptitude games (Queens, Motion, Geo Sudoku, Inductive Logic) and prepare for company placements with Infosys mock tests, PYQs, and AI mock interviews."
+        keywords="gamified apti, gaming apti, aptitude games, cognitive aptitude test, queens game, motion challenge, geo sudoku, grid memory test, infosys mock interview, infosys pyq, infosys practice test, infosys placement papers 2026, tcs nqt prep"
+        canonicalUrl="https://www.aptiverse.in/games"
+      />
       {/* Background shape */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary-50/50 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
       

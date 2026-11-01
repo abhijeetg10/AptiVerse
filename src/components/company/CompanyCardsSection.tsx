@@ -37,9 +37,9 @@ const COMPANY_TRACKS: CompanyTrack[] = [
     bgGradient: 'from-slate-50/80 via-white to-white',
     badgeStatus: 'active',
     packageText: '3.6 - 9.5 LPA',
-    title: 'Infosys Mock Test Track',
-    subtitle: 'Springboard & InfyTQ',
-    desc: 'Mock rounds for Springboard, InfyTQ and general aptitude & coding pattern with live AI interview.',
+    title: 'Infosys Mock Test & AI Interview',
+    subtitle: 'PYQ Practice & Screening Tests',
+    desc: 'Authentic 54-question practice tests, Infosys PYQs, sectional cutoff analysis, and real-time AI mock interview room.',
     difficulty: 'Easy-Medium',
     domainTag: 'Aptitude + Technical',
     linkTo: '/company/infosys'

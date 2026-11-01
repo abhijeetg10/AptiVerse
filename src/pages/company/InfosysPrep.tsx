@@ -17,6 +17,7 @@ import { AIMockInterviewRoom } from '../../components/company/AIMockInterviewRoo
 import { InfosysGuideBlog } from '../../components/company/InfosysGuideBlog';
 import { AdBanner } from '../../components/ui/AdBanner';
 import { DailyChallengeModal } from '../../components/daily/DailyChallengeModal';
+import { SEOHead } from '../../components/seo/SEOHead';
 import infosysLogo from '../../assets/infosys-logo.jpg';
 import gecMysoreImg from '../../assets/gec-mysore.jpg';
 
@@ -43,8 +44,91 @@ export const InfosysPrep: React.FC = () => {
     ? allInterviewQuestions
     : allInterviewQuestions.filter(q => q.category === selectedInterviewCategory);
 
+  const infosysSEOSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Course",
+        "name": "Infosys Mock Interview, Practice Tests & PYQ Placement Track",
+        "description": "Comprehensive Infosys Systems Engineer online preparation track. Includes 54-question full-length timed mock tests, previous year questions (PYQs), and real-time AI mock interview simulation.",
+        "provider": {
+          "@type": "Organization",
+          "name": "AptiVerse",
+          "sameAs": "https://www.aptiverse.in"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.aptiverse.in/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Practice",
+            "item": "https://www.aptiverse.in/games"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Infosys Mock Interview & PYQ Practice Test",
+            "item": "https://www.aptiverse.in/company/infosys"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Does the Infosys Online Assessment have negative marking?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Infosys does not deduct marks for incorrect answers. Since there is zero negative marking, candidates should never leave any question unattempted before the section timer expires."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the pattern of the Infosys Practice Test and Round 1 Online Test?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The test has 54 questions across 5 sections to be completed in 100 minutes: Reasoning Ability (15 Qs, 25 min), Technical Mathematical Ability (10 Qs, 35 min), Verbal Ability (20 Qs, 20 min), Pseudocode (5 Qs, 10 min), and Numerical Puzzle Solving (4 Qs, 10 min)."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does the Infosys AI Mock Interview work?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The AI mock interview simulates an authentic Infosys Technical and HR interview panel. It asks real Infosys interview questions using natural speech synthesis, captures your responses via camera and microphone, and evaluates your answers against what Infosys interviewers look for."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where can I find authentic Infosys PYQs (Previous Year Questions)?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "AptiVerse provides full-length Infosys mock tests curated from actual previous year recruitment patterns, covering reasoning puzzles, cryptarithmetic, pseudocode debugging, and quantitative aptitude."
+            }
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans pb-24">
+      <SEOHead
+        title="Infosys Mock Interview, Practice Tests & PYQ Placement Prep | AptiVerse"
+        description="Ace your Infosys Systems Engineer recruitment with free online practice tests (54 Qs • 100 Min), authentic Infosys PYQs with solutions, and real-time AI mock interview simulation."
+        keywords="infosys mock interview, infosys pyq, infosys practice test, infosys previous year questions, infosys placement papers 2026, infosys systems engineer test, infosys reasoning pyq, infosys mathematical ability pyq, infosys pseudocode test, infosys verbal ability pyq, infosys ai mock interview, infosys placement drive"
+        canonicalUrl="https://www.aptiverse.in/company/infosys"
+        schema={infosysSEOSchema}
+      />
       
       {/* Recruitment Guide & Prep Banner */}
       <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-primary-700 text-white px-4 py-2 text-xs text-center font-medium shadow-sm flex items-center justify-center gap-2">
@@ -89,11 +173,11 @@ export const InfosysPrep: React.FC = () => {
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
-                Infosys Placement Drive <span className="text-primary-400 block sm:inline">Mock Tests & AI Interview</span>
+                Infosys Mock Interview, <span className="text-primary-400 block sm:inline">PYQs & Practice Tests</span>
               </h1>
 
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-                Experience the authentic recruitment simulation: full-length timed screening (<strong>54 Questions • 100 Minutes</strong>) across 5 sections with strict cutoffs, followed by live camera AI Technical and HR interview panels.
+                Experience authentic recruitment screening: full-length <strong>Infosys practice tests (54 Questions • 100 Minutes)</strong> curated from actual <strong>Infosys PYQs</strong> with sectional cutoffs, followed by live camera <strong>AI Technical &amp; HR mock interview</strong> simulations.
               </p>
 
               {/* Quick Info Badges */}
@@ -216,7 +300,7 @@ export const InfosysPrep: React.FC = () => {
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }`}
             >
-              <BookOpen size={14} /> Recruitment Guide & Syllabus Blog
+              <BookOpen size={14} /> 1. Syllabus & Recruitment Guide
             </button>
 
             <button
@@ -227,7 +311,7 @@ export const InfosysPrep: React.FC = () => {
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }`}
             >
-              <Play size={14} className="fill-current" /> Complete Recruitment Drive & Mock Test
+              <Play size={14} className="fill-current" /> 2. Infosys Practice Test & AI Mock Interview
             </button>
 
             <button
@@ -238,7 +322,7 @@ export const InfosysPrep: React.FC = () => {
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }`}
             >
-              <FileText size={14} /> Interview Question Bank ({allInterviewQuestions.length})
+              <FileText size={14} /> 3. Infosys Interview PYQs ({allInterviewQuestions.length})
             </button>
           </div>
 

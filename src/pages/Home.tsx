@@ -8,12 +8,19 @@ import FeedbackModal from '../components/ui/FeedbackModal';
 import { AdBanner } from '../components/ui/AdBanner';
 import { RatingBadge } from '../components/ui/RatingBadge';
 import { CompanyCardsSection } from '../components/company/CompanyCardsSection';
+import { SEOHead } from '../components/seo/SEOHead';
 
 const Home = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   return (
     <div className="flex flex-col font-sans bg-white">
+      <SEOHead
+        title="AptiVerse — Gamified Apti & Gaming Aptitude Practice | Infosys Mock Interview & PYQs"
+        description="India's #1 Gamified Apti & Gaming Aptitude Platform. Solve interactive aptitude games (Queens, Motion, Sudoku) and crack campus placements with Infosys AI mock interviews, PYQ practice tests, and daily challenges."
+        keywords="gamified apti, gaming apti, apti games, gamified aptitude tests, cognitive aptitude games, infosys mock interview, infosys pyq, infosys practice test, infosys previous year questions, tcs nqt mock test, capgemini gamified aptitude, aptitude practice for placements, aptiverse"
+        canonicalUrl="https://www.aptiverse.in/"
+      />
       {/* Hero Section */}
       <section className="relative pt-6 pb-16 lg:pt-8 lg:pb-24 overflow-hidden">
         {/* Subtle background gradient shapes */}
