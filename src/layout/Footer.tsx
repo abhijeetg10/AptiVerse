@@ -63,8 +63,21 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Quick Connect Actions - Sleek Button */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Quick Connect Actions - Sleek Buttons */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 shrink-0">
+              <a
+                href="https://www.linkedin.com/company/aptiversein"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#0A66C2] hover:bg-[#004182] text-white text-xs font-bold shadow-sm hover:shadow-[#0A66C2]/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                title="Follow AptiVerse on LinkedIn"
+              >
+                <svg className="w-3.5 h-3.5 fill-white shrink-0" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+                <span>Follow on LinkedIn</span>
+              </a>
+
               <a
                 href="mailto:argaikwad24@gmail.com"
                 className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white text-xs font-bold shadow-sm hover:shadow-indigo-600/20 transition-all cursor-pointer"
@@ -99,10 +112,27 @@ const Footer = () => {
             <Link to="/leaderboard" className="text-sm text-slate-500 hover:text-indigo-600 transition-colors w-fit font-medium">Leaderboard</Link>
           </div>
 
-          {/* Contact */}
+          {/* Contact & Socials */}
           <div className="flex flex-col gap-4">
-            <h3 className="font-bold text-slate-900 mb-1 tracking-tight">Contact Us</h3>
+            <h3 className="font-bold text-slate-900 mb-1 tracking-tight">Connect with Us</h3>
             
+            <a 
+              href="https://www.linkedin.com/company/aptiversein" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center gap-3 group w-fit"
+            >
+              <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-[#0A66C2] group-hover:border-[#0A66C2] transition-all">
+                <svg className="w-4 h-4 fill-[#0A66C2] group-hover:fill-white transition-colors" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Official LinkedIn</span>
+                <span className="text-sm text-slate-700 font-bold group-hover:text-[#0A66C2] transition-colors">Follow @AptiVerse</span>
+              </div>
+            </a>
+
             <div className="flex items-start gap-3">
               <MapPin size={18} className="text-indigo-500 shrink-0 mt-0.5" />
               <span className="text-sm text-slate-600 font-medium leading-relaxed">
@@ -130,6 +160,17 @@ const Footer = () => {
           </div>
 
           <div className="flex items-center gap-6 font-medium text-slate-400">
+            <a
+              href="https://www.linkedin.com/company/aptiversein"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#0A66C2] text-slate-600 font-bold transition-colors flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5 fill-[#0A66C2]" viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
             <Link to="/about" className="hover:text-indigo-600 transition-colors">About Us</Link>
             <Link to="/privacy" className="hover:text-indigo-600 transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-indigo-600 transition-colors">Terms of Service</Link>

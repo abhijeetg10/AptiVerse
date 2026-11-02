@@ -69,17 +69,30 @@ const AboutUs = () => {
         </div>
 
         {/* Contact & Transparency */}
-        <div className="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-8 sm:p-10 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 sm:p-10 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
           <div>
-            <h3 className="text-xl font-bold mb-1">Have feedback or campus inquiries?</h3>
-            <p className="text-indigo-200 text-xs sm:text-sm">We actively partner with college placement cells and engineering departments.</p>
+            <h3 className="text-xl font-bold mb-1">Follow & Connect on LinkedIn</h3>
+            <p className="text-indigo-200 text-xs sm:text-sm">Join the AptiVerse community for placement prep updates, game algorithms, and announcements.</p>
           </div>
-          <a
-            href="mailto:argaikwad24@gmail.com"
-            className="px-6 py-3.5 bg-white text-slate-950 font-bold rounded-xl text-sm shadow hover:bg-indigo-50 transition-colors shrink-0 flex items-center gap-2"
-          >
-            <Mail size={16} /> Contact Team
-          </a>
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <a
+              href="https://www.linkedin.com/company/aptiversein"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-3.5 bg-[#0A66C2] hover:bg-[#004182] text-white font-bold rounded-xl text-sm shadow hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer hover:scale-105"
+            >
+              <svg className="w-4 h-4 fill-white shrink-0" viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+              </svg>
+              <span>Follow on LinkedIn</span>
+            </a>
+            <a
+              href="mailto:argaikwad24@gmail.com"
+              className="px-5 py-3.5 bg-white text-slate-950 font-bold rounded-xl text-sm shadow hover:bg-indigo-50 transition-colors flex items-center gap-2"
+            >
+              <Mail size={16} /> Contact Team
+            </a>
+          </div>
         </div>
 
       </div>
