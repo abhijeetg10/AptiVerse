@@ -1224,7 +1224,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                   <div className="mt-2 pt-2 border-t border-slate-800">
                     <div className="text-xs font-bold text-amber-400 mb-1">Key Talking Points:</div>
                     <ul className="list-disc list-inside space-y-1 text-xs text-slate-300">
-                      {q.expectedPoints.map((pt, pIdx) => (
+                      {(q.expectedPoints || []).map((pt, pIdx) => (
                         <li key={pIdx}>{pt}</li>
                       ))}
                     </ul>
@@ -1350,7 +1350,7 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
                       <Sparkles size={13} /> What Infosys Interviewers Expect:
                     </div>
                     <ul className="list-disc list-inside space-y-1 mb-2 text-slate-200">
-                      {currentQuestion.expectedPoints.map((pt, i) => (
+                      {(currentQuestion?.expectedPoints || []).map((pt, i) => (
                         <li key={i}>{pt}</li>
                       ))}
                     </ul>

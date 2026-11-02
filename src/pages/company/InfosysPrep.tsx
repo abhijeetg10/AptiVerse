@@ -841,7 +841,7 @@ export const InfosysPrep: React.FC = () => {
                     <div className="bg-white p-4 rounded-xl border border-neutral-200 text-xs">
                       <div className="font-bold text-primary-700 mb-1.5">What Interviewers Expect:</div>
                       <ul className="list-disc list-inside space-y-1 text-neutral-600">
-                        {q.expectedPoints.map((pt, pIdx) => (
+                        {(q.expectedPoints || []).map((pt, pIdx) => (
                           <li key={pIdx}>{pt}</li>
                         ))}
                       </ul>

@@ -62,3 +62,4 @@ describe('Security & Integrity: Anti-Cheat & Score Bounding', () => {
     expect(sanitizeTime(-99999)).toBe(1); // Anti-tamper on negative duration
   });
 });
+

@@ -302,7 +302,7 @@ export const DIChallenge: React.FC = () => {
                   </p>
                   
                   <div className="w-full space-y-4 text-left overflow-y-auto max-h-[350px] pr-2 mb-6">
-                    {state.puzzle.questions.map((q) => {
+                    {(state.puzzle?.questions || []).map((q) => {
                       const ans = state.answers[q.id];
                       const isCorrect = ans === q.correctAnswer;
                       return (

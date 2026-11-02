@@ -65,3 +65,4 @@ describe('Geo Sudoku Engine & Latin Square Generator', () => {
     expect(candidates.length).toBe(1);
   });
 });
+

@@ -38,3 +38,4 @@ describe('Global Daily Challenge Service & Scheduling Rules', () => {
     expect(countdown.formatted).toMatch(/^\d{2}h : \d{2}m : \d{2}s$/);
   });
 });
+

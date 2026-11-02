@@ -651,34 +651,36 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                         Section {currentSectionIdx + 1}: {activeSectionConfig.name}
                       </span>
                       <span className="text-slate-300 font-semibold bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-700/60">
-                        Question {activeQuestionInSecIdx + 1} of {sectionQuestions.length}
+                        Question {activeQuestionInSecIdx + 1} of {Math.max(1, sectionQuestions.length)}
                       </span>
                       <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 text-[11px] flex items-center gap-1">
                         <Sparkles size={11} className="text-emerald-400" /> Previously Asked in Infosys Exam
                       </span>
-                      <span className="text-slate-400 hidden sm:inline">• {currentQ.topic}</span>
+                      {currentQ?.topic && <span className="text-slate-400 hidden sm:inline">• {currentQ.topic}</span>}
                     </div>
 
-                    <button
-                      onClick={handleToggleReview}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-                        markedForReview[currentQ.id]
-                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
-                          : 'bg-slate-800/80 text-slate-400 border-slate-700/80 hover:bg-slate-800 hover:text-slate-200'
-                      }`}
-                    >
-                      <Bookmark size={13} className={markedForReview[currentQ.id] ? "fill-amber-400 text-amber-400" : ""} />
-                      <span>{markedForReview[currentQ.id] ? 'Marked for Review' : 'Mark for Review'}</span>
-                    </button>
+                    {currentQ && (
+                      <button
+                        onClick={handleToggleReview}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                          markedForReview[currentQ.id]
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
+                            : 'bg-slate-800/80 text-slate-400 border-slate-700/80 hover:bg-slate-800 hover:text-slate-200'
+                        }`}
+                      >
+                        <Bookmark size={13} className={markedForReview[currentQ.id] ? "fill-amber-400 text-amber-400" : ""} />
+                        <span>{markedForReview[currentQ.id] ? 'Marked for Review' : 'Mark for Review'}</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Question Prompt */}
                   <p className="text-lg text-white font-medium leading-relaxed whitespace-pre-line mb-4 select-text">
-                    {currentQ.question}
+                    {currentQ?.question || 'Loading question...'}
                   </p>
 
                   {/* Code Snippet if present */}
-                  {currentQ.codeSnippet && (
+                  {currentQ?.codeSnippet && (
                     <div className="bg-[#090d16] text-emerald-400 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 my-4 shadow-inner">
                       <div className="text-[10px] text-slate-500 uppercase tracking-wider pb-2 border-b border-slate-800/80 mb-2 font-sans font-bold flex items-center justify-between">
                         <span>Code Reference</span>
@@ -693,14 +695,18 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                     <span className="font-medium text-blue-400">
                       💡 Infosys has section-wise cutoffs, so prepare well for all sections.
                     </span>
-                    <span className="hidden sm:inline text-slate-600">•</span>
-                    <span className="hidden sm:inline text-slate-400">Topic: <strong className="text-slate-300">{currentQ.topic}</strong></span>
+                    {currentQ?.topic && (
+                      <>
+                        <span className="hidden sm:inline text-slate-600">•</span>
+                        <span className="hidden sm:inline text-slate-400">Topic: <strong className="text-slate-300">{currentQ.topic}</strong></span>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 {/* Multiple Choice Options */}
                 <div className="space-y-3">
-                  {currentQ.options.map((option, optIdx) => {
+                  {currentQ && (currentQ.options || []).map((option, optIdx) => {
                     const isSelected = selectedAnswers[currentQ.id] === optIdx;
                     return (
                       <button
@@ -1029,7 +1035,7 @@ export const InteractiveMockTest: React.FC<InteractiveMockTestProps> = ({
                     )}
 
                     <div className="grid sm:grid-cols-2 gap-2 text-xs my-3">
-                      {q.options.map((opt, optIdx) => {
+                      {(q.options || []).map((opt, optIdx) => {
                         const isThisCorrect = optIdx === q.correctAnswer;
                         const isUserPick = optIdx === userChoice;
 
