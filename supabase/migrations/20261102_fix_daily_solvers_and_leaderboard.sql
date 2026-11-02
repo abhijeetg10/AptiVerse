@@ -280,8 +280,11 @@ END;
 $$;
 
 -- 5. Safe get_daily_challenge_leaderboard RPC
+DROP FUNCTION IF EXISTS public.get_daily_challenge_leaderboard(UUID, INT, INT);
+DROP FUNCTION IF EXISTS public.get_daily_challenge_leaderboard(TEXT, INT, INT);
+
 CREATE OR REPLACE FUNCTION public.get_daily_challenge_leaderboard(
-  p_challenge_id UUID,
+  p_challenge_id TEXT,
   p_limit INT DEFAULT 50,
   p_offset INT DEFAULT 0
 )
@@ -298,14 +301,28 @@ DECLARE
 BEGIN
   v_user_id := auth.uid();
 
-  SELECT COUNT(*) INTO v_total_participants 
-  FROM public.daily_challenge_leaderboard 
-  WHERE daily_challenge_id = p_challenge_id;
-
-  SELECT COALESCE(jsonb_agg(to_jsonb(r)), '[]'::jsonb) INTO v_entries
-  FROM (
+  -- Select unified solvers from daily_challenge_solvers (lightweight and universally accessible)
+  WITH unified AS (
+    SELECT DISTINCT ON (COALESCE(s.user_id::text, s.candidate_name))
+      s.id AS attempt_id,
+      s.user_id,
+      s.candidate_name AS player_name,
+      COALESCE(s.college, 'Candidate') AS college,
+      NULL::text AS avatar_url,
+      100::numeric AS score,
+      100::numeric AS accuracy,
+      ROUND(s.time_taken_seconds * 1000)::bigint AS completion_time_ms,
+      s.time_taken_seconds AS completion_time_seconds,
+      true AS is_correct,
+      s.created_at AS submitted_at
+    FROM public.daily_challenge_solvers s
+    WHERE s.challenge_date = CURRENT_DATE 
+       OR s.challenge_id = p_challenge_id
+    ORDER BY COALESCE(s.user_id::text, s.candidate_name), s.time_taken_seconds ASC
+  ),
+  ranked AS (
     SELECT 
-      rank,
+      DENSE_RANK() OVER (ORDER BY completion_time_seconds ASC, submitted_at ASC) AS rank,
       attempt_id,
       user_id,
       player_name,
@@ -317,8 +334,13 @@ BEGIN
       completion_time_seconds,
       is_correct,
       submitted_at
-    FROM public.daily_challenge_leaderboard
-    WHERE daily_challenge_id = p_challenge_id
+    FROM unified
+  )
+  SELECT COUNT(*) INTO v_total_participants FROM ranked;
+
+  SELECT COALESCE(jsonb_agg(to_jsonb(r)), '[]'::jsonb) INTO v_entries
+  FROM (
+    SELECT * FROM ranked
     ORDER BY rank ASC
     LIMIT p_limit
     OFFSET p_offset
@@ -327,21 +349,8 @@ BEGIN
   IF v_user_id IS NOT NULL THEN
     SELECT to_jsonb(m) INTO v_my_entry
     FROM (
-      SELECT 
-        rank,
-        attempt_id,
-        user_id,
-        player_name,
-        college,
-        avatar_url,
-        score,
-        accuracy,
-        completion_time_ms,
-        completion_time_seconds,
-        is_correct,
-        submitted_at
-      FROM public.daily_challenge_leaderboard
-      WHERE daily_challenge_id = p_challenge_id AND user_id = v_user_id
+      SELECT * FROM ranked
+      WHERE user_id = v_user_id
       LIMIT 1
     ) m;
   END IF;
@@ -353,6 +362,8 @@ BEGIN
   );
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.get_daily_challenge_leaderboard(TEXT, INT, INT) TO authenticated, anon;
 
 -- 6. Backfill existing historical solvers from game_sessions
 DO $$
@@ -385,4 +396,50 @@ BEGIN
 EXCEPTION
   WHEN OTHERS THEN NULL;
 END $$;
+
+-- 7. Grant INSERT on game_sessions and configure RLS policy
+GRANT INSERT, SELECT ON public.game_sessions TO authenticated;
+GRANT SELECT ON public.game_sessions TO anon;
+
+ALTER TABLE public.game_sessions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Game sessions are viewable by everyone." ON public.game_sessions;
+CREATE POLICY "Game sessions are viewable by everyone."
+  ON public.game_sessions FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Users can insert their own game sessions." ON public.game_sessions;
+CREATE POLICY "Users can insert their own game sessions."
+  ON public.game_sessions FOR INSERT
+  TO authenticated
+  WITH CHECK ( auth.uid() = user_id );
+
+-- 8. Backfill daily_challenge_solvers into game_sessions so Sessions tab has all recent records
+INSERT INTO public.game_sessions (
+  id,
+  user_id,
+  game_id,
+  level,
+  score,
+  accuracy,
+  time_spent,
+  passed_distraction,
+  attempt_id,
+  created_at
+)
+SELECT 
+  s.id,
+  s.user_id,
+  'daily_challenge' AS game_id,
+  1 AS level,
+  10.00 AS score,
+  100 AS accuracy,
+  COALESCE(ROUND(s.time_taken_seconds), 15)::int AS time_spent,
+  true AS passed_distraction,
+  s.id AS attempt_id,
+  s.created_at
+FROM public.daily_challenge_solvers s
+WHERE s.user_id IS NOT NULL
+ON CONFLICT (id) DO NOTHING;
+
 

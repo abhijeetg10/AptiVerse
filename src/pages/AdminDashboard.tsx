@@ -472,8 +472,42 @@ export const AdminDashboard = () => {
 
         if (sessErr) throw sessErr;
 
-        if (rawSessions && rawSessions.length > 0) {
-          const userIds = Array.from(new Set(rawSessions.map((s: any) => s.user_id).filter(Boolean)));
+        let sessionList: any[] = rawSessions ? [...rawSessions] : [];
+
+        // Also merge any daily challenge solvers so recent daily plays immediately appear in Sessions
+        try {
+          const { data: dailySolversData } = await supabase
+            .from('daily_challenge_solvers')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+          if (dailySolversData && dailySolversData.length > 0) {
+            const existingIds = new Set(sessionList.map((s: any) => s.id));
+            dailySolversData.forEach((ds: any) => {
+              if (!existingIds.has(ds.id)) {
+                sessionList.push({
+                  id: ds.id,
+                  user_id: ds.user_id,
+                  game_id: 'daily_challenge',
+                  level: 1,
+                  score: 10,
+                  accuracy: 100,
+                  time_spent: Math.round(Number(ds.time_taken_seconds || 15)),
+                  created_at: ds.created_at,
+                  profiles: {
+                    name: ds.candidate_name,
+                    college: ds.college
+                  }
+                });
+              }
+            });
+            sessionList.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          }
+        } catch {}
+
+        if (sessionList.length > 0) {
+          const userIds = Array.from(new Set(sessionList.map((s: any) => s.user_id).filter(Boolean)));
           const profileMap = new Map<string, { name?: string; email?: string }>();
           if (userIds.length > 0) {
             try {
@@ -488,15 +522,15 @@ export const AdminDashboard = () => {
               console.warn('Could not load profiles for sessions:', pErr);
             }
           }
-          const enriched = rawSessions.map((s: any) => ({
+          const enriched = sessionList.map((s: any) => ({
             ...s,
-            profiles: profileMap.get(s.user_id) || null
+            profiles: s.profiles || profileMap.get(s.user_id) || null
           }));
-          setSessions(enriched);
+          setSessions(enriched.slice(0, PAGE_SIZE));
         } else {
           setSessions([]);
         }
-        setTotalTabCount(count ?? 0);
+        setTotalTabCount(Math.max(count ?? 0, sessionList.length));
       }
       else if (activeTab === 'tests') {
         let baseQuery = supabase
@@ -598,18 +632,44 @@ export const AdminDashboard = () => {
 
         if (error) throw error;
 
+        // Also fetch daily challenge solvers to ensure daily challenge completions reflect in the leaderboard
+        const dailySolversByUser = new Map<string, any[]>();
+        try {
+          const { data: dSolvers } = await supabase
+            .from('daily_challenge_solvers')
+            .select('user_id, candidate_name, college, time_taken_seconds, created_at');
+          if (dSolvers) {
+            dSolvers.forEach((ds: any) => {
+              const uKey = ds.user_id;
+              if (uKey) {
+                if (!dailySolversByUser.has(uKey)) dailySolversByUser.set(uKey, []);
+                dailySolversByUser.get(uKey)!.push(ds);
+              }
+            });
+          }
+        } catch {}
+
         const list: any[] = [];
         (profileData || []).forEach((p: any) => {
           const sessions = p.game_sessions || [];
-          if (sessions.length === 0) return;
+          const dailyAttempts = dailySolversByUser.get(p.id) || [];
+          if (sessions.length === 0 && dailyAttempts.length === 0) return;
 
           let total_score = 0;
           let accuracy_sum = 0;
           let total_time = 0;
+          const total_entries = sessions.length + dailyAttempts.length;
+
           sessions.forEach((s: any) => {
             total_score += Number(s.score) || 0;
             accuracy_sum += Number(s.accuracy) || 0;
             total_time += Number(s.time_spent) || 0;
+          });
+
+          dailyAttempts.forEach((d: any) => {
+            total_score += 10;
+            accuracy_sum += 100;
+            total_time += Math.round(Number(d.time_taken_seconds || 15));
           });
 
           list.push({
@@ -618,8 +678,8 @@ export const AdminDashboard = () => {
             college: normalizeCollege(p.college),
             avatar_url: p.avatar_url,
             total_score,
-            avg_accuracy: sessions.length > 0 ? Math.round(accuracy_sum / sessions.length) : 0,
-            total_games: sessions.length,
+            avg_accuracy: total_entries > 0 ? Math.round(accuracy_sum / total_entries) : 0,
+            total_games: total_entries,
             total_time,
           });
         });
