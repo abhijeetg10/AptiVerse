@@ -172,11 +172,16 @@ CREATE TABLE IF NOT EXISTS public.daily_challenge_solvers (
 );
 
 CREATE INDEX IF NOT EXISTS idx_daily_solvers_date_speed ON public.daily_challenge_solvers(challenge_date, time_taken_seconds ASC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_solvers_user_date ON public.daily_challenge_solvers(user_id, challenge_date) WHERE user_id IS NOT NULL;
 ALTER TABLE public.daily_challenge_solvers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public can view daily challenge solvers" ON public.daily_challenge_solvers;
 CREATE POLICY "Public can view daily challenge solvers" ON public.daily_challenge_solvers FOR SELECT TO public USING (true);
 DROP POLICY IF EXISTS "Allow daily challenge solver submissions" ON public.daily_challenge_solvers;
 CREATE POLICY "Allow daily challenge solver submissions" ON public.daily_challenge_solvers FOR INSERT TO public WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow daily challenge solver updates" ON public.daily_challenge_solvers;
+CREATE POLICY "Allow daily challenge solver updates" ON public.daily_challenge_solvers FOR UPDATE TO public USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow daily challenge solver deletions" ON public.daily_challenge_solvers;
+CREATE POLICY "Allow daily challenge solver deletions" ON public.daily_challenge_solvers FOR DELETE TO public USING (true);
 
 -- 7. PRODUCTION GLOBAL DAILY CHALLENGE SYSTEM (20261102)
 CREATE TABLE IF NOT EXISTS public.daily_challenges (
@@ -481,12 +486,35 @@ export const AdminDashboard = () => {
             .from('daily_challenge_solvers')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(50);
+            .limit(100);
 
           if (dailySolversData && dailySolversData.length > 0) {
-            const existingIds = new Set(sessionList.map((s: any) => s.id));
+            // Keep fastest solve per candidate per date to prevent duplicate listings
+            const fastestDailyMap = new Map<string, any>();
             dailySolversData.forEach((ds: any) => {
-              if (!existingIds.has(ds.id)) {
+              const dateStr = ds.challenge_date || (ds.created_at || '').split('T')[0];
+              const userKey = ds.user_id || (ds.candidate_name || 'anon').trim().toLowerCase();
+              const mapKey = `${userKey}_${dateStr}`;
+              const timeSec = Number(ds.time_taken_seconds || 15);
+
+              if (!fastestDailyMap.has(mapKey) || timeSec < fastestDailyMap.get(mapKey).time_taken_seconds) {
+                fastestDailyMap.set(mapKey, ds);
+              }
+            });
+
+            // Prevent duplicating daily_challenge sessions already present from game_sessions
+            const existingDailyKeys = new Set(
+              sessionList
+                .filter((s: any) => s.game_id === 'daily_challenge')
+                .map((s: any) => {
+                  const dateStr = (s.created_at || '').split('T')[0];
+                  const userKey = s.user_id || (s.profiles?.name || 'anon').trim().toLowerCase();
+                  return `${userKey}_${dateStr}`;
+                })
+            );
+
+            fastestDailyMap.forEach((ds: any, mapKey: string) => {
+              if (!existingDailyKeys.has(mapKey)) {
                 sessionList.push({
                   id: ds.id,
                   user_id: ds.user_id,
@@ -893,8 +921,9 @@ export const AdminDashboard = () => {
   const deleteSession = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this game session? This affects the leaderboard.')) return;
     try {
-      const { error } = await supabase.from('game_sessions').delete().eq('id', id);
-      if (error) throw error;
+      // Delete from both game_sessions and daily_challenge_solvers
+      await supabase.from('game_sessions').delete().eq('id', id);
+      await supabase.from('daily_challenge_solvers').delete().eq('id', id);
       setSessions(prev => prev.filter(s => s.id !== id));
       fetchOverviewMetrics();
     } catch (err: any) {

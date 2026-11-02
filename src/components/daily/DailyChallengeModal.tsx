@@ -46,6 +46,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
   // Live Timer State (Calculated from server started_at)
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerIntervalRef = useRef<any>(null);
+  const isSubmittingRef = useRef(false);
 
   // Midnight IST Countdown
   const [countdownStr, setCountdownStr] = useState(() => getISTMidnightCountdown().formatted);
@@ -199,24 +200,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
         if (activeAttempt) {
           setAttempt(activeAttempt);
           if (activeAttempt.is_completed) {
-            // Auto-sync completed attempt to Supabase daily_challenge_solvers
-            submitOfficialDailyChallenge(
-              activeAttempt.attempt_id,
-              activeAttempt.is_correct ?? true,
-              activeAttempt.score ?? 100,
-              activeAttempt.accuracy ?? 100,
-              {
-                challenge_id: globalChallenge.id,
-                candidate_name: user?.name || candidateName,
-                college: user?.college,
-                started_at: activeAttempt.started_at,
-                completion_time_ms: activeAttempt.completion_time_ms || 15000,
-                streak: userStreak
-              },
-              user?.id
-            ).finally(() => {
-              loadLeaderboardRef.current(activeAttempt);
-            });
+            loadLeaderboardRef.current(activeAttempt);
           }
         }
       }
@@ -226,30 +210,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
       setIsLoadingChallenge(false);
       isFetchingTodayRef.current = false;
     }
-  }, [user?.id, user?.name, user?.college, candidateName, userStreak]);
-
-  // Auto-sync offline/guest completed attempt once user signs in or opens modal
-  useEffect(() => {
-    if (attempt?.is_completed && challenge) {
-      submitOfficialDailyChallenge(
-        attempt.attempt_id,
-        attempt.is_correct ?? true,
-        attempt.score ?? 100,
-        attempt.accuracy ?? 100,
-        {
-          challenge_id: challenge.id,
-          candidate_name: user?.name || candidateName,
-          college: user?.college,
-          started_at: attempt.started_at,
-          completion_time_ms: attempt.completion_time_ms || 15000,
-          streak: userStreak
-        },
-        user?.id
-      ).then(() => {
-        loadLeaderboardRef.current();
-      });
-    }
-  }, [user?.id, attempt?.is_completed, challenge?.id, user?.name, user?.college, candidateName, userStreak]);
+  }, []);
 
   // 3. Fetch History
   const loadHistory = useCallback(async () => {
@@ -361,7 +322,8 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
 
   // Submit Official Solution Handler
   const handleSolveChallenge = async (isCorrect: boolean, score: number, accuracy: number) => {
-    if (!challenge) return;
+    if (!challenge || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
 
@@ -396,6 +358,8 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
       loadLeaderboard(result);
     } catch (err) {
       console.warn('Submit solution error:', err);
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 

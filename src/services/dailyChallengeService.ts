@@ -430,6 +430,63 @@ export const startOfficialDailyChallenge = async (
   return newAttempt;
 };
 
+// Dedicated safe solver recorder to guarantee exactly 1 authoritative record per user per day
+async function recordDailySolverSafely(
+  validAttemptId: string,
+  validUserId: string | null,
+  istToday: string,
+  timeTakenSec: number,
+  metadata: Record<string, any>
+) {
+  try {
+    let checkQuery = supabase
+      .from('daily_challenge_solvers')
+      .select('id, time_taken_seconds')
+      .eq('challenge_date', istToday);
+
+    if (validUserId) {
+      checkQuery = checkQuery.eq('user_id', validUserId);
+    } else if (metadata.candidate_name) {
+      checkQuery = checkQuery.eq('candidate_name', metadata.candidate_name);
+    }
+
+    const { data: existingSolver } = await checkQuery.maybeSingle();
+
+    if (existingSolver) {
+      // Candidate already has an entry for today: only update if the new speed is faster
+      if (timeTakenSec < Number(existingSolver.time_taken_seconds)) {
+        await supabase
+          .from('daily_challenge_solvers')
+          .update({
+            time_taken_seconds: timeTakenSec,
+            streak: metadata.streak || 1,
+            candidate_name: metadata.candidate_name || 'AptiVerse Scholar',
+            college: metadata.college || 'Engineering Institute'
+          })
+          .eq('id', existingSolver.id);
+        console.log('⚡ Updated existing daily solver entry with faster speed:', timeTakenSec);
+      } else {
+        console.log('ℹ️ Daily solver entry already recorded with faster or equal time; skipping duplicate insert.');
+      }
+    } else {
+      // First submission for today - insert single authoritative row
+      await supabase.from('daily_challenge_solvers').insert({
+        id: validAttemptId,
+        user_id: validUserId,
+        candidate_name: metadata.candidate_name || 'AptiVerse Scholar',
+        college: metadata.college || 'Engineering Institute',
+        challenge_id: metadata.challenge_id || 'daily_challenge',
+        challenge_date: istToday,
+        time_taken_seconds: timeTakenSec,
+        streak: metadata.streak || 1
+      });
+      console.log('✅ Daily challenge solver recorded in daily_challenge_solvers!');
+    }
+  } catch (solvErr) {
+    console.warn('daily_challenge_solvers recording note:', solvErr);
+  }
+}
+
 /**
  * 3. Submit official daily challenge solution with server-authoritative timestamps
  * Supports both dedicated RPCs and production game_sessions table directly.
@@ -444,6 +501,7 @@ export const submitOfficialDailyChallenge = async (
 ): Promise<DailyAttemptRecord> => {
   const completionTimeMs = metadata.completion_time_ms || 15000;
   const timeSpentSecs = Math.max(1, Math.round(completionTimeMs / 1000));
+  const timeTakenSec = Number((completionTimeMs / 1000).toFixed(1));
   const validAttemptId = attemptId && attemptId.length === 36 ? attemptId : crypto.randomUUID();
   const istToday = getISTDateString();
   const validUserId = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId) ? userId : null;
@@ -459,18 +517,8 @@ export const submitOfficialDailyChallenge = async (
     });
 
     if (!error && data && data.attempt_id) {
-      // Sync to daily_challenge_solvers non-blocking
-      supabase.from('daily_challenge_solvers').upsert({
-        id: validAttemptId,
-        user_id: validUserId,
-        candidate_name: metadata.candidate_name || 'AptiVerse Scholar',
-        college: metadata.college || 'Engineering Institute',
-        challenge_id: metadata.challenge_id || 'daily_challenge',
-        challenge_date: istToday,
-        time_taken_seconds: Number((completionTimeMs / 1000).toFixed(1)),
-        streak: metadata.streak || 1
-      }, { onConflict: 'id' }).then(() => {}, () => {});
-
+      // Sync to daily_challenge_solvers safely with de-duplication
+      recordDailySolverSafely(validAttemptId, validUserId, istToday, timeTakenSec, metadata);
       return data as DailyAttemptRecord;
     }
   } catch (err) {
@@ -478,22 +526,8 @@ export const submitOfficialDailyChallenge = async (
   }
 
   // Layer 2: Direct Supabase tables (Universal: for both authenticated and guest users)
-  // 2A. Direct upsert into daily_challenge_solvers
-  try {
-    await supabase.from('daily_challenge_solvers').upsert({
-      id: validAttemptId,
-      user_id: validUserId,
-      candidate_name: metadata.candidate_name || 'AptiVerse Scholar',
-      college: metadata.college || 'Engineering Institute',
-      challenge_id: metadata.challenge_id || 'daily_challenge',
-      challenge_date: istToday,
-      time_taken_seconds: Number((completionTimeMs / 1000).toFixed(1)),
-      streak: metadata.streak || 1
-    }, { onConflict: 'id' });
-    console.log('✅ Daily challenge solver recorded in daily_challenge_solvers!');
-  } catch (solvErr) {
-    console.warn('daily_challenge_solvers direct upsert note:', solvErr);
-  }
+  // 2A. Direct de-duplicated record in daily_challenge_solvers
+  await recordDailySolverSafely(validAttemptId, validUserId, istToday, timeTakenSec, metadata);
 
   // 2B. daily_challenge_attempts table upsert (if authenticated & challenge_id is UUID)
   if (validUserId && metadata.challenge_id) {
