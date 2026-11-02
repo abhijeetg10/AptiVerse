@@ -41,6 +41,8 @@ const Dashboard = () => {
     di: { name: 'Tab Based DI', path: '/games/di' },
     rc: { name: 'Tab Based RC', path: '/games/rc' },
     queens: { name: 'Queens Challenge', path: '/games/queens' },
+    daily_challenge: { name: 'Daily Hard Challenge', path: '/?challenge=daily' },
+    daily: { name: 'Daily Hard Challenge', path: '/?challenge=daily' },
   };
 
   useEffect(() => {

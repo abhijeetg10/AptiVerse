@@ -72,7 +72,11 @@ const Progress = () => {
   }, [user]);
 
   const getGameIcon = (gameId: string) => {
-    switch (gameId) {
+    const id = (gameId || '').toLowerCase().trim();
+    if (id === 'daily_challenge' || id === 'daily' || id.startsWith('dc-') || id.includes('daily')) {
+      return <Flame size={18} className="text-orange-500 fill-orange-500" />;
+    }
+    switch (id) {
       case 'motion': return <Boxes size={18} className="text-blue-500" />;
       case 'sudoku':
       case 'geo_sudoku': return <Brain size={18} className="text-amber-500" />;
@@ -87,7 +91,11 @@ const Progress = () => {
   };
 
   const getGameName = (gameId: string) => {
-    switch (gameId) {
+    const id = (gameId || '').toLowerCase().trim();
+    if (id === 'daily_challenge' || id === 'daily' || id.startsWith('dc-') || id.includes('daily')) {
+      return "Daily Hard Challenge";
+    }
+    switch (id) {
       case 'motion': return "Motion Challenge";
       case 'sudoku':
       case 'geo_sudoku': return "Geo Sudoku";
@@ -97,7 +105,10 @@ const Progress = () => {
       case 'di': return "Tab Based DI";
       case 'rc': return "Tab Based RC";
       case 'queens': return "Queens Challenge";
-      default: return "Unknown Game";
+      default:
+        return id
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, c => c.toUpperCase()) || "Aptitude Challenge";
     }
   };
 
