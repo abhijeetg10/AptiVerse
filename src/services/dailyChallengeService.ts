@@ -442,10 +442,16 @@ export const submitOfficialDailyChallenge = async (
   metadata: Record<string, any> = {},
   userId?: string
 ): Promise<DailyAttemptRecord> => {
+  const completionTimeMs = metadata.completion_time_ms || 15000;
+  const timeSpentSecs = Math.max(1, Math.round(completionTimeMs / 1000));
+  const validAttemptId = attemptId && attemptId.length === 36 ? attemptId : crypto.randomUUID();
+  const istToday = getISTDateString();
+  const validUserId = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId) ? userId : null;
+
   // Try Layer 1: Dedicated RPC if present
   try {
     const { data, error } = await supabase.rpc('submit_daily_challenge', {
-      p_attempt_id: attemptId,
+      p_attempt_id: validAttemptId,
       p_is_correct: isCorrect,
       p_score: score,
       p_accuracy: accuracy,
@@ -453,72 +459,77 @@ export const submitOfficialDailyChallenge = async (
     });
 
     if (!error && data && data.attempt_id) {
-      return data as DailyAttemptRecord;
-    }
-  } catch (err) {
-    console.warn('submit_daily_challenge RPC note:', err);
-  }
-
-  const completionTimeMs = metadata.completion_time_ms || 15000;
-  const timeSpentSecs = Math.max(1, Math.round(completionTimeMs / 1000));
-  const validAttemptId = attemptId && attemptId.length === 36 ? attemptId : crypto.randomUUID();
-
-  // Try Layer 2: Direct Supabase tables if authenticated
-  if (userId) {
-    const istToday = getISTDateString();
-
-    // 2A. Direct insert into daily_challenge_solvers (lightweight and universally accessible)
-    try {
-      await supabase.from('daily_challenge_solvers').insert({
+      // Sync to daily_challenge_solvers non-blocking
+      supabase.from('daily_challenge_solvers').upsert({
         id: validAttemptId,
-        user_id: userId,
+        user_id: validUserId,
         candidate_name: metadata.candidate_name || 'AptiVerse Scholar',
         college: metadata.college || 'Engineering Institute',
         challenge_id: metadata.challenge_id || 'daily_challenge',
         challenge_date: istToday,
         time_taken_seconds: Number((completionTimeMs / 1000).toFixed(1)),
         streak: metadata.streak || 1
-      });
-      console.log('✅ Daily challenge solver recorded in daily_challenge_solvers!');
-    } catch (solvErr) {
-      console.warn('daily_challenge_solvers direct insert note:', solvErr);
-    }
+      }, { onConflict: 'id' }).then(() => {}, () => {});
 
-    // 2B. daily_challenge_attempts table upsert (only if challenge_id is a valid UUID or existing table format)
-    if (metadata.challenge_id) {
-      try {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(metadata.challenge_id);
-        if (isUUID) {
-          await supabase.from('daily_challenge_attempts').upsert({
-            id: validAttemptId,
-            daily_challenge_id: metadata.challenge_id,
-            user_id: userId,
-            candidate_name: metadata.candidate_name || 'AptiVerse Scholar',
-            college: metadata.college || 'Engineering Institute',
-            completion_time_ms: completionTimeMs,
-            score: score,
-            accuracy: accuracy,
-            is_completed: true,
-            is_correct: isCorrect,
-            status: 'completed',
-            submitted_at: new Date().toISOString(),
-            attempt_metadata: metadata
-          }, { onConflict: 'daily_challenge_id,user_id' });
-        }
-      } catch (attErr) {
-        console.warn('daily_challenge_attempts direct upsert note:', attErr);
+      return data as DailyAttemptRecord;
+    }
+  } catch (err) {
+    console.warn('submit_daily_challenge RPC note:', err);
+  }
+
+  // Layer 2: Direct Supabase tables (Universal: for both authenticated and guest users)
+  // 2A. Direct upsert into daily_challenge_solvers
+  try {
+    await supabase.from('daily_challenge_solvers').upsert({
+      id: validAttemptId,
+      user_id: validUserId,
+      candidate_name: metadata.candidate_name || 'AptiVerse Scholar',
+      college: metadata.college || 'Engineering Institute',
+      challenge_id: metadata.challenge_id || 'daily_challenge',
+      challenge_date: istToday,
+      time_taken_seconds: Number((completionTimeMs / 1000).toFixed(1)),
+      streak: metadata.streak || 1
+    }, { onConflict: 'id' });
+    console.log('✅ Daily challenge solver recorded in daily_challenge_solvers!');
+  } catch (solvErr) {
+    console.warn('daily_challenge_solvers direct upsert note:', solvErr);
+  }
+
+  // 2B. daily_challenge_attempts table upsert (if authenticated & challenge_id is UUID)
+  if (validUserId && metadata.challenge_id) {
+    try {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(metadata.challenge_id);
+      if (isUUID) {
+        await supabase.from('daily_challenge_attempts').upsert({
+          id: validAttemptId,
+          daily_challenge_id: metadata.challenge_id,
+          user_id: validUserId,
+          candidate_name: metadata.candidate_name || 'AptiVerse Scholar',
+          college: metadata.college || 'Engineering Institute',
+          completion_time_ms: completionTimeMs,
+          score: score,
+          accuracy: accuracy,
+          is_completed: true,
+          is_correct: isCorrect,
+          status: 'completed',
+          submitted_at: new Date().toISOString(),
+          attempt_metadata: metadata
+        }, { onConflict: 'daily_challenge_id,user_id' });
       }
+    } catch (attErr) {
+      console.warn('daily_challenge_attempts direct upsert note:', attErr);
     }
+  }
 
-    // 2C. Direct Supabase game_sessions table insertion (attempt_id is a UUID)
+  // 2C. Direct Supabase game_sessions table insertion (if authenticated)
+  if (validUserId) {
     try {
       const startOfDayISO = new Date(`${istToday}T00:00:00+05:30`).toISOString();
 
-      // Check if attempt already exists in game_sessions to avoid duplicate insertions
       const { data: existing } = await supabase
         .from('game_sessions')
         .select('id, score, accuracy, time_spent, created_at')
-        .eq('user_id', userId)
+        .eq('user_id', validUserId)
         .eq('game_id', 'daily_challenge')
         .gte('created_at', startOfDayISO)
         .maybeSingle();
@@ -526,14 +537,14 @@ export const submitOfficialDailyChallenge = async (
       if (!existing && isCorrect) {
         const { error: insertErr } = await supabase.from('game_sessions').insert({
           id: validAttemptId,
-          user_id: userId,
+          user_id: validUserId,
           game_id: 'daily_challenge',
           level: 1,
           score: score,
           accuracy: accuracy,
           time_spent: timeSpentSecs,
           passed_distraction: true,
-          attempt_id: validAttemptId // Must be a valid UUID for postgres uuid column!
+          attempt_id: validAttemptId
         });
 
         if (insertErr) {
@@ -563,10 +574,10 @@ export const submitOfficialDailyChallenge = async (
     rank: 1
   };
 };
-
 /**
  * 4. Fetch daily challenge leaderboard for the given challenge ID
- * Queries dedicated RPCs or direct Supabase game_sessions table.
+ * Queries dedicated RPCs, daily_challenge_solvers, daily_challenge_attempts, and game_sessions
+ * and merges all sources into a unified, de-duplicated speed ranking.
  */
 export const fetchDailyLeaderboard = async (
   challengeId: string,
@@ -574,9 +585,11 @@ export const fetchDailyLeaderboard = async (
   offset: number = 0,
   currentUserId?: string
 ): Promise<DailyLeaderboardData> => {
-  let serverData: DailyLeaderboardData | null = null;
+  const istToday = getISTDateString();
+  const startOfDayISO = new Date(`${istToday}T00:00:00+05:30`).toISOString();
+  const entriesMap = new Map<string, LeaderboardEntry>();
 
-  // 1. Try dedicated RPC
+  // 1. Try dedicated RPC first
   try {
     const { data, error } = await supabase.rpc('get_daily_challenge_leaderboard', {
       p_challenge_id: challengeId,
@@ -584,182 +597,142 @@ export const fetchDailyLeaderboard = async (
       p_offset: offset
     });
 
-    if (!error && data && Array.isArray(data.entries) && data.entries.length > 0) {
-      serverData = {
-        total_participants: data.total_participants || data.entries.length,
-        entries: data.entries,
-        my_entry: data.my_entry || null
-      };
+    if (!error && data && Array.isArray(data.entries)) {
+      data.entries.forEach((e: LeaderboardEntry) => {
+        const key = e.user_id || e.attempt_id;
+        if (key) entriesMap.set(key, e);
+      });
     }
   } catch (err) {
     console.warn('get_daily_challenge_leaderboard RPC error:', err);
   }
 
-  // 2. Direct daily_challenge_solvers table query (fastest & handles all user submissions)
-  if (!serverData || serverData.entries.length === 0) {
-    try {
-      const istToday = getISTDateString();
-      const { data: solvers, error: solvError } = await supabase
-        .from('daily_challenge_solvers')
-        .select('*')
-        .or(`challenge_date.eq.${istToday},challenge_id.eq.${challengeId}`)
-        .order('time_taken_seconds', { ascending: true })
-        .limit(limit);
+  // 2. Query daily_challenge_solvers (lightweight and universally accessible)
+  try {
+    const { data: solvers, error: solvError } = await supabase
+      .from('daily_challenge_solvers')
+      .select('*')
+      .or(`challenge_date.eq.${istToday},challenge_id.eq.${challengeId}`)
+      .order('time_taken_seconds', { ascending: true })
+      .limit(limit);
 
-      if (!solvError && solvers && solvers.length > 0) {
-        const mappedEntries: LeaderboardEntry[] = solvers.map((s: any, idx: number) => ({
-          rank: idx + 1,
-          attempt_id: s.id,
-          user_id: s.user_id || `solver_${s.id}`,
-          player_name: s.candidate_name || 'AptiVerse Scholar',
-          college: s.college || 'Engineering Institute',
-          avatar_url: undefined,
-          completion_time_ms: Math.round(Number(s.time_taken_seconds || 15) * 1000),
-          completion_time_seconds: Number(s.time_taken_seconds || 15),
-          score: 100,
-          accuracy: 100,
-          is_correct: true,
-          submitted_at: s.created_at || new Date().toISOString()
-        }));
-
-        const myEntry = currentUserId
-          ? mappedEntries.find(e => e.user_id === currentUserId) || null
-          : null;
-
-        serverData = {
-          total_participants: mappedEntries.length,
-          entries: mappedEntries,
-          my_entry: myEntry
-        };
-      }
-    } catch (solvErr) {
-      console.warn('Direct daily_challenge_solvers query note:', solvErr);
+    if (!solvError && solvers && solvers.length > 0) {
+      solvers.forEach((s: any) => {
+        const key = s.user_id || s.id;
+        if (!entriesMap.has(key)) {
+          entriesMap.set(key, {
+            rank: 1,
+            attempt_id: s.id,
+            user_id: s.user_id || `solver_${s.id}`,
+            player_name: s.candidate_name || 'AptiVerse Scholar',
+            college: s.college || 'Engineering Institute',
+            avatar_url: undefined,
+            completion_time_ms: Math.round(Number(s.time_taken_seconds || 15) * 1000),
+            completion_time_seconds: Number(s.time_taken_seconds || 15),
+            score: 100,
+            accuracy: 100,
+            is_correct: true,
+            submitted_at: s.created_at || new Date().toISOString()
+          });
+        }
+      });
     }
+  } catch (solvErr) {
+    console.warn('daily_challenge_solvers query note:', solvErr);
   }
 
-  // 3. Direct daily_challenge_attempts table fallback
-  if (!serverData || serverData.entries.length === 0) {
-    try {
-      const { data: attempts, error: attError } = await supabase
-        .from('daily_challenge_attempts')
-        .select(`
-          id,
-          user_id,
-          candidate_name,
-          college,
-          avatar_url,
-          score,
-          accuracy,
-          completion_time_ms,
-          is_correct,
-          submitted_at
-        `)
-        .eq('daily_challenge_id', challengeId)
-        .eq('is_completed', true)
-        .order('is_correct', { ascending: false })
-        .order('score', { ascending: false })
-        .order('accuracy', { ascending: false })
-        .order('completion_time_ms', { ascending: true })
-        .limit(limit);
+  // 3. Query daily_challenge_attempts
+  try {
+    const { data: attempts, error: attError } = await supabase
+      .from('daily_challenge_attempts')
+      .select('id, user_id, candidate_name, college, avatar_url, score, accuracy, completion_time_ms, is_correct, submitted_at')
+      .eq('daily_challenge_id', challengeId)
+      .eq('is_completed', true)
+      .limit(limit);
 
-      if (!attError && attempts && attempts.length > 0) {
-        const mappedEntries: LeaderboardEntry[] = attempts.map((a: any, idx: number) => ({
-          rank: idx + 1,
-          attempt_id: a.id,
-          user_id: a.user_id,
-          player_name: a.candidate_name || 'AptiVerse Scholar',
-          college: a.college || 'Engineering Institute',
-          avatar_url: a.avatar_url,
-          completion_time_ms: a.completion_time_ms || 15000,
-          completion_time_seconds: Number(((a.completion_time_ms || 15000) / 1000).toFixed(1)),
-          score: a.score ?? 100,
-          accuracy: a.accuracy ?? 100,
-          is_correct: a.is_correct ?? true,
-          submitted_at: a.submitted_at || new Date().toISOString()
-        }));
-
-        const myEntry = currentUserId
-          ? mappedEntries.find(e => e.user_id === currentUserId) || null
-          : null;
-
-        serverData = {
-          total_participants: mappedEntries.length,
-          entries: mappedEntries,
-          my_entry: myEntry
-        };
-      }
-    } catch (err) {
-      console.warn('Direct daily_challenge_attempts query note:', err);
+    if (!attError && attempts && attempts.length > 0) {
+      attempts.forEach((a: any) => {
+        const key = a.user_id || a.id;
+        if (!entriesMap.has(key)) {
+          entriesMap.set(key, {
+            rank: 1,
+            attempt_id: a.id,
+            user_id: a.user_id,
+            player_name: a.candidate_name || 'AptiVerse Scholar',
+            college: a.college || 'Engineering Institute',
+            avatar_url: a.avatar_url,
+            completion_time_ms: a.completion_time_ms || 15000,
+            completion_time_seconds: Number(((a.completion_time_ms || 15000) / 1000).toFixed(1)),
+            score: a.score ?? 100,
+            accuracy: a.accuracy ?? 100,
+            is_correct: a.is_correct ?? true,
+            submitted_at: a.submitted_at || new Date().toISOString()
+          });
+        }
+      });
     }
+  } catch (err) {
+    console.warn('daily_challenge_attempts query note:', err);
   }
 
-  // 3. Direct Supabase game_sessions table fallback
-  if (!serverData || serverData.entries.length === 0) {
-    try {
-      const istToday = getISTDateString();
-      const startOfDayISO = new Date(`${istToday}T00:00:00+05:30`).toISOString();
+  // 4. Query game_sessions
+  try {
+    const { data: sessions, error: sessErr } = await supabase
+      .from('game_sessions')
+      .select('id, user_id, score, accuracy, time_spent, created_at')
+      .eq('game_id', 'daily_challenge')
+      .gte('created_at', startOfDayISO)
+      .limit(limit);
 
-      const { data: sessions, error } = await supabase
-        .from('game_sessions')
-        .select(`
-          id,
-          user_id,
-          score,
-          accuracy,
-          time_spent,
-          created_at,
-          profiles:user_id (
-            name,
-            college,
-            avatar_url
-          )
-        `)
-        .eq('game_id', 'daily_challenge')
-        .gte('created_at', startOfDayISO)
-        .order('score', { ascending: false })
-        .order('time_spent', { ascending: true })
-        .limit(limit);
+    if (!sessErr && sessions && sessions.length > 0) {
+      const userIds = Array.from(new Set(sessions.map((s: any) => s.user_id).filter(Boolean)));
+      const profileMap = new Map<string, { name?: string; college?: string; avatar_url?: string }>();
+      if (userIds.length > 0) {
+        try {
+          const { data: profs } = await supabase
+            .from('profiles')
+            .select('id, name, college, avatar_url')
+            .in('id', userIds);
+          (profs || []).forEach((p: any) => profileMap.set(p.id, p));
+        } catch {}
+      }
 
-      if (!error && sessions && sessions.length > 0) {
-        const mappedEntries: LeaderboardEntry[] = sessions.map((s: any, idx: number) => {
-          const profile = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles;
-          return {
-            rank: idx + 1,
+      sessions.forEach((s: any) => {
+        const key = s.user_id || s.id;
+        if (!entriesMap.has(key)) {
+          const prof = profileMap.get(s.user_id);
+          entriesMap.set(key, {
+            rank: 1,
             attempt_id: s.id,
             user_id: s.user_id,
-            player_name: profile?.name || 'AptiVerse Scholar',
-            college: profile?.college || 'Engineering Institute',
+            player_name: prof?.name || 'AptiVerse Scholar',
+            college: prof?.college || 'Engineering Institute',
+            avatar_url: prof?.avatar_url,
             completion_time_ms: s.time_spent * 1000,
             completion_time_seconds: s.time_spent,
             score: s.score,
             accuracy: s.accuracy,
             is_correct: true,
             submitted_at: s.created_at
-          };
-        });
-
-        const myEntry = currentUserId 
-          ? mappedEntries.find(e => e.user_id === currentUserId) || null
-          : null;
-
-        serverData = {
-          total_participants: mappedEntries.length,
-          entries: mappedEntries,
-          my_entry: myEntry
-        };
-      }
-    } catch (err) {
-      console.warn('Direct game_sessions leaderboard fetch error:', err);
+          });
+        }
+      });
     }
+  } catch (err) {
+    console.warn('game_sessions query note:', err);
   }
 
-  const result: DailyLeaderboardData = serverData || {
-    total_participants: 0,
-    entries: [],
-    my_entry: null
-  };
+  // Convert map to sorted ranked entries
+  let rankedEntries = Array.from(entriesMap.values()).sort((a, b) => {
+    if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+    return (a.completion_time_ms || 0) - (b.completion_time_ms || 0);
+  }).map((entry, idx) => ({ ...entry, rank: idx + 1 }));
 
-  // Check if current user has a completed local attempt for this challenge
+  let myEntry = currentUserId
+    ? rankedEntries.find(e => e.user_id === currentUserId) || null
+    : null;
+
+  // Local storage attempt fallback for guest / current browser if not in database yet
   try {
     const localKey = `aptiverse_daily_attempt_${challengeId}`;
     const raw = typeof window !== 'undefined' ? localStorage.getItem(localKey) : null;
@@ -770,7 +743,7 @@ export const fetchDailyLeaderboard = async (
           ? localStorage.getItem('aptiverse_interview_candidate_name') || 'You'
           : 'You';
 
-        const myEntry: LeaderboardEntry = result.my_entry || {
+        const myLocalEntry: LeaderboardEntry = myEntry || {
           rank: 1,
           attempt_id: localAttempt.attempt_id,
           user_id: currentUserId || 'local_current_user',
@@ -784,27 +757,28 @@ export const fetchDailyLeaderboard = async (
           submitted_at: localAttempt.submitted_at || new Date().toISOString()
         };
 
-        result.my_entry = myEntry;
-
-        const alreadyInList = result.entries.some(
+        myEntry = myLocalEntry;
+        const alreadyInList = rankedEntries.some(
           e => e.attempt_id === localAttempt.attempt_id || (e.user_id && currentUserId && e.user_id === currentUserId)
         );
 
         if (!alreadyInList) {
-          result.entries = [myEntry, ...result.entries].sort((a, b) => {
+          rankedEntries = [myLocalEntry, ...rankedEntries].sort((a, b) => {
             if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
             return (a.completion_time_ms || 0) - (b.completion_time_ms || 0);
           }).map((entry, idx) => ({ ...entry, rank: idx + 1 }));
-
-          result.total_participants = Math.max(result.total_participants, result.entries.length);
         }
       }
     }
   } catch (err) {
-    console.warn('Local attempt leaderboard merge note:', err);
+    console.warn('Local attempt merge note:', err);
   }
 
-  return result;
+  return {
+    total_participants: rankedEntries.length,
+    entries: rankedEntries,
+    my_entry: myEntry
+  };
 };
 
 /**

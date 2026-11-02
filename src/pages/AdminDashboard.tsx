@@ -685,113 +685,120 @@ export const AdminDashboard = () => {
         setTotalTabCount(list.length);
       }
       else if (activeTab === 'daily') {
-        let loaded = false;
+        const allSolversMap = new Map<string, any>();
 
         // Tier 1: Try daily_challenge_solvers table
         try {
-          let query = supabase
+          const { data: solversData, error: sErr } = await supabase
             .from('daily_challenge_solvers')
-            .select('id, user_id, candidate_name, college, challenge_id, challenge_date, time_taken_seconds, streak, created_at', { count: 'exact' });
+            .select('*')
+            .order('created_at', { ascending: false });
 
-          if (searchTerm.trim()) {
-            query = query.or(`candidate_name.ilike.%${searchTerm.trim()}%,college.ilike.%${searchTerm.trim()}%,challenge_id.ilike.%${searchTerm.trim()}%`);
+          if (!sErr && solversData) {
+            solversData.forEach((s: any) => {
+              const key = s.id || (s.user_id ? `${s.user_id}_${s.challenge_date}` : crypto.randomUUID());
+              allSolversMap.set(key, {
+                id: s.id,
+                user_id: s.user_id,
+                candidate_name: s.candidate_name || 'AptiVerse Scholar',
+                college: s.college || '—',
+                challenge_id: s.challenge_id || 'daily_challenge',
+                challenge_date: s.challenge_date || (s.created_at || '').split('T')[0],
+                time_taken_seconds: Number(s.time_taken_seconds || 15),
+                streak: s.streak || 1,
+                created_at: s.created_at
+              });
+            });
           }
-
-          const { data, count, error } = await query
-            .order('created_at', { ascending: false })
-            .range(from, to);
-
-          if (!error && data) {
-            setDailySolvers(data);
-            setTotalTabCount(count ?? data.length);
-            loaded = true;
-          }
-        } catch {
-          // Fall through to next tier
-        }
+        } catch {}
 
         // Tier 2: Try daily_challenge_attempts table
-        if (!loaded) {
-          try {
-            let query = supabase
-              .from('daily_challenge_attempts')
-              .select('id, user_id, candidate_name, college, daily_challenge_id, completion_time_ms, score, accuracy, is_completed, submitted_at, created_at, attempt_metadata', { count: 'exact' })
-              .eq('is_completed', true);
+        try {
+          const { data: attemptsData, error: aErr } = await supabase
+            .from('daily_challenge_attempts')
+            .select('*')
+            .eq('is_completed', true)
+            .order('created_at', { ascending: false });
 
-            if (searchTerm.trim()) {
-              query = query.or(`candidate_name.ilike.%${searchTerm.trim()}%,college.ilike.%${searchTerm.trim()}%,daily_challenge_id.ilike.%${searchTerm.trim()}%`);
-            }
-
-            const { data, count, error } = await query
-              .order('created_at', { ascending: false })
-              .range(from, to);
-
-            if (!error && data) {
-              const mapped = data.map((d: any) => ({
-                id: d.id,
-                user_id: d.user_id,
-                candidate_name: d.candidate_name || 'AptiVerse Scholar',
-                college: d.college || '—',
-                challenge_id: d.daily_challenge_id || 'daily_challenge',
-                challenge_date: (d.submitted_at || d.created_at || '').split('T')[0] || new Date().toISOString().split('T')[0],
-                time_taken_seconds: Number(((d.completion_time_ms || 15000) / 1000).toFixed(1)),
-                streak: d.attempt_metadata?.streak || 1,
-                created_at: d.submitted_at || d.created_at || new Date().toISOString()
-              }));
-              setDailySolvers(mapped);
-              setTotalTabCount(count ?? mapped.length);
-              loaded = true;
-            }
-          } catch {
-            // Fall through to Tier 3
+          if (!aErr && attemptsData) {
+            attemptsData.forEach((d: any) => {
+              const dateStr = (d.submitted_at || d.created_at || '').split('T')[0];
+              const key = d.id || (d.user_id ? `${d.user_id}_${dateStr}` : crypto.randomUUID());
+              if (!allSolversMap.has(key)) {
+                allSolversMap.set(key, {
+                  id: d.id,
+                  user_id: d.user_id,
+                  candidate_name: d.candidate_name || 'AptiVerse Scholar',
+                  college: d.college || '—',
+                  challenge_id: d.daily_challenge_id || 'daily_challenge',
+                  challenge_date: dateStr,
+                  time_taken_seconds: Number(((d.completion_time_ms || 15000) / 1000).toFixed(1)),
+                  streak: d.attempt_metadata?.streak || 1,
+                  created_at: d.submitted_at || d.created_at
+                });
+              }
+            });
           }
-        }
+        } catch {}
 
-        // Tier 3: Fallback to game_sessions table
-        if (!loaded) {
-          let query = supabase
+        // Tier 3: Try game_sessions table
+        try {
+          const { data: sessionData, error: sessErr } = await supabase
             .from('game_sessions')
-            .select('id, user_id, score, accuracy, time_spent, created_at, attempt_id', { count: 'exact' })
-            .eq('game_id', 'daily_challenge');
+            .select('id, user_id, score, accuracy, time_spent, created_at, attempt_id')
+            .eq('game_id', 'daily_challenge')
+            .order('created_at', { ascending: false });
 
-          const { data, count, error } = await query
-            .order('created_at', { ascending: false })
-            .range(from, to);
+          if (!sessErr && sessionData && sessionData.length > 0) {
+            const userIds = Array.from(new Set(sessionData.map((s: any) => s.user_id).filter(Boolean)));
+            const profileMap = new Map<string, { name?: string; college?: string }>();
 
-          if (error) throw error;
+            if (userIds.length > 0) {
+              try {
+                const { data: profs } = await supabase
+                  .from('profiles')
+                  .select('id, name, college')
+                  .in('id', userIds);
+                (profs || []).forEach((p: any) => profileMap.set(p.id, p));
+              } catch {}
+            }
 
-          const rawSessions = data || [];
-          const userIds = Array.from(new Set(rawSessions.map((s: any) => s.user_id).filter(Boolean)));
-          const profileMap = new Map<string, { name?: string; college?: string }>();
-
-          if (userIds.length > 0) {
-            try {
-              const { data: profs } = await supabase
-                .from('profiles')
-                .select('id, name, college')
-                .in('id', userIds);
-              (profs || []).forEach((p: any) => profileMap.set(p.id, p));
-            } catch {}
+            sessionData.forEach((s: any) => {
+              const dateStr = (s.created_at || '').split('T')[0];
+              const key = s.id || (s.user_id ? `${s.user_id}_${dateStr}` : crypto.randomUUID());
+              if (!allSolversMap.has(key)) {
+                const prof = profileMap.get(s.user_id);
+                allSolversMap.set(key, {
+                  id: s.id,
+                  user_id: s.user_id,
+                  candidate_name: prof?.name || 'AptiVerse Scholar',
+                  college: prof?.college || '—',
+                  challenge_id: s.attempt_id || 'daily_challenge',
+                  challenge_date: dateStr,
+                  time_taken_seconds: s.time_spent || 1,
+                  streak: 1,
+                  created_at: s.created_at
+                });
+              }
+            });
           }
+        } catch {}
 
-          const mapped = rawSessions.map((s: any) => {
-            const prof = profileMap.get(s.user_id);
-            return {
-              id: s.id,
-              user_id: s.user_id,
-              candidate_name: prof?.name || 'AptiVerse Scholar',
-              college: prof?.college || '—',
-              challenge_id: 'daily_challenge',
-              challenge_date: (s.created_at || '').split('T')[0],
-              time_taken_seconds: s.time_spent || 1,
-              streak: 1,
-              created_at: s.created_at
-            };
-          });
+        let combinedSolvers = Array.from(allSolversMap.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
 
-          setDailySolvers(mapped);
-          setTotalTabCount(count ?? mapped.length);
+        if (searchTerm.trim()) {
+          const term = searchTerm.trim().toLowerCase();
+          combinedSolvers = combinedSolvers.filter(
+            s => (s.candidate_name || '').toLowerCase().includes(term) ||
+                 (s.college || '').toLowerCase().includes(term) ||
+                 (s.challenge_id || '').toLowerCase().includes(term)
+          );
         }
+
+        setDailySolvers(combinedSolvers.slice(from, to + 1));
+        setTotalTabCount(combinedSolvers.length);
       }
     } catch (err: any) {
       console.error(`Error loading tab data for ${activeTab}:`, err);
