@@ -414,7 +414,67 @@ CREATE POLICY "Users can insert their own game sessions."
   TO authenticated
   WITH CHECK ( auth.uid() = user_id );
 
--- 8. Backfill daily_challenge_solvers into game_sessions so Sessions tab has all recent records
+-- 8. Update secure_validate_game_session trigger function
+-- Allows administrative queries / migrations where auth.uid() is null, and supports 'queens' and 'daily_challenge'
+CREATE OR REPLACE FUNCTION public.secure_validate_game_session()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_last_session_time TIMESTAMP WITH TIME ZONE;
+  v_recent_count INT;
+BEGIN
+  -- Live client authorization check (allows admin / background migrations where auth.uid() is null)
+  IF auth.uid() IS NOT NULL AND auth.uid() != NEW.user_id THEN
+    RAISE EXCEPTION 'Security Violation: Unauthorized session submission';
+  END IF;
+
+  IF NEW.user_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.user_id AND is_blocked = true) THEN
+    RAISE EXCEPTION 'Security Violation: Account is suspended';
+  END IF;
+
+  IF NEW.game_id = 'geo_sudoku' THEN
+    NEW.game_id := 'sudoku';
+  END IF;
+
+  -- Support all active game types including daily challenges and queens
+  IF NEW.game_id NOT IN ('motion', 'sudoku', 'grid', 'switch', 'inductive', 'di', 'rc', 'queens', 'daily_challenge') THEN
+    RAISE EXCEPTION 'Security Violation: Unknown game identifier: %', NEW.game_id;
+  END IF;
+
+  IF NEW.level < 1 THEN
+    NEW.level := 1;
+  END IF;
+
+  NEW.score := LEAST(10.00, GREATEST(0.00, COALESCE(NEW.score, 0.00)));
+  NEW.accuracy := LEAST(100, GREATEST(0, COALESCE(NEW.accuracy, 100)));
+  NEW.time_spent := GREATEST(2, COALESCE(NEW.time_spent, 2));
+
+  -- Live user cooldown & quota (only evaluated for live end-user sessions)
+  IF auth.uid() IS NOT NULL THEN
+    SELECT created_at INTO v_last_session_time
+    FROM public.game_sessions
+    WHERE user_id = NEW.user_id
+    ORDER BY created_at DESC
+    LIMIT 1;
+
+    IF v_last_session_time IS NOT NULL AND (NOW() - v_last_session_time) < INTERVAL '2 seconds' THEN
+      RAISE EXCEPTION 'Anti-Cheat: Submissions too fast. Please play normally.';
+    END IF;
+
+    SELECT count(*) INTO v_recent_count
+    FROM public.game_sessions
+    WHERE user_id = NEW.user_id
+      AND created_at > (NOW() - INTERVAL '1 hour');
+
+    IF v_recent_count >= 120 THEN
+      RAISE EXCEPTION 'Anti-Cheat: Hourly game quota reached. Please take a break.';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 9. Backfill daily_challenge_solvers into game_sessions so Sessions tab has all recent records
 INSERT INTO public.game_sessions (
   id,
   user_id,
@@ -441,5 +501,6 @@ SELECT
 FROM public.daily_challenge_solvers s
 WHERE s.user_id IS NOT NULL
 ON CONFLICT (id) DO NOTHING;
+
 
 

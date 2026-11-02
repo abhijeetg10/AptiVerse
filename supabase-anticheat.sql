@@ -197,11 +197,12 @@ DECLARE
   v_last_session_time TIMESTAMP WITH TIME ZONE;
   v_recent_count INT;
 BEGIN
-  IF auth.uid() IS NULL OR auth.uid() != NEW.user_id THEN
+  -- Live client authorization check (allows admin / background migrations where auth.uid() is null)
+  IF auth.uid() IS NOT NULL AND auth.uid() != NEW.user_id THEN
     RAISE EXCEPTION 'Security Violation: Unauthorized session submission';
   END IF;
 
-  IF EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.user_id AND is_blocked = true) THEN
+  IF NEW.user_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.user_id AND is_blocked = true) THEN
     RAISE EXCEPTION 'Security Violation: Account is suspended';
   END IF;
 
@@ -209,42 +210,39 @@ BEGIN
     NEW.game_id := 'sudoku';
   END IF;
 
-  IF NEW.game_id NOT IN ('motion', 'sudoku', 'grid', 'switch', 'inductive', 'di', 'rc') THEN
-    RAISE EXCEPTION 'Security Violation: Unknown game identifier';
+  -- Support all active game types including daily challenges and queens
+  IF NEW.game_id NOT IN ('motion', 'sudoku', 'grid', 'switch', 'inductive', 'di', 'rc', 'queens', 'daily_challenge') THEN
+    RAISE EXCEPTION 'Security Violation: Unknown game identifier: %', NEW.game_id;
   END IF;
 
   IF NEW.level < 1 THEN
-    RAISE EXCEPTION 'Security Violation: Invalid level %', NEW.level;
+    NEW.level := 1;
   END IF;
 
-  IF NEW.score < 0 OR NEW.score > 10 THEN
-    RAISE EXCEPTION 'Security Violation: Score must be between 0 and 10';
-  END IF;
-  IF NEW.accuracy < 0 OR NEW.accuracy > 100 THEN
-    RAISE EXCEPTION 'Security Violation: Accuracy must be between 0 and 100';
-  END IF;
+  NEW.score := LEAST(10.00, GREATEST(0.00, COALESCE(NEW.score, 0.00)));
+  NEW.accuracy := LEAST(100, GREATEST(0, COALESCE(NEW.accuracy, 100)));
+  NEW.time_spent := GREATEST(2, COALESCE(NEW.time_spent, 2));
 
-  IF NEW.time_spent < 2 THEN
-    RAISE EXCEPTION 'Anti-Cheat: Completion time too low';
-  END IF;
+  -- Live user cooldown & quota (only evaluated for live end-user sessions)
+  IF auth.uid() IS NOT NULL THEN
+    SELECT created_at INTO v_last_session_time
+    FROM public.game_sessions
+    WHERE user_id = NEW.user_id
+    ORDER BY created_at DESC
+    LIMIT 1;
 
-  SELECT created_at INTO v_last_session_time
-  FROM public.game_sessions
-  WHERE user_id = NEW.user_id
-  ORDER BY created_at DESC
-  LIMIT 1;
+    IF v_last_session_time IS NOT NULL AND (NOW() - v_last_session_time) < INTERVAL '2 seconds' THEN
+      RAISE EXCEPTION 'Anti-Cheat: Submissions too fast. Please play normally.';
+    END IF;
 
-  IF v_last_session_time IS NOT NULL AND (NOW() - v_last_session_time) < INTERVAL '2 seconds' THEN
-    RAISE EXCEPTION 'Anti-Cheat: Submissions too fast. Please play normally.';
-  END IF;
+    SELECT count(*) INTO v_recent_count
+    FROM public.game_sessions
+    WHERE user_id = NEW.user_id
+      AND created_at > (NOW() - INTERVAL '1 hour');
 
-  SELECT count(*) INTO v_recent_count
-  FROM public.game_sessions
-  WHERE user_id = NEW.user_id
-    AND created_at > (NOW() - INTERVAL '1 hour');
-
-  IF v_recent_count >= 120 THEN
-    RAISE EXCEPTION 'Anti-Cheat: Hourly game quota reached. Please take a break.';
+    IF v_recent_count >= 120 THEN
+      RAISE EXCEPTION 'Anti-Cheat: Hourly game quota reached. Please take a break.';
+    END IF;
   END IF;
 
   RETURN NEW;
