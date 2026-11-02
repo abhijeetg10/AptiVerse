@@ -331,56 +331,53 @@ export const AdminDashboard = () => {
         setTotalTestsCount(0);
       }
 
-      // Exact Daily Challenge Solvers (Total and Today with full fallback)
+      // Exact Daily Challenge Solvers (Total and Today - Distinct Candidates)
       try {
         let totalCount = 0;
         let todayCount = 0;
         const todayKey = new Date().toISOString().split('T')[0];
 
         // 1. Try daily_challenge_solvers
-        const { count: cSolvers, error: errSolvers } = await supabase
+        const { data: allSolvers, error: errSolvers } = await supabase
           .from('daily_challenge_solvers')
-          .select('id', { count: 'exact', head: true });
+          .select('user_id, candidate_name, challenge_date');
 
-        if (!errSolvers && cSolvers !== null) {
-          totalCount = cSolvers;
-          const { count: cToday } = await supabase
-            .from('daily_challenge_solvers')
-            .select('id', { count: 'exact', head: true })
-            .eq('challenge_date', todayKey);
-          todayCount = cToday ?? 0;
+        if (!errSolvers && allSolvers && allSolvers.length > 0) {
+          const distinctToday = new Set<string>();
+          const distinctTotal = new Set<string>();
+
+          allSolvers.forEach((s: any) => {
+            const dateStr = s.challenge_date || '';
+            const uKey = s.user_id || (s.candidate_name || '').trim().toLowerCase();
+            if (dateStr === todayKey) {
+              distinctToday.add(uKey);
+            }
+            distinctTotal.add(`${uKey}_${dateStr}`);
+          });
+
+          totalCount = distinctTotal.size;
+          todayCount = distinctToday.size;
         } else {
-          // 2. Try daily_challenge_attempts
-          const { count: cAttempts, error: errAttempts } = await supabase
-            .from('daily_challenge_attempts')
-            .select('id', { count: 'exact', head: true })
-            .eq('is_completed', true);
+          // 2. Fallback to game_sessions
+          const { data: sess } = await supabase
+            .from('game_sessions')
+            .select('user_id, created_at')
+            .eq('game_id', 'daily_challenge');
 
-          if (!errAttempts && cAttempts !== null) {
-            totalCount = cAttempts;
-            const startOfDayISO = new Date(`${todayKey}T00:00:00+05:30`).toISOString();
-            const { count: cAttemptsToday } = await supabase
-              .from('daily_challenge_attempts')
-              .select('id', { count: 'exact', head: true })
-              .eq('is_completed', true)
-              .gte('created_at', startOfDayISO);
-            todayCount = cAttemptsToday ?? 0;
-          } else {
-            // 3. Fallback to game_sessions
-            const { count: cSessions } = await supabase
-              .from('game_sessions')
-              .select('id', { count: 'exact', head: true })
-              .eq('game_id', 'daily_challenge');
-            totalCount = cSessions ?? 0;
-            const startOfDayISO = new Date(`${todayKey}T00:00:00+05:30`).toISOString();
-            const { count: cSessionsToday } = await supabase
-              .from('game_sessions')
-              .select('id', { count: 'exact', head: true })
-              .eq('game_id', 'daily_challenge')
-              .gte('created_at', startOfDayISO);
-            todayCount = cSessionsToday ?? 0;
+          if (sess && sess.length > 0) {
+            const distinctToday = new Set<string>();
+            const distinctTotal = new Set<string>();
+            sess.forEach((s: any) => {
+              const dateStr = (s.created_at || '').split('T')[0];
+              const uKey = s.user_id || 'anon';
+              if (dateStr === todayKey) distinctToday.add(uKey);
+              distinctTotal.add(`${uKey}_${dateStr}`);
+            });
+            totalCount = distinctTotal.size;
+            todayCount = distinctToday.size;
           }
         }
+
         setTotalDailySolversCount(totalCount);
         setTodayDailySolversCount(todayCount);
       } catch {
@@ -696,18 +693,25 @@ export const AdminDashboard = () => {
 
           if (!sErr && solversData) {
             solversData.forEach((s: any) => {
-              const key = s.id || (s.user_id ? `${s.user_id}_${s.challenge_date}` : crypto.randomUUID());
-              allSolversMap.set(key, {
-                id: s.id,
-                user_id: s.user_id,
-                candidate_name: s.candidate_name || 'AptiVerse Scholar',
-                college: s.college || '—',
-                challenge_id: s.challenge_id || 'daily_challenge',
-                challenge_date: s.challenge_date || (s.created_at || '').split('T')[0],
-                time_taken_seconds: Number(s.time_taken_seconds || 15),
-                streak: s.streak || 1,
-                created_at: s.created_at
-              });
+              const dateStr = s.challenge_date || (s.created_at || '').split('T')[0];
+              const userKey = s.user_id || (s.candidate_name || 'anon').trim().toLowerCase();
+              const userDayKey = `${userKey}_${dateStr}`;
+              const timeSec = Number(s.time_taken_seconds || 15);
+
+              // Keep fastest attempt for the same user on that day
+              if (!allSolversMap.has(userDayKey) || timeSec < allSolversMap.get(userDayKey).time_taken_seconds) {
+                allSolversMap.set(userDayKey, {
+                  id: s.id,
+                  user_id: s.user_id,
+                  candidate_name: s.candidate_name || 'AptiVerse Scholar',
+                  college: s.college || '—',
+                  challenge_id: s.challenge_id || 'daily_challenge',
+                  challenge_date: dateStr,
+                  time_taken_seconds: timeSec,
+                  streak: s.streak || 1,
+                  created_at: s.created_at
+                });
+              }
             });
           }
         } catch {}
@@ -723,16 +727,19 @@ export const AdminDashboard = () => {
           if (!aErr && attemptsData) {
             attemptsData.forEach((d: any) => {
               const dateStr = (d.submitted_at || d.created_at || '').split('T')[0];
-              const key = d.id || (d.user_id ? `${d.user_id}_${dateStr}` : crypto.randomUUID());
-              if (!allSolversMap.has(key)) {
-                allSolversMap.set(key, {
+              const userKey = d.user_id || (d.candidate_name || 'anon').trim().toLowerCase();
+              const userDayKey = `${userKey}_${dateStr}`;
+              const timeSec = Number(((d.completion_time_ms || 15000) / 1000).toFixed(1));
+
+              if (!allSolversMap.has(userDayKey) || timeSec < allSolversMap.get(userDayKey).time_taken_seconds) {
+                allSolversMap.set(userDayKey, {
                   id: d.id,
                   user_id: d.user_id,
                   candidate_name: d.candidate_name || 'AptiVerse Scholar',
                   college: d.college || '—',
                   challenge_id: d.daily_challenge_id || 'daily_challenge',
                   challenge_date: dateStr,
-                  time_taken_seconds: Number(((d.completion_time_ms || 15000) / 1000).toFixed(1)),
+                  time_taken_seconds: timeSec,
                   streak: d.attempt_metadata?.streak || 1,
                   created_at: d.submitted_at || d.created_at
                 });
@@ -765,17 +772,20 @@ export const AdminDashboard = () => {
 
             sessionData.forEach((s: any) => {
               const dateStr = (s.created_at || '').split('T')[0];
-              const key = s.id || (s.user_id ? `${s.user_id}_${dateStr}` : crypto.randomUUID());
-              if (!allSolversMap.has(key)) {
-                const prof = profileMap.get(s.user_id);
-                allSolversMap.set(key, {
+              const prof = profileMap.get(s.user_id);
+              const userKey = s.user_id || (prof?.name || 'anon').trim().toLowerCase();
+              const userDayKey = `${userKey}_${dateStr}`;
+              const timeSec = s.time_spent || 1;
+
+              if (!allSolversMap.has(userDayKey) || timeSec < allSolversMap.get(userDayKey).time_taken_seconds) {
+                allSolversMap.set(userDayKey, {
                   id: s.id,
                   user_id: s.user_id,
                   candidate_name: prof?.name || 'AptiVerse Scholar',
                   college: prof?.college || '—',
                   challenge_id: s.attempt_id || 'daily_challenge',
                   challenge_date: dateStr,
-                  time_taken_seconds: s.time_spent || 1,
+                  time_taken_seconds: timeSec,
                   streak: 1,
                   created_at: s.created_at
                 });
@@ -784,8 +794,9 @@ export const AdminDashboard = () => {
           }
         } catch {}
 
+        // Sort by speed (fastest solve first!)
         let combinedSolvers = Array.from(allSolversMap.values()).sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a, b) => a.time_taken_seconds - b.time_taken_seconds
         );
 
         if (searchTerm.trim()) {

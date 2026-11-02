@@ -179,7 +179,24 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
         if (activeAttempt) {
           setAttempt(activeAttempt);
           if (activeAttempt.is_completed) {
-            loadLeaderboardRef.current(activeAttempt);
+            // Auto-sync completed attempt to Supabase daily_challenge_solvers
+            submitOfficialDailyChallenge(
+              activeAttempt.attempt_id,
+              activeAttempt.is_correct ?? true,
+              activeAttempt.score ?? 100,
+              activeAttempt.accuracy ?? 100,
+              {
+                challenge_id: globalChallenge.id,
+                candidate_name: user?.name || candidateName,
+                college: user?.college,
+                started_at: activeAttempt.started_at,
+                completion_time_ms: activeAttempt.completion_time_ms || 15000,
+                streak: userStreak
+              },
+              user?.id
+            ).finally(() => {
+              loadLeaderboardRef.current(activeAttempt);
+            });
           }
         }
       }
@@ -189,11 +206,11 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
       setIsLoadingChallenge(false);
       isFetchingTodayRef.current = false;
     }
-  }, [user?.id]);
+  }, [user?.id, user?.name, user?.college, candidateName, userStreak]);
 
-  // Auto-sync offline/guest completed attempt once user signs in
+  // Auto-sync offline/guest completed attempt once user signs in or opens modal
   useEffect(() => {
-    if (user?.id && attempt?.is_completed && challenge) {
+    if (attempt?.is_completed && challenge) {
       submitOfficialDailyChallenge(
         attempt.attempt_id,
         attempt.is_correct ?? true,
@@ -201,18 +218,18 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
         attempt.accuracy ?? 100,
         {
           challenge_id: challenge.id,
-          candidate_name: user.name || candidateName,
-          college: user.college,
+          candidate_name: user?.name || candidateName,
+          college: user?.college,
           started_at: attempt.started_at,
           completion_time_ms: attempt.completion_time_ms || 15000,
           streak: userStreak
         },
-        user.id
+        user?.id
       ).then(() => {
         loadLeaderboardRef.current();
       });
     }
-  }, [user?.id, attempt?.is_completed, challenge?.id]);
+  }, [user?.id, attempt?.is_completed, challenge?.id, user?.name, user?.college, candidateName, userStreak]);
 
   // 3. Fetch History
   const loadHistory = useCallback(async () => {
