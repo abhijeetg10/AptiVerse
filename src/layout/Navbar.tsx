@@ -8,6 +8,7 @@ import { Bug } from 'lucide-react';
 import ReportBugModal from '../components/ui/ReportBugModal';
 import BetaNoticeModal from '../components/ui/BetaNoticeModal';
 import { DailyChallengeModal } from '../components/daily/DailyChallengeModal';
+import { DailyChallengeFloatingWidget } from '../components/daily/DailyChallengeFloatingWidget';
 
 const Navbar = () => {
   const { user } = useAuth();
@@ -166,6 +167,11 @@ const Navbar = () => {
       <DailyChallengeModal 
         isOpen={isDailyChallengeOpen} 
         onClose={() => setIsDailyChallengeOpen(false)} 
+      />
+
+      {/* Persistent Circular FAB & Attention Popup */}
+      <DailyChallengeFloatingWidget
+        onOpen={() => setIsDailyChallengeOpen(true)}
       />
 
       <ReportBugModal 
