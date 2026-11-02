@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Gamepad2, Users, Trophy, Zap, Target, Brain, LineChart, MessageSquare, Crown } from 'lucide-react';
+import { ArrowRight, Gamepad2, Users, Trophy, Zap, Target, Brain, LineChart, MessageSquare, Crown, Share2, Building2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { GameCard } from '../components/ui/GameCard';
 import { Link } from 'react-router-dom';
@@ -9,9 +9,11 @@ import { AdBanner } from '../components/ui/AdBanner';
 import { RatingBadge } from '../components/ui/RatingBadge';
 import { CompanyCardsSection } from '../components/company/CompanyCardsSection';
 import { SEOHead } from '../components/seo/SEOHead';
+import { ShareInfosysModal } from '../components/company/ShareInfosysModal';
 
 const Home = () => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isShareInfosysOpen, setIsShareInfosysOpen] = useState(false);
 
   return (
     <div className="flex flex-col font-sans bg-white">
@@ -31,11 +33,37 @@ const Home = () => {
           
           {/* Left: Content */}
           <div className="flex flex-col items-start gap-6 relative z-10">
-            <div className="flex flex-wrap items-center gap-3">
+            {/* Badges / Announcement Strip */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Attempt Infosys Test Now Badge */}
+              <Link
+                to="/company/infosys"
+                className="group relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-primary-600 text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all duration-200 border border-white/20 cursor-pointer"
+                title="Attempt Free Infosys Practice Test & AI Mock Interview"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+                </span>
+                <span className="tracking-wide">🔥 Attempt Infosys Test Now</span>
+                <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              {/* Share Infosys Test Button */}
+              <button
+                onClick={() => setIsShareInfosysOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50/90 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold transition-all shadow-2xs hover:scale-105 active:scale-95 cursor-pointer"
+                title="Share Infosys Mock Test with Batchmates"
+              >
+                <Share2 size={12} className="text-blue-600" />
+                <span>Share Test</span>
+              </button>
+
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-primary-100 text-primary-600 text-xs font-semibold shadow-sm">
                 <Gamepad2 size={14} />
-                Gamified Aptitude Practice Platform
+                Gamified Aptitude
               </div>
+
               <RatingBadge 
                 variant="pill" 
                 onFeedbackClick={() => setIsFeedbackOpen(true)} 
@@ -50,7 +78,7 @@ const Home = () => {
                 <svg className="w-3.5 h-3.5 fill-[#0A66C2] shrink-0" viewBox="0 0 24 24">
                   <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
                 </svg>
-                <span>Follow on LinkedIn</span>
+                <span>Follow</span>
               </a>
             </div>
             
@@ -63,15 +91,27 @@ const Home = () => {
               Improve your speed, accuracy, and problem-solving skills through interactive games inspired by real hiring assessments at top tech companies.
             </p>
             
-            <div className="flex flex-wrap items-center gap-4 mt-2">
+            <div className="flex flex-wrap items-center gap-3 mt-2">
               <Link to="/games">
-                <Button size="lg" className="gap-2 text-sm px-8 h-12 rounded-xl bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-600/20">
+                <Button size="lg" className="gap-2 text-sm px-7 h-12 rounded-xl bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-600/20">
                   Start Practice <ArrowRight size={16} />
                 </Button>
               </Link>
+              <Link to="/company/infosys">
+                <Button size="lg" variant="secondary" className="gap-2 text-sm px-6 h-12 rounded-xl border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 text-blue-700 font-bold shadow-xs">
+                  <Building2 size={16} className="text-blue-600" /> Infosys Test Prep
+                </Button>
+              </Link>
+              <button
+                onClick={() => setIsShareInfosysOpen(true)}
+                className="flex items-center gap-2 text-sm px-5 h-12 rounded-xl bg-white border border-neutral-200 shadow-sm text-neutral-700 hover:bg-neutral-50 hover:text-blue-600 hover:border-blue-200 font-semibold transition-all cursor-pointer"
+                title="Share Infosys Placement Test"
+              >
+                <Share2 size={16} className="text-blue-500" /> Share Test
+              </button>
               <button
                 onClick={() => setIsFeedbackOpen(true)}
-                className="flex items-center gap-2 text-sm px-8 h-12 rounded-xl bg-white border border-neutral-200 shadow-sm text-neutral-700 hover:bg-neutral-50 hover:text-indigo-600 hover:border-indigo-200 font-semibold transition-all"
+                className="flex items-center gap-2 text-sm px-5 h-12 rounded-xl bg-white border border-neutral-200 shadow-sm text-neutral-700 hover:bg-neutral-50 hover:text-indigo-600 hover:border-indigo-200 font-semibold transition-all cursor-pointer"
               >
                 <MessageSquare size={16} className="text-indigo-500" /> Share Feedback
               </button>
@@ -558,6 +598,11 @@ const Home = () => {
         isOpen={isFeedbackOpen}
         onClose={() => setIsFeedbackOpen(false)}
         onSubmit={() => setIsFeedbackOpen(false)}
+      />
+
+      <ShareInfosysModal
+        isOpen={isShareInfosysOpen}
+        onClose={() => setIsShareInfosysOpen(false)}
       />
     </div>
   );

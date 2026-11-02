@@ -3,7 +3,7 @@ import {
   Building2, BookOpen, Video, Clock, CheckCircle2, 
   MapPin, GraduationCap, ChevronRight, FileText, ChevronDown, 
   Search, ShieldCheck, ArrowRight, UserCheck, Play, Lock, LogIn, Target,
-  Code2, Trophy, Flame, Sparkles
+  Code2, Trophy, Flame, Sparkles, Share2
 } from 'lucide-react';
 import { 
   TECHNICAL_INTERVIEW_PROMPTS, 
@@ -17,6 +17,7 @@ import { AIMockInterviewRoom } from '../../components/company/AIMockInterviewRoo
 import { InfosysGuideBlog } from '../../components/company/InfosysGuideBlog';
 import { AdBanner } from '../../components/ui/AdBanner';
 import { DailyChallengeModal } from '../../components/daily/DailyChallengeModal';
+import { ShareInfosysModal } from '../../components/company/ShareInfosysModal';
 import { SEOHead } from '../../components/seo/SEOHead';
 import infosysLogo from '../../assets/infosys-logo.jpg';
 import gecMysoreImg from '../../assets/gec-mysore.jpg';
@@ -26,6 +27,7 @@ export const InfosysPrep: React.FC = () => {
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [selectedMockBundle, setSelectedMockBundle] = useState<MockTestBundle | null>(null);
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Primary view: 'guide' (Recruitment Guide Blog first!), 'timeline-test' (Mock Tests), or 'qbank'
   const [activeTab, setActiveTab] = useState<'guide' | 'timeline-test' | 'qbank'>('guide');
@@ -233,6 +235,15 @@ export const InfosysPrep: React.FC = () => {
                   <Play size={14} className="fill-white" />
                   <span>2. Take Mock Test & AI Interview</span>
                   <ArrowRight size={13} />
+                </button>
+
+                <button
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/80 shadow-xs"
+                  title="Share Infosys Placement Test with Friends"
+                >
+                  <Share2 size={14} className="text-blue-400" />
+                  <span>Share Test</span>
                 </button>
               </div>
             </div>
@@ -903,6 +914,12 @@ export const InfosysPrep: React.FC = () => {
       <DailyChallengeModal
         isOpen={isDailyChallengeOpen}
         onClose={() => setIsDailyChallengeOpen(false)}
+      />
+
+      {/* Share Infosys Test Modal */}
+      <ShareInfosysModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
       />
 
     </div>
