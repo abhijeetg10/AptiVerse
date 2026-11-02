@@ -156,6 +156,7 @@ DROP POLICY IF EXISTS "Users can view own mock scores" ON public.company_mock_sc
 CREATE POLICY "Users can view own mock scores" ON public.company_mock_scores FOR SELECT TO authenticated USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Admins have full access to mock scores" ON public.company_mock_scores;
 CREATE POLICY "Admins have full access to mock scores" ON public.company_mock_scores FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+GRANT ALL ON public.company_mock_scores TO authenticated, anon;
 
 -- 6. DAILY HARD PROBLEM CHALLENGE SOLVERS & STREAK
 CREATE TABLE IF NOT EXISTS public.daily_challenge_solvers (
@@ -549,9 +550,11 @@ export const AdminDashboard = () => {
           .order('created_at', { ascending: false })
           .range(from, to);
 
-        if (testErr) throw testErr;
-
-        if (rawScores && rawScores.length > 0) {
+        if (testErr) {
+          console.warn('company_mock_scores query note (table pending creation):', testErr);
+          setTestScores([]);
+          setTotalTabCount(0);
+        } else if (rawScores && rawScores.length > 0) {
           const userIds = Array.from(new Set(rawScores.map((t: any) => t.user_id).filter(Boolean)));
           const profileMap = new Map<string, { name?: string; email?: string; college?: string }>();
           if (userIds.length > 0) {
@@ -574,8 +577,11 @@ export const AdminDashboard = () => {
           setTestScores(enriched);
         } else {
           setTestScores([]);
+          setTotalTabCount(count ?? 0);
         }
-        setTotalTabCount(count ?? 0);
+        if (!testErr) {
+          setTotalTabCount(count ?? 0);
+        }
       }
       else if (activeTab === 'reviews') {
         let baseQuery = supabase
