@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Flame, X, ArrowRight, Trophy, Sparkles } from 'lucide-react';
 
 interface DailyChallengeFloatingWidgetProps {
@@ -8,6 +9,7 @@ interface DailyChallengeFloatingWidgetProps {
 export const DailyChallengeFloatingWidget: React.FC<DailyChallengeFloatingWidgetProps> = ({
   onOpen
 }) => {
+  const [mounted, setMounted] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -25,6 +27,8 @@ export const DailyChallengeFloatingWidget: React.FC<DailyChallengeFloatingWidget
   const isAlreadySolvedToday = lastSolvedDate === today;
 
   useEffect(() => {
+    setMounted(true);
+
     if (typeof window === 'undefined') return;
 
     // Check if dismissed in this session
@@ -54,8 +58,10 @@ export const DailyChallengeFloatingWidget: React.FC<DailyChallengeFloatingWidget
     onOpen();
   };
 
-  return (
-    <div className="fixed bottom-5 right-5 z-[80] flex flex-col items-end pointer-events-auto select-none font-sans">
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[9990] flex flex-col items-end pointer-events-auto select-none font-sans">
       
       {/* Pop-up Attention Card on arrival */}
       {showPopup && !isDismissed && (
@@ -127,26 +133,27 @@ export const DailyChallengeFloatingWidget: React.FC<DailyChallengeFloatingWidget
           onClick={handleOpenChallenge}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className="group relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-orange-600 via-amber-500 to-rose-500 flex items-center justify-center shadow-xl shadow-orange-500/35 hover:shadow-2xl hover:shadow-orange-500/50 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-white/80 ring-4 ring-orange-400/20"
+          className="group relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-orange-600 via-amber-500 to-rose-500 flex items-center justify-center shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-white/90 ring-4 ring-orange-400/25"
           title="Daily Hard Problem Challenge & Leaderboard"
           aria-label="Open Daily Challenge"
         >
           {/* Animated pulsing outer ring */}
-          <span className="absolute -inset-1 rounded-full bg-orange-400/30 animate-ping opacity-60 pointer-events-none" />
+          <span className="absolute -inset-1.5 rounded-full bg-orange-400/35 animate-ping opacity-60 pointer-events-none" />
 
           {/* Inner Flame Icon */}
           <Flame 
-            size={24} 
-            className="text-white fill-amber-200 transition-transform duration-300 group-hover:scale-115 group-hover:rotate-6 drop-shadow-sm" 
+            size={28} 
+            className="text-white fill-amber-200 transition-transform duration-300 group-hover:scale-115 group-hover:rotate-6 drop-shadow-md" 
           />
 
           {/* Small Top Badge: LIVE or Solved Check */}
-          <span className="absolute -top-1 -right-1 flex h-4.5 items-center justify-center rounded-full bg-neutral-900 px-1.5 text-[9px] font-black uppercase text-amber-300 border border-white/80 shadow-xs">
+          <span className="absolute -top-1 -right-1 flex h-5 items-center justify-center rounded-full bg-neutral-900 px-1.5 text-[9px] font-black uppercase text-amber-300 border-2 border-white shadow-xs">
             {isAlreadySolvedToday ? '✓' : 'LIVE'}
           </span>
         </button>
       </div>
 
-    </div>
+    </div>,
+    document.body
   );
 };
