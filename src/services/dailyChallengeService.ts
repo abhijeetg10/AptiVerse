@@ -354,6 +354,42 @@ export const startOfficialDailyChallenge = async (
     } catch (err) {
       console.warn('start_daily_challenge RPC error:', err);
     }
+
+    // Direct game_sessions fallback: check if user already solved today's challenge in database
+    try {
+      const istToday = getISTDateString();
+      const startOfDayISO = new Date(`${istToday}T00:00:00+05:30`).toISOString();
+
+      const { data: existingSession } = await supabase
+        .from('game_sessions')
+        .select('id, score, accuracy, time_spent, created_at')
+        .eq('user_id', userId)
+        .eq('game_id', 'daily_challenge')
+        .gte('created_at', startOfDayISO)
+        .maybeSingle();
+
+      if (existingSession) {
+        const completedAttempt: DailyAttemptRecord = {
+          attempt_id: existingSession.id,
+          daily_challenge_id: challengeId,
+          started_at: existingSession.created_at,
+          submitted_at: existingSession.created_at,
+          completion_time_ms: existingSession.time_spent * 1000,
+          completion_time_seconds: existingSession.time_spent,
+          score: existingSession.score,
+          accuracy: existingSession.accuracy,
+          is_completed: true,
+          is_correct: true,
+          status: 'completed',
+          already_existed: true
+        };
+        const localKey = `aptiverse_daily_attempt_${challengeId}`;
+        localStorage.setItem(localKey, JSON.stringify(completedAttempt));
+        return completedAttempt;
+      }
+    } catch (checkErr) {
+      console.warn('Database check existing attempt error:', checkErr);
+    }
   }
 
   // Local storage fallback for anonymous / guest mode
@@ -385,14 +421,17 @@ export const startOfficialDailyChallenge = async (
 
 /**
  * 3. Submit official daily challenge solution with server-authoritative timestamps
+ * Supports both dedicated RPCs and production game_sessions table directly.
  */
 export const submitOfficialDailyChallenge = async (
   attemptId: string,
   isCorrect: boolean,
   score: number,
   accuracy: number,
-  metadata: Record<string, any> = {}
+  metadata: Record<string, any> = {},
+  userId?: string
 ): Promise<DailyAttemptRecord> => {
+  // Try Layer 1: Dedicated RPC if present
   try {
     const { data, error } = await supabase.rpc('submit_daily_challenge', {
       p_attempt_id: attemptId,
@@ -409,14 +448,57 @@ export const submitOfficialDailyChallenge = async (
     console.warn('submit_daily_challenge RPC note:', err);
   }
 
+  const completionTimeMs = metadata.completion_time_ms || 15000;
+  const timeSpentSecs = Math.max(1, Math.round(completionTimeMs / 1000));
+  const validAttemptId = attemptId && attemptId.length === 36 ? attemptId : crypto.randomUUID();
+
+  // Try Layer 2: Direct Supabase game_sessions table insertion if authenticated
+  if (userId) {
+    try {
+      const istToday = getISTDateString();
+      const startOfDayISO = new Date(`${istToday}T00:00:00+05:30`).toISOString();
+
+      // Check if attempt already exists in game_sessions to avoid duplicate insertions
+      const { data: existing } = await supabase
+        .from('game_sessions')
+        .select('id, score, accuracy, time_spent, created_at')
+        .eq('user_id', userId)
+        .eq('game_id', 'daily_challenge')
+        .gte('created_at', startOfDayISO)
+        .maybeSingle();
+
+      if (!existing && isCorrect) {
+        const { error: insertErr } = await supabase.from('game_sessions').insert({
+          id: validAttemptId,
+          user_id: userId,
+          game_id: 'daily_challenge',
+          level: 1,
+          score: score,
+          accuracy: accuracy,
+          time_spent: timeSpentSecs,
+          passed_distraction: true,
+          attempt_id: `dc_${istToday}_${userId}`
+        });
+
+        if (insertErr) {
+          console.warn('Failed to insert into game_sessions:', insertErr);
+        } else {
+          console.log('✅ Daily challenge officially saved to Supabase game_sessions!');
+        }
+      }
+    } catch (dbErr) {
+      console.warn('Database save attempt error:', dbErr);
+    }
+  }
+
   // Fallback local update
   return {
-    attempt_id: attemptId,
+    attempt_id: validAttemptId,
     daily_challenge_id: metadata.challenge_id || '',
     started_at: metadata.started_at || new Date().toISOString(),
     submitted_at: new Date().toISOString(),
-    completion_time_ms: metadata.completion_time_ms || 15000,
-    completion_time_seconds: Math.round(((metadata.completion_time_ms || 15000) / 1000) * 10) / 10,
+    completion_time_ms: completionTimeMs,
+    completion_time_seconds: Math.round((completionTimeMs / 1000) * 10) / 10,
     score: score,
     accuracy: accuracy,
     is_completed: true,
@@ -428,14 +510,17 @@ export const submitOfficialDailyChallenge = async (
 
 /**
  * 4. Fetch daily challenge leaderboard for the given challenge ID
+ * Queries dedicated RPCs or direct Supabase game_sessions table.
  */
 export const fetchDailyLeaderboard = async (
   challengeId: string,
   limit: number = 50,
-  offset: number = 0
+  offset: number = 0,
+  currentUserId?: string
 ): Promise<DailyLeaderboardData> => {
   let serverData: DailyLeaderboardData | null = null;
 
+  // 1. Try dedicated RPC
   try {
     const { data, error } = await supabase.rpc('get_daily_challenge_leaderboard', {
       p_challenge_id: challengeId,
@@ -443,15 +528,75 @@ export const fetchDailyLeaderboard = async (
       p_offset: offset
     });
 
-    if (!error && data) {
+    if (!error && data && Array.isArray(data.entries) && data.entries.length > 0) {
       serverData = {
-        total_participants: data.total_participants || 0,
-        entries: Array.isArray(data.entries) ? data.entries : [],
+        total_participants: data.total_participants || data.entries.length,
+        entries: data.entries,
         my_entry: data.my_entry || null
       };
     }
   } catch (err) {
     console.warn('get_daily_challenge_leaderboard RPC error:', err);
+  }
+
+  // 2. Direct Supabase game_sessions table fallback
+  if (!serverData || serverData.entries.length === 0) {
+    try {
+      const istToday = getISTDateString();
+      const startOfDayISO = new Date(`${istToday}T00:00:00+05:30`).toISOString();
+
+      const { data: sessions, error } = await supabase
+        .from('game_sessions')
+        .select(`
+          id,
+          user_id,
+          score,
+          accuracy,
+          time_spent,
+          created_at,
+          profiles:user_id (
+            name,
+            college,
+            avatar_url
+          )
+        `)
+        .eq('game_id', 'daily_challenge')
+        .gte('created_at', startOfDayISO)
+        .order('score', { ascending: false })
+        .order('time_spent', { ascending: true })
+        .limit(limit);
+
+      if (!error && sessions && sessions.length > 0) {
+        const mappedEntries: LeaderboardEntry[] = sessions.map((s: any, idx: number) => {
+          const profile = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles;
+          return {
+            rank: idx + 1,
+            attempt_id: s.id,
+            user_id: s.user_id,
+            player_name: profile?.name || 'AptiVerse Scholar',
+            college: profile?.college || 'Engineering Institute',
+            completion_time_ms: s.time_spent * 1000,
+            completion_time_seconds: s.time_spent,
+            score: s.score,
+            accuracy: s.accuracy,
+            is_correct: true,
+            submitted_at: s.created_at
+          };
+        });
+
+        const myEntry = currentUserId 
+          ? mappedEntries.find(e => e.user_id === currentUserId) || null
+          : null;
+
+        serverData = {
+          total_participants: mappedEntries.length,
+          entries: mappedEntries,
+          my_entry: myEntry
+        };
+      }
+    } catch (err) {
+      console.warn('Direct game_sessions leaderboard fetch error:', err);
+    }
   }
 
   const result: DailyLeaderboardData = serverData || {
@@ -474,7 +619,7 @@ export const fetchDailyLeaderboard = async (
         const myEntry: LeaderboardEntry = result.my_entry || {
           rank: 1,
           attempt_id: localAttempt.attempt_id,
-          user_id: 'local_current_user',
+          user_id: currentUserId || 'local_current_user',
           player_name: candidateName,
           college: 'Candidate',
           completion_time_ms: localAttempt.completion_time_ms || 15000,
@@ -488,7 +633,7 @@ export const fetchDailyLeaderboard = async (
         result.my_entry = myEntry;
 
         const alreadyInList = result.entries.some(
-          e => e.attempt_id === localAttempt.attempt_id || (e.user_id && e.user_id === myEntry.user_id)
+          e => e.attempt_id === localAttempt.attempt_id || (e.user_id && currentUserId && e.user_id === currentUserId)
         );
 
         if (!alreadyInList) {

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   Flame, Clock, Trophy, CheckCircle2, 
   ArrowRight, Zap, X, RefreshCw, Calendar, Play, Award, 
-  ChevronRight, Sparkles, Gamepad2, ShieldCheck, UserCheck
+  ChevronRight, Sparkles, Gamepad2, ShieldCheck, UserCheck, LogIn
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -28,7 +28,7 @@ interface DailyChallengeModalProps {
 }
 
 export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
+  const { user, signInWithGoogle } = useAuth();
 
   // Active Tab: 'challenge' | 'leaderboard' | 'history'
   const [activeTab, setActiveTab] = useState<'challenge' | 'leaderboard' | 'history'>('challenge');
@@ -80,8 +80,16 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
       const globalChallenge = await fetchTodayGlobalChallenge();
       setChallenge(globalChallenge);
 
-      // Check if user already has an existing attempt in local storage or session
+      // Check if user already has an existing attempt in local storage or database
       if (globalChallenge?.id) {
+        if (user?.id) {
+          const serverAttempt = await startOfficialDailyChallenge(globalChallenge.id, user.id);
+          if (serverAttempt?.is_completed) {
+            setAttempt(serverAttempt);
+            return;
+          }
+        }
+
         const localKey = `aptiverse_daily_attempt_${globalChallenge.id}`;
         const saved = localStorage.getItem(localKey);
         if (saved) {
@@ -96,21 +104,21 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     } finally {
       setIsLoadingChallenge(false);
     }
-  }, []);
+  }, [user?.id]);
 
-  // 2. Fetch Leaderboard
+  // 2. Fetch Leaderboard (queries Supabase game_sessions & dedicated RPCs)
   const loadLeaderboard = useCallback(async () => {
     if (!challenge?.id) return;
     setIsLoadingLeaderboard(true);
     try {
-      const data = await fetchDailyLeaderboard(challenge.id);
+      const data = await fetchDailyLeaderboard(challenge.id, 50, 0, user?.id);
 
       if (attempt?.is_completed && (!data.my_entry || data.entries.length === 0)) {
         const myEntry = {
           rank: 1,
           attempt_id: attempt.attempt_id,
           user_id: user?.id || 'me',
-          player_name: candidateName,
+          player_name: user?.name || candidateName,
           college: user?.college || 'Candidate',
           completion_time_ms: attempt.completion_time_ms || 15000,
           completion_time_seconds: attempt.completion_time_seconds || Number(((attempt.completion_time_ms || 15000) / 1000).toFixed(1)),
@@ -135,6 +143,29 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
       setIsLoadingLeaderboard(false);
     }
   }, [challenge?.id, attempt, user, candidateName]);
+
+  // Auto-sync offline/guest completed attempt once user signs in
+  useEffect(() => {
+    if (user?.id && attempt?.is_completed && challenge) {
+      submitOfficialDailyChallenge(
+        attempt.attempt_id,
+        attempt.is_correct ?? true,
+        attempt.score ?? 100,
+        attempt.accuracy ?? 100,
+        {
+          challenge_id: challenge.id,
+          candidate_name: user.name || candidateName,
+          college: user.college,
+          started_at: attempt.started_at,
+          completion_time_ms: attempt.completion_time_ms || 15000,
+          streak: userStreak
+        },
+        user.id
+      ).then(() => {
+        loadLeaderboard();
+      });
+    }
+  }, [user?.id, attempt?.is_completed, challenge?.id, candidateName, userStreak, loadLeaderboard]);
 
   // 3. Fetch History
   const loadHistory = useCallback(async () => {
@@ -265,12 +296,13 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
         accuracy,
         {
           challenge_id: challenge.id,
-          candidate_name: candidateName,
+          candidate_name: user?.name || candidateName,
           college: user?.college,
           started_at: attempt.started_at,
           completion_time_ms: calculatedTimeMs,
           streak: updatedStreak
-        }
+        },
+        user?.id
       );
 
       setAttempt(result);
@@ -423,6 +455,25 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                       Today's official competitive puzzle assigned globally to all AptiVerse users. One scored attempt per candidate.
                     </p>
 
+                    {/* Guest Sign-in Banner */}
+                    {!user && (
+                      <div className="mt-4 p-3 bg-amber-50 border border-amber-200/90 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-2xs">
+                        <div className="flex items-center gap-2 text-amber-900">
+                          <ShieldCheck size={18} className="text-amber-600 shrink-0" />
+                          <div>
+                            <span className="font-bold">Guest Mode: </span>
+                            <span className="text-amber-800">Sign in with Google so your score &amp; college are officially recorded on the live Supabase Leaderboard!</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => signInWithGoogle()}
+                          className="w-full sm:w-auto px-4 py-2 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-extrabold rounded-xl shrink-0 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-all text-xs"
+                        >
+                          <LogIn size={14} /> Sign In with Google
+                        </button>
+                      </div>
+                    )}
+
                     {/* Pre-Start Preview & Action */}
                     {!isChallengeStarted ? (
                       <div className="mt-5 p-5 bg-white rounded-2xl border border-primary-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -482,7 +533,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
 
                       <div className="flex items-center justify-between pt-2 border-t border-emerald-200/60">
                         <span className="text-[11px] text-emerald-800 font-medium">
-                          Your attempt is permanently stored and officially ranked.
+                          Your attempt is officially verified and ranked.
                         </span>
                         <button
                           onClick={() => setActiveTab('leaderboard')}
@@ -493,6 +544,21 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                           <ChevronRight size={13} />
                         </button>
                       </div>
+
+                      {/* Guest prompt to sync to Supabase database */}
+                      {!user && (
+                        <div className="pt-2 border-t border-emerald-200/60 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                          <span className="text-[11px] text-emerald-900 font-medium">
+                            🏆 Sign in with Google to sync this winning score to the live Supabase Database!
+                          </span>
+                          <button
+                            onClick={() => signInWithGoogle()}
+                            className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+                          >
+                            <LogIn size={13} /> Sign In to Save to DB
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
@@ -528,6 +594,21 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                   <span>Refresh</span>
                 </button>
               </div>
+
+              {/* Guest hint in leaderboard */}
+              {!user && (
+                <div className="p-3 bg-amber-50 border border-amber-200/90 rounded-xl flex items-center justify-between gap-3 text-xs">
+                  <span className="text-amber-900 text-[11px]">
+                    Sign in with Google to tie your college name and verified profile to your official leaderboard rank.
+                  </span>
+                  <button
+                    onClick={() => signInWithGoogle()}
+                    className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shrink-0 flex items-center gap-1 text-[11px] cursor-pointer shadow-2xs"
+                  >
+                    <LogIn size={12} /> Sign In
+                  </button>
+                </div>
+              )}
 
               {/* User's Current Rank Card */}
               {leaderboardData.my_entry && (
