@@ -15,6 +15,16 @@ const Navbar = () => {
   const [isBugModalOpen, setIsBugModalOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isDailyChallengeOpen, setIsDailyChallengeOpen] = React.useState(false);
+
+  // Auto-open daily challenge when arriving via shared challenge link
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('challenge') === 'daily' || params.get('daily') === 'true' || params.get('challenger')) {
+        setIsDailyChallengeOpen(true);
+      }
+    }
+  }, []);
   
   const navLinks = [
     { name: 'Home', path: '/' },

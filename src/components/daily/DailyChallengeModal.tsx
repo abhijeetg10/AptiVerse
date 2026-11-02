@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   Flame, Clock, Trophy, CheckCircle2, 
   ArrowRight, Zap, X, RefreshCw, Calendar, Play, Award, 
-  ChevronRight, Sparkles, Gamepad2, ShieldCheck, UserCheck, LogIn
+  ChevronRight, Sparkles, Gamepad2, ShieldCheck, UserCheck, LogIn, Share2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -21,6 +21,7 @@ import {
   type LeaderboardEntry 
 } from '../../services/dailyChallengeService';
 import { DailyPlayableGame } from './DailyPlayableGame';
+import { ChallengeFriendModal } from './ChallengeFriendModal';
 import { cn } from '../../utils/cn';
 
 interface DailyChallengeModalProps {
@@ -73,6 +74,25 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
 
   // Candidate Name
   const candidateName = user?.name || localStorage.getItem('aptiverse_interview_candidate_name') || 'AptiVerse Scholar';
+
+  // Challenge a Friend Modal State
+  const [isChallengeFriendModalOpen, setIsChallengeFriendModalOpen] = useState(false);
+  const [incomingChallenger, setIncomingChallenger] = useState<{ name: string; time: string } | null>(null);
+
+  // Check for incoming challenger from shared link
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const chName = params.get('challenger');
+      const chTime = params.get('time');
+      if (chName) {
+        setIncomingChallenger({
+          name: chName,
+          time: chTime || '15s'
+        });
+      }
+    }
+  }, []);
 
   // 1. Fetch Leaderboard (queries Supabase game_sessions & dedicated RPCs)
   const loadLeaderboard = useCallback(async (forcedAttempt?: DailyAttemptRecord) => {
@@ -413,6 +433,16 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Challenge a Friend Button in Header */}
+            <button
+              onClick={() => setIsChallengeFriendModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold transition-all cursor-pointer hover:scale-105 shadow-2xs active:scale-95"
+              title="Challenge a Friend"
+            >
+              <Share2 size={13} className="text-orange-600" />
+              <span className="hidden sm:inline">Challenge Friend</span>
+            </button>
+
             {/* Live IST Countdown to 12:00 AM Midnight */}
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-neutral-200 shadow-xs text-xs text-neutral-700 font-mono font-semibold">
               <Clock size={13} className="text-amber-500" />
@@ -494,6 +524,26 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                 </div>
               ) : challenge ? (
                 <>
+                  {/* Incoming Challenger Callout Banner */}
+                  {incomingChallenger && !isChallengeCompleted && (
+                    <div className="p-4 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border border-orange-200 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs animate-fadeIn shadow-2xs">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl shrink-0">⚔️</span>
+                        <div>
+                          <p className="font-extrabold text-neutral-900 text-sm">
+                            Challenged by <span className="text-orange-600 font-black">{incomingChallenger.name}</span>!
+                          </p>
+                          <p className="text-[11px] text-neutral-600">
+                            Their official solve speed: <strong className="text-neutral-900 font-mono">{incomingChallenger.time}</strong>. Can you beat their time today?
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold rounded-xl text-[10px] uppercase tracking-wider shrink-0 shadow-xs">
+                        Beat Their Speed
+                      </span>
+                    </div>
+                  )}
+
                   {/* Challenge Overview Card */}
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-50/50 via-white to-slate-50 border border-primary-100/70 shadow-xs relative">
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
@@ -597,10 +647,15 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-emerald-200/60">
-                        <span className="text-[11px] text-emerald-800 font-medium">
-                          Your attempt is officially verified and ranked.
-                        </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-emerald-200/60">
+                        <button
+                          onClick={() => setIsChallengeFriendModalOpen(true)}
+                          className="px-4 py-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                        >
+                          <Share2 size={14} />
+                          <span>Challenge a Friend ⚔️</span>
+                        </button>
+
                         <button
                           onClick={() => setActiveTab('leaderboard')}
                           className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
@@ -678,7 +733,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
 
               {/* User's Current Rank Card */}
               {leaderboardData?.my_entry && (
-                <div className="p-4 rounded-2xl bg-primary-50 border border-primary-200 flex items-center justify-between text-xs animate-fadeIn shadow-xs">
+                <div className="p-4 rounded-2xl bg-primary-50 border border-primary-200 flex flex-wrap items-center justify-between gap-3 text-xs animate-fadeIn shadow-xs">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-primary-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
                       #{leaderboardData.my_entry.rank}
@@ -691,9 +746,19 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 font-mono font-bold">
-                    <span className="text-emerald-700">{leaderboardData.my_entry.completion_time_seconds}s</span>
-                    <span className="text-primary-800">{leaderboardData.my_entry.score} pts</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 font-mono font-bold">
+                      <span className="text-emerald-700">{leaderboardData.my_entry.completion_time_seconds}s</span>
+                      <span className="text-primary-800">{leaderboardData.my_entry.score} pts</span>
+                    </div>
+
+                    <button
+                      onClick={() => setIsChallengeFriendModalOpen(true)}
+                      className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-2xs cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                    >
+                      <Share2 size={13} />
+                      <span>Challenge a Friend</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -873,6 +938,22 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
 
         </div>
       </div>
+
+      {/* Challenge a Friend Share Modal */}
+      <ChallengeFriendModal
+        isOpen={isChallengeFriendModalOpen}
+        onClose={() => setIsChallengeFriendModalOpen(false)}
+        challengerName={candidateName}
+        solveTimeSeconds={
+          attempt?.completion_time_seconds ||
+          leaderboardData?.my_entry?.completion_time_seconds ||
+          ((attempt?.completion_time_ms || 0) / 1000).toFixed(1) ||
+          '15'
+        }
+        streak={userStreak}
+        challengeTitle={challenge?.title}
+        challengeDate={challenge?.challenge_date}
+      />
     </div>,
     document.body
   );
