@@ -98,6 +98,8 @@ export function applyMove(state: GameState, entityId: string, direction: Directi
   if (state.status !== "playing") return state;
   if (steps === 0) return state;
 
+  const normalizedDir = (String(direction).toUpperCase()) as Direction;
+
   const newState = {
     ...state,
     ball: { ...state.ball },
@@ -110,7 +112,7 @@ export function applyMove(state: GameState, entityId: string, direction: Directi
     let actualSteps = 0;
 
     for (let i = 0; i < steps; i++) {
-      const next = calculateNewPosition({ row: currentRow, col: currentCol }, direction);
+      const next = calculateNewPosition({ row: currentRow, col: currentCol }, normalizedDir);
       if (checkCollisionRect(next.row, next.col, 1, 1, "ball", newState, false)) break;
       
       currentRow = next.row;
@@ -131,9 +133,9 @@ export function applyMove(state: GameState, entityId: string, direction: Directi
     
     const block = newState.blocks[blockIndex];
     
-    // Validate orientation vs direction
-    if (block.orientation === "horizontal" && (direction === "UP" || direction === "DOWN")) return state;
-    if (block.orientation === "vertical" && (direction === "LEFT" || direction === "RIGHT")) return state;
+    // Validate orientation vs direction (case-insensitive)
+    if (block.orientation === "horizontal" && (normalizedDir === "UP" || normalizedDir === "DOWN")) return state;
+    if (block.orientation === "vertical" && (normalizedDir === "LEFT" || normalizedDir === "RIGHT")) return state;
 
     const width = block.orientation === "horizontal" ? block.length : 1;
     const height = block.orientation === "vertical" ? block.length : 1;
@@ -143,7 +145,7 @@ export function applyMove(state: GameState, entityId: string, direction: Directi
     let actualSteps = 0;
 
     for (let i = 0; i < steps; i++) {
-      const next = calculateNewPosition({ row: currentRow, col: currentCol }, direction);
+      const next = calculateNewPosition({ row: currentRow, col: currentCol }, normalizedDir);
       if (checkCollisionRect(next.row, next.col, width, height, block.id, newState, false)) break;
       
       currentRow = next.row;
