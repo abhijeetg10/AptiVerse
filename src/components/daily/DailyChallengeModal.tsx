@@ -134,8 +134,18 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     }
   }, [challenge?.id, attempt, user, candidateName]);
 
+  // Stable ref for loadLeaderboard to prevent cyclical dependency loops
+  const loadLeaderboardRef = useRef(loadLeaderboard);
+  useEffect(() => {
+    loadLeaderboardRef.current = loadLeaderboard;
+  });
+
+  const isFetchingTodayRef = useRef(false);
+
   // 2. Load today's global challenge (Single source of truth)
   const loadTodayChallenge = useCallback(async () => {
+    if (isFetchingTodayRef.current) return;
+    isFetchingTodayRef.current = true;
     setIsLoadingChallenge(true);
     try {
       const globalChallenge = await fetchTodayGlobalChallenge();
@@ -153,19 +163,23 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
         }
 
         if (user?.id) {
-          const serverAttempt = await startOfficialDailyChallenge(globalChallenge.id, user.id);
-          if (serverAttempt) {
-            if (serverAttempt.is_completed || !activeAttempt?.is_completed) {
-              activeAttempt = serverAttempt;
-              localStorage.setItem(localKey, JSON.stringify(serverAttempt));
+          try {
+            const serverAttempt = await startOfficialDailyChallenge(globalChallenge.id, user.id);
+            if (serverAttempt) {
+              if (serverAttempt.is_completed || !activeAttempt?.is_completed) {
+                activeAttempt = serverAttempt;
+                localStorage.setItem(localKey, JSON.stringify(serverAttempt));
+              }
             }
+          } catch (e) {
+            console.warn('startOfficialDailyChallenge check error:', e);
           }
         }
 
         if (activeAttempt) {
           setAttempt(activeAttempt);
           if (activeAttempt.is_completed) {
-            loadLeaderboard(activeAttempt);
+            loadLeaderboardRef.current(activeAttempt);
           }
         }
       }
@@ -173,8 +187,9 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
       console.warn('Daily challenge load error:', err);
     } finally {
       setIsLoadingChallenge(false);
+      isFetchingTodayRef.current = false;
     }
-  }, [user?.id, loadLeaderboard]);
+  }, [user?.id]);
 
   // Auto-sync offline/guest completed attempt once user signs in
   useEffect(() => {
@@ -194,10 +209,10 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
         },
         user.id
       ).then(() => {
-        loadLeaderboard();
+        loadLeaderboardRef.current();
       });
     }
-  }, [user?.id, attempt?.is_completed, challenge?.id, candidateName, userStreak, loadLeaderboard]);
+  }, [user?.id, attempt?.is_completed, challenge?.id]);
 
   // 3. Fetch History
   const loadHistory = useCallback(async () => {

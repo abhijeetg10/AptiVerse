@@ -320,9 +320,15 @@ export const fetchTodayGlobalChallenge = async (targetDate?: string): Promise<Da
   const istDateStr = targetDate || getISTDateString();
 
   try {
-    const { data, error } = await supabase.rpc('get_or_create_daily_challenge', {
+    const rpcPromise = supabase.rpc('get_or_create_daily_challenge', {
       p_target_date: istDateStr
     });
+    // 3.5s timeout prevents any hung network request from locking the UI spinner
+    const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) =>
+      setTimeout(() => reject(new Error('RPC Timeout')), 3500)
+    );
+
+    const { data, error } = (await Promise.race([rpcPromise, timeoutPromise])) as any;
 
     if (!error && data && data.id) {
       return data as DailyChallengeRecord;
@@ -344,9 +350,14 @@ export const startOfficialDailyChallenge = async (
 ): Promise<DailyAttemptRecord> => {
   if (userId) {
     try {
-      const { data, error } = await supabase.rpc('start_daily_challenge', {
+      const rpcPromise = supabase.rpc('start_daily_challenge', {
         p_challenge_id: challengeId
       });
+      const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) =>
+        setTimeout(() => reject(new Error('RPC Timeout')), 3000)
+      );
+
+      const { data, error } = (await Promise.race([rpcPromise, timeoutPromise])) as any;
 
       if (!error && data && data.attempt_id) {
         return data as DailyAttemptRecord;

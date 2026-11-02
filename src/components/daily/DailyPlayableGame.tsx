@@ -66,7 +66,7 @@ export const DailyPlayableGame: React.FC<DailyPlayableGameProps> = ({
   isSolved,
   disabled = false,
 }) => {
-  const puzzle = challengeConfig?.puzzle;
+  const puzzle = challengeConfig?.puzzle || challengeConfig;
 
   if (!puzzle) {
     return (
