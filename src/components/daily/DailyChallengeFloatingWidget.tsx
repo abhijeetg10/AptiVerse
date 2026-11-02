@@ -61,21 +61,18 @@ export const DailyChallengeFloatingWidget: React.FC<DailyChallengeFloatingWidget
   if (!mounted || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[9990] flex flex-col items-end pointer-events-auto select-none font-sans">
+    <div className="fixed bottom-5 right-5 z-[9990] flex flex-col items-end pointer-events-auto select-none font-sans max-w-[calc(100vw-2.5rem)]">
       
       {/* Pop-up Attention Card on arrival */}
       {showPopup && !isDismissed && (
         <div 
           onClick={handleOpenChallenge}
-          className="mb-3 w-72 sm:w-80 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl border-2 border-orange-300 text-neutral-800 transition-all duration-300 hover:shadow-orange-500/20 hover:scale-[1.02] cursor-pointer group relative overflow-hidden"
+          className="mb-3 w-72 sm:w-80 max-w-[calc(100vw-2.5rem)] bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl border-2 border-orange-300 text-neutral-800 transition-all duration-200 hover:shadow-orange-500/20 hover:scale-[1.02] cursor-pointer group relative overflow-hidden"
         >
-          {/* Background subtle glow */}
-          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-400/10 rounded-full blur-xl pointer-events-none" />
-
           {/* Close button */}
           <button
             onClick={handleDismissPopup}
-            className="absolute top-2.5 right-2.5 p-1 rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+            className="absolute top-2.5 right-2.5 p-1 rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
             title="Dismiss"
           >
             <X size={15} />
@@ -119,35 +116,32 @@ export const DailyChallengeFloatingWidget: React.FC<DailyChallengeFloatingWidget
       {/* Floating Circular Daily Challenge Logo / Button (FAB) */}
       <div className="relative flex items-center">
         {/* Tooltip / Expanded Label on Hover */}
-        <div 
-          className={`hidden sm:flex items-center gap-2 mr-3 px-3.5 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md text-white text-xs font-bold shadow-lg transition-all duration-300 pointer-events-none ${
-            isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
-          }`}
-        >
-          <Flame size={14} className="fill-orange-400 text-orange-400" />
-          <span>{isAlreadySolvedToday ? 'View Leaderboard' : "Today's Daily Challenge"}</span>
-        </div>
+        {isHovered && (
+          <div 
+            className="hidden sm:flex items-center gap-2 mr-3 px-3.5 py-1.5 rounded-full bg-slate-900/95 backdrop-blur-md text-white text-xs font-bold shadow-lg pointer-events-none transition-opacity duration-200"
+          >
+            <Flame size={14} className="fill-orange-400 text-orange-400" />
+            <span>{isAlreadySolvedToday ? 'View Leaderboard' : "Today's Daily Challenge"}</span>
+          </div>
+        )}
 
         {/* Circular Button */}
         <button
           onClick={handleOpenChallenge}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className="group relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-orange-600 via-amber-500 to-rose-500 flex items-center justify-center shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer border-2 border-white/90 ring-4 ring-orange-400/25"
+          className="group relative w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-orange-600 via-amber-500 to-rose-500 flex items-center justify-center shadow-xl shadow-orange-500/35 hover:shadow-2xl hover:shadow-orange-500/50 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border-2 border-white/90 ring-4 ring-orange-400/20"
           title="Daily Hard Problem Challenge & Leaderboard"
           aria-label="Open Daily Challenge"
         >
-          {/* Animated pulsing outer ring */}
-          <span className="absolute -inset-1.5 rounded-full bg-orange-400/35 animate-ping opacity-60 pointer-events-none" />
-
           {/* Inner Flame Icon */}
           <Flame 
-            size={28} 
-            className="text-white fill-amber-200 transition-transform duration-300 group-hover:scale-115 group-hover:rotate-6 drop-shadow-md" 
+            size={24} 
+            className="text-white fill-amber-200 transition-transform duration-200 group-hover:rotate-6 drop-shadow-md" 
           />
 
           {/* Small Top Badge: LIVE or Solved Check */}
-          <span className="absolute -top-1 -right-1 flex h-5 items-center justify-center rounded-full bg-neutral-900 px-1.5 text-[9px] font-black uppercase text-amber-300 border-2 border-white shadow-xs">
+          <span className="absolute -top-1 -right-1 flex h-4.5 items-center justify-center rounded-full bg-neutral-900 px-1.5 text-[9px] font-black uppercase text-amber-300 border border-white shadow-xs">
             {isAlreadySolvedToday ? '✓' : 'LIVE'}
           </span>
         </button>
