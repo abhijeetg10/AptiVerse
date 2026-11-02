@@ -17,7 +17,8 @@ import {
   type DailyChallengeRecord, 
   type DailyAttemptRecord, 
   type DailyLeaderboardData, 
-  type HistoricalChallengeRecord 
+  type HistoricalChallengeRecord,
+  type LeaderboardEntry 
 } from '../../services/dailyChallengeService';
 import { DailyPlayableGame } from './DailyPlayableGame';
 import { cn } from '../../utils/cn';
@@ -73,30 +74,99 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
   // Candidate Name
   const candidateName = user?.name || localStorage.getItem('aptiverse_interview_candidate_name') || 'AptiVerse Scholar';
 
-  // 1. Load today's global challenge (Single source of truth)
+  // 1. Fetch Leaderboard (queries Supabase game_sessions & dedicated RPCs)
+  const loadLeaderboard = useCallback(async (forcedAttempt?: DailyAttemptRecord) => {
+    if (!challenge?.id) return;
+    setIsLoadingLeaderboard(true);
+    try {
+      const data = await fetchDailyLeaderboard(challenge.id, 50, 0, user?.id);
+      const activeAttempt = forcedAttempt || attempt;
+
+      const entries = Array.isArray(data?.entries) ? [...data.entries] : [];
+
+      if (activeAttempt?.is_completed) {
+        const myEntry: LeaderboardEntry = {
+          rank: 1,
+          attempt_id: activeAttempt.attempt_id,
+          user_id: user?.id || 'me',
+          player_name: user?.name || candidateName,
+          college: user?.college || 'Candidate',
+          completion_time_ms: activeAttempt.completion_time_ms || 15000,
+          completion_time_seconds: activeAttempt.completion_time_seconds || Number(((activeAttempt.completion_time_ms || 15000) / 1000).toFixed(1)),
+          score: activeAttempt.score ?? 100,
+          accuracy: activeAttempt.accuracy ?? 100,
+          is_correct: activeAttempt.is_correct ?? true,
+          submitted_at: activeAttempt.submitted_at || new Date().toISOString()
+        };
+
+        const existingIdx = entries.findIndex(e => e.attempt_id === activeAttempt.attempt_id || (user?.id && e.user_id === user.id));
+        if (existingIdx >= 0) {
+          entries[existingIdx] = { ...entries[existingIdx], ...myEntry };
+        } else {
+          entries.unshift(myEntry);
+        }
+
+        // Re-rank entries based on score and time
+        entries.sort((a, b) => {
+          if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+          return (a.completion_time_ms || 0) - (b.completion_time_ms || 0);
+        });
+        entries.forEach((e, idx) => { e.rank = idx + 1; });
+
+        const myRankedEntry = entries.find(e => e.attempt_id === activeAttempt.attempt_id || (user?.id && e.user_id === user.id)) || myEntry;
+
+        setLeaderboardData({
+          total_participants: Math.max(data?.total_participants || 0, entries.length),
+          entries,
+          my_entry: myRankedEntry
+        });
+      } else {
+        setLeaderboardData({
+          total_participants: data?.total_participants || entries.length,
+          entries,
+          my_entry: data?.my_entry || null
+        });
+      }
+    } catch (err) {
+      console.warn('Leaderboard load error:', err);
+    } finally {
+      setIsLoadingLeaderboard(false);
+    }
+  }, [challenge?.id, attempt, user, candidateName]);
+
+  // 2. Load today's global challenge (Single source of truth)
   const loadTodayChallenge = useCallback(async () => {
     setIsLoadingChallenge(true);
     try {
       const globalChallenge = await fetchTodayGlobalChallenge();
       setChallenge(globalChallenge);
 
-      // Check if user already has an existing attempt in local storage or database
       if (globalChallenge?.id) {
-        if (user?.id) {
-          const serverAttempt = await startOfficialDailyChallenge(globalChallenge.id, user.id);
-          if (serverAttempt?.is_completed) {
-            setAttempt(serverAttempt);
-            return;
-          }
-        }
+        let activeAttempt: DailyAttemptRecord | null = null;
 
         const localKey = `aptiverse_daily_attempt_${globalChallenge.id}`;
         const saved = localStorage.getItem(localKey);
         if (saved) {
           try {
-            const parsed = JSON.parse(saved);
-            setAttempt(parsed);
+            activeAttempt = JSON.parse(saved);
           } catch {}
+        }
+
+        if (user?.id) {
+          const serverAttempt = await startOfficialDailyChallenge(globalChallenge.id, user.id);
+          if (serverAttempt) {
+            if (serverAttempt.is_completed || !activeAttempt?.is_completed) {
+              activeAttempt = serverAttempt;
+              localStorage.setItem(localKey, JSON.stringify(serverAttempt));
+            }
+          }
+        }
+
+        if (activeAttempt) {
+          setAttempt(activeAttempt);
+          if (activeAttempt.is_completed) {
+            loadLeaderboard(activeAttempt);
+          }
         }
       }
     } catch (err) {
@@ -104,45 +174,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     } finally {
       setIsLoadingChallenge(false);
     }
-  }, [user?.id]);
-
-  // 2. Fetch Leaderboard (queries Supabase game_sessions & dedicated RPCs)
-  const loadLeaderboard = useCallback(async () => {
-    if (!challenge?.id) return;
-    setIsLoadingLeaderboard(true);
-    try {
-      const data = await fetchDailyLeaderboard(challenge.id, 50, 0, user?.id);
-
-      if (attempt?.is_completed && (!data.my_entry || data.entries.length === 0)) {
-        const myEntry = {
-          rank: 1,
-          attempt_id: attempt.attempt_id,
-          user_id: user?.id || 'me',
-          player_name: user?.name || candidateName,
-          college: user?.college || 'Candidate',
-          completion_time_ms: attempt.completion_time_ms || 15000,
-          completion_time_seconds: attempt.completion_time_seconds || Number(((attempt.completion_time_ms || 15000) / 1000).toFixed(1)),
-          score: attempt.score ?? 100,
-          accuracy: attempt.accuracy ?? 100,
-          is_correct: attempt.is_correct ?? true,
-          submitted_at: attempt.submitted_at || new Date().toISOString()
-        };
-
-        const existingIdx = data.entries.findIndex(e => e.attempt_id === attempt.attempt_id);
-        const newEntries = existingIdx >= 0 ? data.entries : [myEntry, ...data.entries];
-
-        setLeaderboardData({
-          total_participants: Math.max(data.total_participants, newEntries.length),
-          entries: newEntries,
-          my_entry: data.my_entry || myEntry
-        });
-      } else {
-        setLeaderboardData(data);
-      }
-    } finally {
-      setIsLoadingLeaderboard(false);
-    }
-  }, [challenge?.id, attempt, user, candidateName]);
+  }, [user?.id, loadLeaderboard]);
 
   // Auto-sync offline/guest completed attempt once user signs in
   useEffect(() => {
@@ -277,7 +309,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
 
   // Submit Official Solution Handler
   const handleSolveChallenge = async (isCorrect: boolean, score: number, accuracy: number) => {
-    if (!attempt || attempt.is_completed || !challenge) return;
+    if (!challenge) return;
 
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
 
@@ -288,9 +320,11 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     localStorage.setItem('aptiverse_daily_streak', String(updatedStreak));
     localStorage.setItem('aptiverse_daily_last_solved_date', challenge.challenge_date);
 
+    const currentAttemptId = attempt?.attempt_id || crypto.randomUUID();
+
     try {
       const result = await submitOfficialDailyChallenge(
-        attempt.attempt_id,
+        currentAttemptId,
         isCorrect,
         score,
         accuracy,
@@ -298,7 +332,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
           challenge_id: challenge.id,
           candidate_name: user?.name || candidateName,
           college: user?.college,
-          started_at: attempt.started_at,
+          started_at: attempt?.started_at || new Date().toISOString(),
           completion_time_ms: calculatedTimeMs,
           streak: updatedStreak
         },
@@ -307,7 +341,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
 
       setAttempt(result);
       localStorage.setItem(`aptiverse_daily_attempt_${challenge.id}`, JSON.stringify(result));
-      loadLeaderboard();
+      loadLeaderboard(result);
     } catch (err) {
       console.warn('Submit solution error:', err);
     }
@@ -587,7 +621,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                 </div>
 
                 <button
-                  onClick={loadLeaderboard}
+                  onClick={() => loadLeaderboard()}
                   className="p-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-600 hover:text-neutral-900 border border-neutral-200 text-xs flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <RefreshCw size={12} className={isLoadingLeaderboard ? 'animate-spin' : ''} />
@@ -611,7 +645,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
               )}
 
               {/* User's Current Rank Card */}
-              {leaderboardData.my_entry && (
+              {leaderboardData?.my_entry && (
                 <div className="p-4 rounded-2xl bg-primary-50 border border-primary-200 flex items-center justify-between text-xs animate-fadeIn shadow-xs">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-primary-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
@@ -633,83 +667,92 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
               )}
 
               {/* Leaderboard Table */}
-              {isLoadingLeaderboard ? (
-                <div className="p-12 text-center text-xs text-neutral-500">
-                  <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                  Loading speed rankings...
-                </div>
-              ) : leaderboardData.entries.length === 0 ? (
-                <div className="p-10 text-center text-xs text-neutral-500 bg-slate-50 rounded-2xl border border-neutral-200">
-                  <Flame size={32} className="mx-auto text-amber-500 mb-2 opacity-80" />
-                  <p className="font-bold text-neutral-800 text-sm">No one has completed today's challenge yet!</p>
-                  <p className="text-[11px] text-neutral-500 mt-1">Be the first candidate to solve it and take Rank #1 globally.</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-neutral-100 bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-xs">
-                  {leaderboardData.entries.map((entry) => {
-                    const isTop1 = entry.rank === 1;
-                    const isTop2 = entry.rank === 2;
-                    const isTop3 = entry.rank === 3;
-                    const isMe = user?.id && entry.user_id === user.id;
+              {(() => {
+                const safeEntries = Array.isArray(leaderboardData?.entries) ? leaderboardData.entries : [];
+                if (isLoadingLeaderboard) {
+                  return (
+                    <div className="p-12 text-center text-xs text-neutral-500">
+                      <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      Loading speed rankings...
+                    </div>
+                  );
+                }
+                if (safeEntries.length === 0) {
+                  return (
+                    <div className="p-10 text-center text-xs text-neutral-500 bg-slate-50 rounded-2xl border border-neutral-200">
+                      <Flame size={32} className="mx-auto text-amber-500 mb-2 opacity-80" />
+                      <p className="font-bold text-neutral-800 text-sm">No one has completed today's challenge yet!</p>
+                      <p className="text-[11px] text-neutral-500 mt-1">Be the first candidate to solve it and take Rank #1 globally.</p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="divide-y divide-neutral-100 bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-xs">
+                    {safeEntries.map((entry) => {
+                      const isTop1 = entry.rank === 1;
+                      const isTop2 = entry.rank === 2;
+                      const isTop3 = entry.rank === 3;
+                      const isMe = user?.id && entry.user_id === user.id;
 
-                    return (
-                      <div
-                        key={entry.attempt_id}
-                        className={cn(
-                          "p-3.5 px-5 flex items-center justify-between text-xs transition-colors",
-                          isMe
-                            ? "bg-primary-50/70 font-semibold"
-                            : isTop1
-                              ? "bg-amber-50/60"
-                              : isTop2
-                                ? "bg-slate-50/80"
-                                : isTop3
-                                  ? "bg-orange-50/30"
-                                  : "hover:bg-neutral-50/70"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          {/* Rank Badge */}
-                          <div className={cn(
-                            "w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0",
-                            isTop1 
-                              ? "bg-gradient-to-tr from-amber-400 to-amber-500 text-amber-950 shadow-xs" 
-                              : isTop2 
-                                ? "bg-gradient-to-tr from-slate-200 to-slate-300 text-slate-800" 
-                                : isTop3 
-                                  ? "bg-gradient-to-tr from-amber-600 to-amber-700 text-white" 
-                                  : "bg-neutral-100 text-neutral-700"
-                          )}>
-                            {entry.rank}
+                      return (
+                        <div
+                          key={entry.attempt_id}
+                          className={cn(
+                            "p-3.5 px-5 flex items-center justify-between text-xs transition-colors",
+                            isMe
+                              ? "bg-primary-50/70 font-semibold"
+                              : isTop1
+                                ? "bg-amber-50/60"
+                                : isTop2
+                                  ? "bg-slate-50/80"
+                                  : isTop3
+                                    ? "bg-orange-50/30"
+                                    : "hover:bg-neutral-50/70"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            {/* Rank Badge */}
+                            <div className={cn(
+                              "w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0",
+                              isTop1 
+                                ? "bg-gradient-to-tr from-amber-400 to-amber-500 text-amber-950 shadow-xs" 
+                                : isTop2 
+                                  ? "bg-gradient-to-tr from-slate-200 to-slate-300 text-slate-800" 
+                                  : isTop3 
+                                    ? "bg-gradient-to-tr from-amber-600 to-amber-700 text-white" 
+                                    : "bg-neutral-100 text-neutral-700"
+                            )}>
+                              {entry.rank}
+                            </div>
+
+                            <div>
+                              <div className="font-bold text-neutral-900 flex items-center gap-1.5">
+                                <span>{entry.player_name}</span>
+                                {isMe && (
+                                  <span className="px-1.5 py-0.2 rounded bg-primary-200 text-primary-900 text-[9px] font-bold">
+                                    YOU
+                                  </span>
+                                )}
+                                {isTop1 && <Award size={13} className="text-amber-500" />}
+                              </div>
+                              <div className="text-[11px] text-neutral-400">
+                                {entry.college || 'Engineering Institute'}
+                              </div>
+                            </div>
                           </div>
 
-                          <div>
-                            <div className="font-bold text-neutral-900 flex items-center gap-1.5">
-                              <span>{entry.player_name}</span>
-                              {isMe && (
-                                <span className="px-1.5 py-0.2 rounded bg-primary-200 text-primary-900 text-[9px] font-bold">
-                                  YOU
-                                </span>
-                              )}
-                              {isTop1 && <Award size={13} className="text-amber-500" />}
-                            </div>
-                            <div className="text-[11px] text-neutral-400">
-                              {entry.college || 'Engineering Institute'}
+                          <div className="flex items-center gap-4 text-right font-mono">
+                            <div>
+                              <div className="font-extrabold text-emerald-700">{entry.completion_time_seconds}s</div>
+                              <div className="text-[10px] text-neutral-400">{entry.accuracy}% acc</div>
                             </div>
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-4 text-right font-mono">
-                          <div>
-                            <div className="font-extrabold text-emerald-700">{entry.completion_time_seconds}s</div>
-                            <div className="text-[10px] text-neutral-400">{entry.accuracy}% acc</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -728,20 +771,28 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                 </p>
               </div>
 
-              {isLoadingHistory ? (
-                <div className="p-12 text-center text-xs text-neutral-500">
-                  <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                  Loading past challenges...
-                </div>
-              ) : historyList.length === 0 ? (
-                <div className="p-10 text-center text-xs text-neutral-500 bg-slate-50 rounded-2xl border border-neutral-200">
-                  <Calendar size={32} className="mx-auto text-neutral-400 mb-2" />
-                  <p className="font-bold text-neutral-800 text-sm">No historical challenges recorded yet.</p>
-                  <p className="text-[11px] text-neutral-500 mt-1">Past challenges will automatically archive here every midnight IST.</p>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {historyList.map((item) => (
+              {(() => {
+                const safeHistory = Array.isArray(historyList) ? historyList : [];
+                if (isLoadingHistory) {
+                  return (
+                    <div className="p-12 text-center text-xs text-neutral-500">
+                      <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      Loading past challenges...
+                    </div>
+                  );
+                }
+                if (safeHistory.length === 0) {
+                  return (
+                    <div className="p-10 text-center text-xs text-neutral-500 bg-slate-50 rounded-2xl border border-neutral-200">
+                      <Calendar size={32} className="mx-auto text-neutral-400 mb-2" />
+                      <p className="font-bold text-neutral-800 text-sm">No historical challenges recorded yet.</p>
+                      <p className="text-[11px] text-neutral-500 mt-1">Past challenges will automatically archive here every midnight IST.</p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="space-y-2.5">
+                    {safeHistory.map((item) => (
                     <div
                       key={item.challenge_id}
                       className="p-4 rounded-2xl bg-white border border-neutral-200 hover:border-primary-300 transition-all shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
@@ -783,7 +834,8 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
                     </div>
                   ))}
                 </div>
-              )}
+              );
+            })()}
             </div>
           )}
 

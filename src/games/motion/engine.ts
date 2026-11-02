@@ -17,8 +17,8 @@ export function createInitialState(puzzle: PuzzleDefinition): GameState {
       row: puzzle.target.row,
       col: puzzle.target.col,
     },
-    blocks: puzzle.blocks.map(b => ({ ...b, type: "block" })),
-    walls: (puzzle.walls || []).map(w => ({ ...w, type: "wall" })),
+    blocks: (puzzle?.blocks || []).map(b => ({ ...b, type: "block" })),
+    walls: (puzzle?.walls || []).map(w => ({ ...w, type: "wall" })),
     moves: 0,
     optimalMoves: puzzle.optimalMoves,
     status: "playing"

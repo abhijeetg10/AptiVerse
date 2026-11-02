@@ -2,7 +2,7 @@ import React from 'react';
 import type { ShapeId, Grid3x3, InductiveState } from './types';
 import { cn } from '../../utils/cn';
 
-const ShapeIcon = ({ shape, className = "" }: { shape: ShapeId, className?: string }) => {
+const ShapeIcon = ({ shape, className = "" }: { shape: ShapeId | null | undefined, className?: string }) => {
   switch (shape) {
     case 'yc':
       return <div className={cn("w-full h-full rounded-full bg-yellow-400 shadow-sm", className)} />;
@@ -22,7 +22,7 @@ const ShapeIcon = ({ shape, className = "" }: { shape: ShapeId, className?: stri
   }
 };
 
-const GridBox = ({ grid, selectable, selected, onClick, status, isCorrect }: { grid: Grid3x3, selectable?: boolean, selected?: boolean, onClick?: () => void, status?: string, isCorrect?: boolean }) => {
+const GridBox = ({ grid, selectable, selected, onClick, status, isCorrect }: { grid: (ShapeId | null)[], selectable?: boolean, selected?: boolean, onClick?: () => void, status?: string, isCorrect?: boolean }) => {
   // Outline based on status
   let outlineClass = "border-transparent";
   const isAnswered = status === 'completed' || status === 'failed';
@@ -50,7 +50,7 @@ const GridBox = ({ grid, selectable, selected, onClick, status, isCorrect }: { g
         selected && "scale-105"
       )}
     >
-      {grid.map((shape, i) => (
+      {(grid || []).map((shape, i) => (
         <div key={i} className="flex items-center justify-center bg-slate-100 rounded-sm p-1">
           <ShapeIcon shape={shape} />
         </div>
@@ -111,7 +111,7 @@ export const InductiveBoard: React.FC<InductiveBoardProps> = ({ state, onToggle 
       <div className="flex-1 bg-slate-100 rounded-3xl p-6 border border-slate-200 flex flex-col items-center">
         <h3 className="text-lg font-bold text-slate-800 mb-6 text-center">These two grids follow a rule</h3>
         <div className="flex flex-col gap-6">
-          {puzzle.examples.map((grid, i) => (
+          {(puzzle?.examples || []).map((grid, i) => (
             <GridBox key={`ex-${i}`} grid={grid} />
           ))}
         </div>
@@ -121,15 +121,15 @@ export const InductiveBoard: React.FC<InductiveBoardProps> = ({ state, onToggle 
       <div className="flex-[2] bg-white rounded-3xl p-6 shadow-xl border border-slate-100 flex flex-col items-center">
         <h3 className="text-lg font-bold text-slate-800 mb-6 text-center">Which two of these grids follow the same rule?</h3>
         <div className="grid grid-cols-2 gap-8">
-          {puzzle.options.map((grid, i) => (
+          {(puzzle?.options || []).map((grid, i) => (
             <GridBox 
               key={`opt-${i}`} 
               grid={grid} 
               selectable={true}
-              selected={selectedIndices.includes(i)}
+              selected={selectedIndices?.includes(i)}
               onClick={() => onToggle(i)}
               status={status}
-              isCorrect={puzzle.correctOptionIndices.includes(i)}
+              isCorrect={puzzle?.correctOptionIndices?.includes(i)}
             />
           ))}
         </div>

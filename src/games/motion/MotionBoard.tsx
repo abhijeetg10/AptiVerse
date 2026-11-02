@@ -220,7 +220,7 @@ export const MotionBoard: React.FC<MotionBoardProps> = ({ state, onMove, onDragS
       ))}
 
       {/* Blocks */}
-      {blocks.map((block, i) => {
+      {(blocks || []).map((block, i) => {
         const w = getWidth(block);
         const h = getHeight(block);
         const colorClass = colorMap[block.color || ''] || Object.values(colorMap)[i % Object.keys(colorMap).length];

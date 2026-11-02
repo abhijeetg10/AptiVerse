@@ -402,7 +402,7 @@ const SudokuPlayable: React.FC<{
       <div className="w-full flex flex-col items-center gap-2 pt-2 border-t border-slate-100">
         <span className="text-xs font-bold text-slate-700">Choose Shape to Place:</span>
         <div className="flex flex-wrap items-center justify-center gap-2">
-          {puzzle.symbols.map((sym) => (
+          {(puzzle?.symbols || ['circle', 'square', 'triangle', 'star']).map((sym) => (
             <button
               key={sym}
               type="button"
@@ -501,7 +501,7 @@ const GridPlayable: React.FC<{
 
           <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
             <div className="w-28 h-28 grid grid-cols-4 gap-1">
-              {puzzle.distraction.grid1.map((v, i) => (
+              {(puzzle?.distraction?.grid1 || []).map((v, i) => (
                 <div key={i} className={cn("rounded-sm", v ? "bg-amber-400" : "bg-slate-100")} />
               ))}
             </div>
@@ -577,17 +577,56 @@ const GridPlayable: React.FC<{
 // 5. INDUCTIVE CHALLENGE (SERVER-DELIVERED RULE SET)
 // ============================================================================
 const InductivePlayable: React.FC<{
-  puzzle: InductivePuzzle;
+  puzzle: any;
   onSolve: (isCorrect: boolean, score: number, accuracy: number) => void;
   isSolved: boolean;
   disabled: boolean;
 }> = ({ puzzle, onSolve, isSolved, disabled }) => {
-  const [state, setState] = useState<InductiveState>(() => createInductiveInitialState(puzzle));
+  const normalizedPuzzle: InductivePuzzle = React.useMemo(() => {
+    const p = puzzle || {};
+    let rawExamples = p.examples;
+    if (!rawExamples && Array.isArray(p.setAGrids)) {
+      rawExamples = p.setAGrids.slice(0, 2);
+    }
+    if (!rawExamples || !Array.isArray(rawExamples) || rawExamples.length < 2) {
+      rawExamples = [
+        ['yc', 'yc', 'yc', null, null, null, null, null, null],
+        [null, null, null, 'yc', 'yc', 'yc', null, null, null]
+      ];
+    }
+
+    let rawOptions = p.options;
+    if (!rawOptions && Array.isArray(p.testGrids)) {
+      rawOptions = p.testGrids.slice(0, 4);
+    }
+    if (!rawOptions || !Array.isArray(rawOptions) || rawOptions.length < 4) {
+      rawOptions = [
+        ['yc', 'yc', 'yc', null, 'rs', null, null, null, null],
+        [null, null, 'rs', null, 'rs', null, null, 'rs', null],
+        ['rs', 'rs', 'rs', null, null, null, null, null, null],
+        [null, null, null, 'yc', 'yc', 'yc', 'rs', null, null]
+      ];
+    }
+
+    const correctOptionIndices = Array.isArray(p.correctOptionIndices) && p.correctOptionIndices.length === 2
+      ? [p.correctOptionIndices[0], p.correctOptionIndices[1]]
+      : [0, 3];
+
+    return {
+      id: p.id || 'inductive_daily',
+      ruleName: p.ruleName || 'Pattern Deduction',
+      examples: rawExamples as any,
+      options: rawOptions as any,
+      correctOptionIndices: correctOptionIndices as [number, number]
+    };
+  }, [puzzle]);
+
+  const [state, setState] = useState<InductiveState>(() => createInductiveInitialState(normalizedPuzzle));
   const [isWrong, setIsWrong] = useState(false);
 
   useEffect(() => {
-    setState(createInductiveInitialState(puzzle));
-  }, [puzzle]);
+    setState(createInductiveInitialState(normalizedPuzzle));
+  }, [normalizedPuzzle]);
 
   const handleToggle = (idx: number) => {
     if (disabled || isSolved || state.status === 'completed') return;
