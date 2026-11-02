@@ -434,6 +434,8 @@ export const fetchDailyLeaderboard = async (
   limit: number = 50,
   offset: number = 0
 ): Promise<DailyLeaderboardData> => {
+  let serverData: DailyLeaderboardData | null = null;
+
   try {
     const { data, error } = await supabase.rpc('get_daily_challenge_leaderboard', {
       p_challenge_id: challengeId,
@@ -442,7 +444,7 @@ export const fetchDailyLeaderboard = async (
     });
 
     if (!error && data) {
-      return {
+      serverData = {
         total_participants: data.total_participants || 0,
         entries: Array.isArray(data.entries) ? data.entries : [],
         my_entry: data.my_entry || null
@@ -452,11 +454,58 @@ export const fetchDailyLeaderboard = async (
     console.warn('get_daily_challenge_leaderboard RPC error:', err);
   }
 
-  return {
+  const result: DailyLeaderboardData = serverData || {
     total_participants: 0,
     entries: [],
     my_entry: null
   };
+
+  // Check if current user has a completed local attempt for this challenge
+  try {
+    const localKey = `aptiverse_daily_attempt_${challengeId}`;
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(localKey) : null;
+    if (raw) {
+      const localAttempt: DailyAttemptRecord = JSON.parse(raw);
+      if (localAttempt && localAttempt.is_completed) {
+        const candidateName = typeof window !== 'undefined'
+          ? localStorage.getItem('aptiverse_interview_candidate_name') || 'You'
+          : 'You';
+
+        const myEntry: LeaderboardEntry = result.my_entry || {
+          rank: 1,
+          attempt_id: localAttempt.attempt_id,
+          user_id: 'local_current_user',
+          player_name: candidateName,
+          college: 'Candidate',
+          completion_time_ms: localAttempt.completion_time_ms || 15000,
+          completion_time_seconds: localAttempt.completion_time_seconds || Number(((localAttempt.completion_time_ms || 15000) / 1000).toFixed(1)),
+          score: localAttempt.score ?? 100,
+          accuracy: localAttempt.accuracy ?? 100,
+          is_correct: localAttempt.is_correct ?? true,
+          submitted_at: localAttempt.submitted_at || new Date().toISOString()
+        };
+
+        result.my_entry = myEntry;
+
+        const alreadyInList = result.entries.some(
+          e => e.attempt_id === localAttempt.attempt_id || (e.user_id && e.user_id === myEntry.user_id)
+        );
+
+        if (!alreadyInList) {
+          result.entries = [myEntry, ...result.entries].sort((a, b) => {
+            if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+            return (a.completion_time_ms || 0) - (b.completion_time_ms || 0);
+          }).map((entry, idx) => ({ ...entry, rank: idx + 1 }));
+
+          result.total_participants = Math.max(result.total_participants, result.entries.length);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Local attempt leaderboard merge note:', err);
+  }
+
+  return result;
 };
 
 /**

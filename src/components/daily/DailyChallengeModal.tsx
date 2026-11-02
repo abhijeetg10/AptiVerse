@@ -104,11 +104,37 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     setIsLoadingLeaderboard(true);
     try {
       const data = await fetchDailyLeaderboard(challenge.id);
-      setLeaderboardData(data);
+
+      if (attempt?.is_completed && (!data.my_entry || data.entries.length === 0)) {
+        const myEntry = {
+          rank: 1,
+          attempt_id: attempt.attempt_id,
+          user_id: user?.id || 'me',
+          player_name: candidateName,
+          college: user?.college || 'Candidate',
+          completion_time_ms: attempt.completion_time_ms || 15000,
+          completion_time_seconds: attempt.completion_time_seconds || Number(((attempt.completion_time_ms || 15000) / 1000).toFixed(1)),
+          score: attempt.score ?? 100,
+          accuracy: attempt.accuracy ?? 100,
+          is_correct: attempt.is_correct ?? true,
+          submitted_at: attempt.submitted_at || new Date().toISOString()
+        };
+
+        const existingIdx = data.entries.findIndex(e => e.attempt_id === attempt.attempt_id);
+        const newEntries = existingIdx >= 0 ? data.entries : [myEntry, ...data.entries];
+
+        setLeaderboardData({
+          total_participants: Math.max(data.total_participants, newEntries.length),
+          entries: newEntries,
+          my_entry: data.my_entry || myEntry
+        });
+      } else {
+        setLeaderboardData(data);
+      }
     } finally {
       setIsLoadingLeaderboard(false);
     }
-  }, [challenge?.id]);
+  }, [challenge?.id, attempt, user, candidateName]);
 
   // 3. Fetch History
   const loadHistory = useCallback(async () => {
