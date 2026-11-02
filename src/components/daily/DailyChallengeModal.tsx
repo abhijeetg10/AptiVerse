@@ -14,6 +14,8 @@ import {
   fetchDailyChallengeHistory, 
   getISTMidnightCountdown, 
   getISTDateString,
+  calculateUserDailyStreak,
+  computeStreakFromSolvedDates,
   type DailyChallengeRecord, 
   type DailyAttemptRecord, 
   type DailyLeaderboardData, 
@@ -63,13 +65,14 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
   const [historyList, setHistoryList] = useState<HistoricalChallengeRecord[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Streak state
+  // Streak state (Calculated accurately from consecutive solved dates)
   const [userStreak, setUserStreak] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('aptiverse_daily_streak');
-      return saved ? parseInt(saved, 10) : 1;
+      const parsed = saved ? parseInt(saved, 10) : 0;
+      return isNaN(parsed) ? 0 : parsed;
     } catch {
-      return 1;
+      return 0;
     }
   });
 
@@ -169,6 +172,11 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     isFetchingTodayRef.current = true;
     setIsLoadingChallenge(true);
     try {
+      // Sync genuine streak from database records
+      calculateUserDailyStreak(user?.id, user?.name || candidateName).then((s) => {
+        setUserStreak(s);
+      });
+
       const globalChallenge = await fetchTodayGlobalChallenge();
       setChallenge(globalChallenge);
 
@@ -210,7 +218,7 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
       setIsLoadingChallenge(false);
       isFetchingTodayRef.current = false;
     }
-  }, []);
+  }, [user?.id, user?.name, candidateName]);
 
   // 3. Fetch History
   const loadHistory = useCallback(async () => {
@@ -218,6 +226,28 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     try {
       const list = await fetchDailyChallengeHistory();
       setHistoryList(list);
+
+      // Reconcile and calculate genuine streak from historical solve entries
+      const completedHistoryDates = list
+        .filter(item => item.my_is_completed)
+        .map(item => item.challenge_date)
+        .filter(Boolean);
+
+      if (completedHistoryDates.length > 0) {
+        let currentSolved: string[] = [];
+        try {
+          const raw = localStorage.getItem('aptiverse_daily_solved_dates');
+          if (raw) currentSolved = JSON.parse(raw);
+        } catch {}
+
+        const mergedDates = Array.from(new Set([...currentSolved, ...completedHistoryDates]));
+        localStorage.setItem('aptiverse_daily_solved_dates', JSON.stringify(mergedDates));
+
+        const istToday = getISTDateString();
+        const verifiedStreak = computeStreakFromSolvedDates(mergedDates, istToday);
+        setUserStreak(verifiedStreak);
+        localStorage.setItem('aptiverse_daily_streak', String(verifiedStreak));
+      }
     } finally {
       setIsLoadingHistory(false);
     }
@@ -328,11 +358,23 @@ export const DailyChallengeModal: React.FC<DailyChallengeModalProps> = ({ isOpen
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
 
     const calculatedTimeMs = Math.round(elapsedSeconds * 1000);
+    const istToday = challenge.challenge_date || getISTDateString();
 
-    const updatedStreak = userStreak + 1;
+    // Accurately record today's solve and compute genuine streak
+    let solvedDates: string[] = [];
+    try {
+      const raw = localStorage.getItem('aptiverse_daily_solved_dates');
+      if (raw) solvedDates = JSON.parse(raw);
+    } catch {}
+    if (!solvedDates.includes(istToday)) {
+      solvedDates.push(istToday);
+    }
+    localStorage.setItem('aptiverse_daily_solved_dates', JSON.stringify(solvedDates));
+
+    const updatedStreak = computeStreakFromSolvedDates(solvedDates, istToday);
     setUserStreak(updatedStreak);
     localStorage.setItem('aptiverse_daily_streak', String(updatedStreak));
-    localStorage.setItem('aptiverse_daily_last_solved_date', challenge.challenge_date);
+    localStorage.setItem('aptiverse_daily_last_solved_date', istToday);
 
     const currentAttemptId = attempt?.attempt_id || crypto.randomUUID();
 

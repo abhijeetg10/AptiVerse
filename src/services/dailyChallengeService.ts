@@ -115,6 +115,106 @@ export const getISTMidnightCountdown = (now: Date = new Date()): {
 };
 
 /**
+ * Subtracts 1 calendar day from a YYYY-MM-DD date string
+ */
+export const getPreviousDateString = (dateStr: string): string => {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().split('T')[0];
+};
+
+/**
+ * Computes consecutive solved days ending on today (or yesterday if today isn't solved yet).
+ * Solves the bug where streak was blindly incrementing +1 on every submit.
+ */
+export const computeStreakFromSolvedDates = (solvedDates: string[], todayStr: string = getISTDateString()): number => {
+  const dateSet = new Set(solvedDates.filter(Boolean));
+  if (dateSet.size === 0) return 0;
+
+  let streak = 0;
+  let checkDate = todayStr;
+
+  // Case 1: Today is already solved -> start counting backwards from today
+  if (dateSet.has(checkDate)) {
+    while (dateSet.has(checkDate)) {
+      streak += 1;
+      checkDate = getPreviousDateString(checkDate);
+    }
+    return streak;
+  }
+
+  // Case 2: Today is not solved yet -> check if yesterday was solved (streak is active)
+  const yesterdayStr = getPreviousDateString(todayStr);
+  if (dateSet.has(yesterdayStr)) {
+    checkDate = yesterdayStr;
+    while (dateSet.has(checkDate)) {
+      streak += 1;
+      checkDate = getPreviousDateString(checkDate);
+    }
+    return streak;
+  }
+
+  return 0;
+};
+
+/**
+ * Calculates user's genuine consecutive day streak from Supabase & local storage
+ */
+export const calculateUserDailyStreak = async (
+  userId?: string | null,
+  candidateName?: string | null
+): Promise<number> => {
+  const istToday = getISTDateString();
+  const solvedDates = new Set<string>();
+
+  // 1. Check local storage recorded solved dates
+  try {
+    const rawLocalDates = localStorage.getItem('aptiverse_daily_solved_dates');
+    if (rawLocalDates) {
+      const parsed = JSON.parse(rawLocalDates);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(d => { if (typeof d === 'string' && d.length === 10) solvedDates.add(d); });
+      }
+    }
+  } catch {}
+
+  // 2. Query Supabase daily_challenge_solvers table
+  try {
+    let query = supabase
+      .from('daily_challenge_solvers')
+      .select('challenge_date');
+
+    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      query = query.eq('user_id', userId);
+    } else if (candidateName) {
+      query = query.eq('candidate_name', candidateName.trim());
+    }
+
+    const { data: solverRows } = await query;
+    if (solverRows && Array.isArray(solverRows)) {
+      solverRows.forEach(row => {
+        if (row.challenge_date) {
+          const dateStr = String(row.challenge_date).split('T')[0];
+          if (dateStr.length === 10) solvedDates.add(dateStr);
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('calculateUserDailyStreak query note:', err);
+  }
+
+  // 3. Compute consecutive day streak backwards
+  const calculatedStreak = computeStreakFromSolvedDates(Array.from(solvedDates), istToday);
+
+  // Sync to local storage
+  localStorage.setItem('aptiverse_daily_streak', String(calculatedStreak));
+  localStorage.setItem('aptiverse_daily_solved_dates', JSON.stringify(Array.from(solvedDates)));
+
+  return calculatedStreak;
+};
+
+/**
  * Deterministic fallback generator if Supabase is offline or starting up
  */
 export const getDeterministicFallbackChallenge = (dateKey: string): DailyChallengeRecord => {

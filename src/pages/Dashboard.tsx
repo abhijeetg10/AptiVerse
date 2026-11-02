@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { DailyChallengeModal } from '../components/daily/DailyChallengeModal';
-import { fetchTodayGlobalChallenge, getISTMidnightCountdown, type DailyChallengeRecord } from '../services/dailyChallengeService';
+import { fetchTodayGlobalChallenge, getISTMidnightCountdown, calculateUserDailyStreak, type DailyChallengeRecord } from '../services/dailyChallengeService';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -27,7 +27,15 @@ const Dashboard = () => {
     score: 0,
   });
 
-  const currentStreak = localStorage.getItem('aptiverse_daily_streak') || (stats.games > 0 ? '1' : '0');
+  const [currentStreak, setCurrentStreak] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('aptiverse_daily_streak');
+      const parsed = saved ? parseInt(saved, 10) : 0;
+      return isNaN(parsed) ? 0 : parsed;
+    } catch {
+      return 0;
+    }
+  });
 
   const [lastGame, setLastGame] = useState<{ id: string; name: string; path: string; level: number } | null>(null);
 
@@ -102,6 +110,9 @@ const Dashboard = () => {
           level: latestSession.level || 1,
         });
       }
+
+      // Synchronize genuine consecutive daily challenge streak
+      calculateUserDailyStreak(user?.id, user?.name).then(s => setCurrentStreak(s));
     };
     
     fetchStats();
