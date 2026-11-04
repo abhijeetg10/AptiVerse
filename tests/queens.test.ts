@@ -39,6 +39,10 @@ describe('Queens Challenge Engine & CSP Solver', () => {
     // Place queen
     state = handleCellClick(state, 0, 1, 'queen');
     expect(state.board[0][1]).toBe('queen');
+    // Ensure surrounding cells are NOT automatically marked with 'x' by default
+    expect(state.board[0][0]).toBe('empty');
+    expect(state.board[0][2]).toBe('empty');
+    expect(state.board[1][1]).toBe('empty');
 
     // Toggle off
     state = handleCellClick(state, 0, 1, 'queen');

@@ -122,13 +122,13 @@ export const QueensInstructions: React.FC<QueensInstructionsProps> = ({
           </h4>
           <ul className="text-xs text-slate-600 space-y-2 list-disc list-inside">
             <li>
-              Use <strong>Mark X</strong> mode or right-click to eliminate impossible cells.
+              Use <strong>Mark X</strong> mode or right-click to manually cross out and eliminate impossible cells as you deduce the puzzle.
             </li>
             <li>
               When a row, column, or region has only 1 remaining empty cell, placing a Queen there is 100% guaranteed.
             </li>
             <li>
-              Enable <strong>Auto-Mark</strong> to automatically cross out invalid surrounding cells whenever you set a Queen.
+              Optionally enable <strong>Auto-Mark</strong> in the options if you ever prefer automatic elimination, or keep it off to mark cells yourself.
             </li>
           </ul>
         </div>

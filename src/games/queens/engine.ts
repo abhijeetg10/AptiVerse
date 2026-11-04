@@ -32,7 +32,7 @@ export function createInitialState(puzzle: QueensPuzzle): QueensGameState {
     hintsUsed: 0,
     inputMode: 'queen',
     autoCheck: true,
-    autoMark: true,
+    autoMark: false,
     status: 'playing',
     timeElapsed: 0,
     highlightedCell: null,
