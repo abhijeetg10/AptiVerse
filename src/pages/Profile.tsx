@@ -214,7 +214,7 @@ const Profile = () => {
           <div className="lg:col-span-7 flex flex-col gap-6">
             
             {/* Identity Card */}
-            <div className="bg-gradient-to-br from-[#f4f7ff] to-white rounded-2xl border border-indigo-100/70 p-7 flex items-center gap-6 relative overflow-hidden shadow-sm">
+            <div className="bg-gradient-to-br from-[#f4f7ff] to-white rounded-2xl border border-indigo-100/70 p-5 sm:p-7 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6 relative overflow-hidden shadow-sm">
               
               {/* Abstract decorative background */}
               <div className="absolute top-0 right-0 w-2/3 h-full opacity-30 pointer-events-none">

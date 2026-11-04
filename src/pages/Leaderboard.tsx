@@ -488,22 +488,22 @@ const Leaderboard = () => {
         {/* Filters Row */}
         <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
            {/* Tab Buttons */}
-           <div className="flex items-center bg-white p-1 rounded-xl shadow-sm border border-neutral-100 shrink-0">
+           <div className="flex items-center bg-white p-1 rounded-xl shadow-sm border border-neutral-100 shrink-0 overflow-x-auto max-w-full no-scrollbar">
              <button 
                onClick={() => { setActiveTab('all-time'); setVisibleCount(25); }}
-               className={cn("px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all cursor-pointer", activeTab === 'all-time' ? "bg-primary-600 text-white shadow-md" : "text-neutral-500 hover:bg-neutral-50")}
+               className={cn("px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap", activeTab === 'all-time' ? "bg-primary-600 text-white shadow-md" : "text-neutral-500 hover:bg-neutral-50")}
              >
                <Trophy size={16} /> All Time
              </button>
              <button 
                onClick={() => { setActiveTab('this-week'); setVisibleCount(25); }}
-               className={cn("px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all cursor-pointer", activeTab === 'this-week' ? "bg-primary-600 text-white shadow-md" : "text-neutral-500 hover:bg-neutral-50")}
+               className={cn("px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap", activeTab === 'this-week' ? "bg-primary-600 text-white shadow-md" : "text-neutral-500 hover:bg-neutral-50")}
              >
                <Target size={16} /> This Week
              </button>
              <button 
                onClick={() => { setActiveTab('college'); setVisibleCount(25); }}
-               className={cn("px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all cursor-pointer", activeTab === 'college' ? "bg-primary-600 text-white shadow-md" : "text-neutral-500 hover:bg-neutral-50")}
+               className={cn("px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap", activeTab === 'college' ? "bg-primary-600 text-white shadow-md" : "text-neutral-500 hover:bg-neutral-50")}
              >
                <Landmark size={16} /> College Standings
              </button>

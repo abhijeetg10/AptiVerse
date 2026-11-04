@@ -35,8 +35,8 @@ const Games = () => {
             </p>
           </div>
           
-          <div className="relative shrink-0">
-             <div className="bg-white/60 backdrop-blur-md border border-neutral-200/60 rounded-2xl p-4 pr-10 flex items-center gap-4 shadow-sm w-[380px]">
+          <div className="relative shrink-0 w-full lg:w-auto">
+             <div className="bg-white/60 backdrop-blur-md border border-neutral-200/60 rounded-2xl p-4 flex items-center gap-4 shadow-sm w-full sm:w-[380px]">
                 <div className="w-12 h-12 rounded-full bg-[#0f172a] flex items-center justify-center shrink-0 shadow-lg">
                    <Trophy size={20} className="text-amber-500" />
                 </div>
@@ -46,8 +46,8 @@ const Games = () => {
                 </div>
              </div>
              
-             {/* Hand drawn arrow text */}
-             <div className="absolute -right-24 top-0 text-primary-500 font-medium text-sm rotate-[10deg] font-caveat flex flex-col items-center z-20">
+             {/* Hand drawn arrow text - visible on xl screens to avoid mobile overflow */}
+             <div className="hidden xl:flex absolute -right-24 top-0 text-primary-500 font-medium text-sm rotate-[10deg] font-caveat flex-col items-center z-20 pointer-events-none">
                 <span>Same skills.</span>
                 <span>Higher chances.</span>
                 <span>Get Placement Ready.</span>

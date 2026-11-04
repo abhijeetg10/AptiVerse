@@ -45,7 +45,7 @@ export const QueensToolbar: React.FC<QueensToolbarProps> = ({
           <button
             onClick={() => onInputModeChange('queen')}
             disabled={disabled}
-            className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-all ${
               inputMode === 'queen'
                 ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30'
                 : 'text-slate-600 hover:text-slate-900'
@@ -58,7 +58,7 @@ export const QueensToolbar: React.FC<QueensToolbarProps> = ({
           <button
             onClick={() => onInputModeChange('x')}
             disabled={disabled}
-            className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-all ${
               inputMode === 'x'
                 ? 'bg-slate-800 text-white shadow-md'
                 : 'text-slate-600 hover:text-slate-900'

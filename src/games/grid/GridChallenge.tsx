@@ -156,8 +156,8 @@ export const GridChallenge: React.FC = () => {
                Time remaining: <span className="font-mono text-primary-600 font-bold text-lg">{countdown}s</span>
             </div>
 
-            <div className="bg-white/80 p-6 rounded-3xl shadow-2xl border border-slate-200/50 backdrop-blur-sm relative">
-              <div className="grid grid-cols-5 gap-3 sm:gap-4 w-[280px] h-[280px] sm:w-[360px] sm:h-[360px]">
+            <div className="bg-white/80 p-3.5 sm:p-6 rounded-3xl shadow-2xl border border-slate-200/50 backdrop-blur-sm relative">
+              <div className="grid grid-cols-5 gap-2.5 sm:gap-4 w-[260px] h-[260px] sm:w-[360px] sm:h-[360px] max-w-[calc(100vw-3.5rem)] aspect-square">
                 {Array.from({ length: gridSize }).map((_, i) => {
                   const isPresent = sequence.includes(i);
                   return (
@@ -221,8 +221,8 @@ export const GridChallenge: React.FC = () => {
               </div>
             )}
 
-            <div className="bg-white/80 p-6 rounded-3xl shadow-2xl border border-slate-200/50 backdrop-blur-sm relative">
-              <div className="grid grid-cols-5 gap-3 sm:gap-4 w-[280px] h-[280px] sm:w-[360px] sm:h-[360px]">
+            <div className="bg-white/80 p-3.5 sm:p-6 rounded-3xl shadow-2xl border border-slate-200/50 backdrop-blur-sm relative">
+              <div className="grid grid-cols-5 gap-2.5 sm:gap-4 w-[260px] h-[260px] sm:w-[360px] sm:h-[360px] max-w-[calc(100vw-3.5rem)] aspect-square">
                 {Array.from({ length: gridSize }).map((_, i) => {
                   const isSelected = userSelection.includes(i);
                   return (

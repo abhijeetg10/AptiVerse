@@ -82,7 +82,7 @@ const Home = () => {
               </a>
             </div>
             
-            <h1 className="text-5xl lg:text-[64px] leading-[1.1] font-extrabold tracking-tight text-neutral-900">
+            <h1 className="text-3xl sm:text-5xl lg:text-[64px] leading-[1.1] font-extrabold tracking-tight text-neutral-900">
               Practice Smarter.<br />
               <span className="text-primary-600">Get Placement Ready.</span>
             </h1>
@@ -125,8 +125,8 @@ const Home = () => {
 
           {/* Right: Visual Showcase (The Floating Cards) */}
           <div className="relative w-full h-[400px] lg:h-[500px] flex items-center justify-center scale-75 sm:scale-90 lg:scale-100 origin-center -mt-12 lg:mt-0">
-             {/* Hand drawn arrow text */}
-             <div className="absolute top-0 right-[10%] z-30 text-primary-500 font-medium text-sm rotate-[15deg] font-caveat flex flex-col items-center">
+             {/* Hand drawn arrow text - visible on tablet up */}
+             <div className="hidden sm:flex absolute top-0 right-[10%] z-30 text-primary-500 font-medium text-sm rotate-[15deg] font-caveat flex-col items-center pointer-events-none">
                 <span>Play</span>
                 <span>Solve</span>
                 <span>Improve</span>

@@ -141,8 +141,8 @@ export const QueensBoard: React.FC<QueensBoardProps> = ({
                     <div className="transform transition-transform active:scale-95 group-hover:scale-110 z-10">
                       <div className="relative flex items-center justify-center">
                         <Crown
-                          size={size <= 7 ? 32 : size <= 9 ? 26 : 22}
-                          className={`${
+                          size={size <= 7 ? 28 : size <= 9 ? 22 : 18}
+                          className={`w-5 h-5 sm:w-7 sm:h-7 ${
                             hasConflict
                               ? 'text-red-600 fill-red-500 drop-shadow-[0_2px_4px_rgba(239,68,68,0.5)]'
                               : 'text-amber-500 fill-amber-400 drop-shadow-[0_2px_6px_rgba(245,158,11,0.55)]'
@@ -156,8 +156,8 @@ export const QueensBoard: React.FC<QueensBoardProps> = ({
                   {cellVal === 'x' && (
                     <div className="transform transition-transform group-hover:scale-110 z-10">
                       <XIcon
-                        size={size <= 7 ? 20 : size <= 9 ? 16 : 14}
-                        className="text-slate-500/80 stroke-[2.5]"
+                        size={size <= 7 ? 18 : size <= 9 ? 15 : 12}
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500/80 stroke-[2.5]"
                       />
                     </div>
                   )}
