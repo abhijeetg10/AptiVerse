@@ -853,7 +853,23 @@ export const AIMockInterviewRoom: React.FC<AIMockInterviewRoomProps> = ({
       {isFinished && !hasSubmittedInterviewFeedback && (
         <CompulsoryFeedbackModal
           testTitle={`${driveTitle} (${activeRound === 'technical' ? 'Technical Panel' : 'HR Panel'})`}
+          testId={`infosys_${activeRound}_interview`}
+          candidateName={candidateName}
           contextType="interview"
+          scoreData={{
+            score: questions.length,
+            totalQuestions: questions.length,
+            percentage: integrityScore,
+            cleared: integrityScore >= 70,
+            sectionalScores: {
+              'Time': `${Math.max(1, Math.round(elapsedTime / 60))}m (${formatSeconds(elapsedTime)})`,
+              'Integrity': `${integrityScore}%`,
+              'Words': totalWordsSpoken,
+              'Round': activeRound === 'technical' ? 'Technical' : 'HR',
+              'Violations': violations.length,
+              'Webcam': isCameraActive ? 'Active' : 'Verified'
+            }
+          }}
           onSubmitted={() => setHasSubmittedInterviewFeedback(true)}
         />
       )}

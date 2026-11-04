@@ -6,12 +6,13 @@ import { useAuth } from '../../context/AuthContext';
 interface CompulsoryFeedbackModalProps {
   testTitle?: string;
   testId?: string;
+  candidateName?: string;
   recordId?: string | null;
   scoreData?: {
     score: number;
     totalQuestions: number;
     percentage: number;
-    sectionalScores?: { [secName: string]: number };
+    sectionalScores?: { [secName: string]: any };
     cleared?: boolean;
   };
   contextType?: 'mock_test' | 'interview' | 'complete_drive';
@@ -21,6 +22,7 @@ interface CompulsoryFeedbackModalProps {
 export const CompulsoryFeedbackModal: React.FC<CompulsoryFeedbackModalProps> = ({
   testTitle = 'Infosys Systems Engineer Assessment',
   testId = 'infosys_format_a',
+  candidateName: propCandidateName,
   recordId = null,
   scoreData,
   contextType = 'mock_test',
@@ -69,30 +71,29 @@ export const CompulsoryFeedbackModal: React.FC<CompulsoryFeedbackModalProps> = (
 
     const overallRating = Math.round((mockRating + interviewRating + appRating) / 3);
     const structuredComment = `[INFOSYS COMPULSORY FEEDBACK] [Context: ${contextType}] [Drive: ${testTitle}] [Mock: ${mockRating}★, Interview: ${interviewRating}★, App: ${appRating}★] Review: ${writtenFeedback.trim()}`;
-    const candidateName = user?.name || localStorage.getItem('aptiverse_interview_candidate_name') || 'Candidate';
+    const candidateFinalName = propCandidateName?.trim() || user?.name || localStorage.getItem('aptiverse_interview_candidate_name') || 'Candidate';
 
     try {
-      // 1. If mock test: store candidate name, test title, score & feedback in company_mock_scores
-      // DO NOT store interview score or answers (only mock test data is tracked)
-      if (contextType === 'mock_test') {
+      // 1. If mock test or interview: store candidate name, test title, minutes/score & feedback in company_mock_scores
+      if (contextType === 'mock_test' || contextType === 'interview') {
         if (recordId) {
           await supabase.from('company_mock_scores').update({
-            candidate_name: candidateName,
+            candidate_name: candidateFinalName,
             feedback_rating: overallRating,
             feedback_comment: writtenFeedback.trim()
           }).eq('id', recordId);
         } else {
           await supabase.from('company_mock_scores').insert([{
             user_id: user?.id || null,
-            candidate_name: candidateName,
+            candidate_name: candidateFinalName,
             company: 'infosys',
-            test_id: testId || 'infosys_format_a',
+            test_id: testId || (contextType === 'interview' ? 'infosys_interview' : 'infosys_format_a'),
             test_title: testTitle,
             score: scoreData?.score ?? 0,
             total_questions: scoreData?.totalQuestions ?? 0,
             percentage: scoreData?.percentage ?? 0,
             sectional_scores: scoreData?.sectionalScores || {},
-            cleared: scoreData?.cleared ?? false,
+            cleared: scoreData?.cleared ?? true,
             feedback_rating: overallRating,
             feedback_comment: writtenFeedback.trim()
           }]);
