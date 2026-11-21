@@ -21,9 +21,9 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const InfosysPrep = lazy(() => import('./pages/company/InfosysPrep'));
 
 // Lazy-load interactive games
-const MotionChallenge = lazy(() => import('./games/MotionChallenge'));
-const GeoSudoku = lazy(() => import('./games/GeoSudoku'));
-const GridChallenge = lazy(() => import('./games/GridChallenge'));
+const MotionChallenge = lazy(() => import('./games/motion/MotionChallenge'));
+const GeoSudoku = lazy(() => import('./games/sudoku/GeoSudokuChallenge'));
+const GridChallenge = lazy(() => import('./games/grid/GridChallenge'));
 const SwitchChallenge = lazy(() => import('./games/switch/SwitchChallenge'));
 const InductiveChallenge = lazy(() => import('./games/inductive/InductiveChallenge'));
 const DIChallenge = lazy(() => import('./games/di/DIChallenge'));

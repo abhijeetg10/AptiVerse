@@ -87,9 +87,9 @@ check('Public logo and images exist and are accessible', () => {
 });
 
 // ----------------------------------------------------
-// 3. ALL 7 GAMES STRUCTURAL & EXPORT AUDIT
+// 3. ALL 8 GAMES STRUCTURAL & EXPORT AUDIT
 // ----------------------------------------------------
-console.log('\n--- 3. Auditing All 7 Games & Challenge Components ---');
+console.log('\n--- 3. Auditing All 8 Games & Challenge Components ---');
 
 const games = [
   { id: 'motion', file: '../src/games/motion/MotionChallenge.tsx', board: '../src/games/motion/MotionBoard.tsx' },
@@ -98,7 +98,8 @@ const games = [
   { id: 'sudoku', file: '../src/games/sudoku/GeoSudokuChallenge.tsx', board: '../src/games/sudoku/GeoSudokuBoard.tsx' },
   { id: 'grid', file: '../src/games/grid/GridChallenge.tsx' },
   { id: 'rc', file: '../src/games/rc/RCChallenge.tsx' },
-  { id: 'di', file: '../src/games/di/DIChallenge.tsx' }
+  { id: 'di', file: '../src/games/di/DIChallenge.tsx' },
+  { id: 'queens', file: '../src/games/queens/QueensChallenge.tsx', board: '../src/games/queens/QueensBoard.tsx' }
 ];
 
 games.forEach(g => {
@@ -177,14 +178,14 @@ check('Admin Dashboard route is protected by AdminRoute authorization guard', ()
 
 check('SQL Migration prevents ordinary users from altering role or is_blocked', () => {
   const sql = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261013_master_audit_fixes.sql'), 'utf8');
-  if (!sql.includes('get_user_role(auth.uid())')) {
-    throw new Error('Missing get_user_role check in profile RLS policy');
+  if (!sql.includes('protect_profile_privileged_fields')) {
+    throw new Error('Missing protect_profile_privileged_fields trigger function in migration');
   }
-  if (!sql.includes('get_user_is_blocked(auth.uid())')) {
-    throw new Error('Missing get_user_is_blocked check in profile RLS policy');
+  if (!sql.includes('is_admin()')) {
+    throw new Error('Missing is_admin() role check in profile security function');
   }
-  if (!sql.includes('get_user_warning_message(auth.uid())')) {
-    throw new Error('Missing get_user_warning_message check in profile RLS policy');
+  if (!sql.includes('Unauthorized modification of privileged profile fields')) {
+    throw new Error('Privileged field escalation exception missing in trigger');
   }
 });
 
@@ -204,16 +205,16 @@ check('Public leaderboard views omit private user emails and warnings', () => {
   }
 });
 
-check('Anti-cheat validation trigger enforces score ranges and cooldown', () => {
+check('Trusted Attempt RPCs enforce session ownership and revoke direct client writes', () => {
   const sql = fs.readFileSync(path.join(__dirname, '../supabase/migrations/20261013_master_audit_fixes.sql'), 'utf8');
-  if (!sql.includes('NEW.score < 0 OR NEW.score > 10')) {
-    throw new Error('Score bounds 0..10 not enforced in trigger');
+  if (!sql.includes('REVOKE INSERT, UPDATE, DELETE ON public.game_attempts')) {
+    throw new Error('Direct table writes on game_attempts must be revoked from authenticated/anon');
   }
-  if (!sql.includes('NEW.time_spent < 2')) {
-    throw new Error('Minimum human completion time check missing');
+  if (!sql.includes('create_game_attempt') || !sql.includes('complete_game_attempt')) {
+    throw new Error('Trusted attempt RPCs missing from migration');
   }
-  if (!sql.includes('auth.uid() != NEW.user_id')) {
-    throw new Error('Session ownership check missing');
+  if (!sql.includes('already_completed')) {
+    throw new Error('Idempotent double-award protection missing in complete_game_attempt');
   }
 });
 

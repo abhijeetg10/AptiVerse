@@ -7,7 +7,7 @@ export const normalizeCollege = (name: string | null | undefined): string => {
   const raw = name.trim();
   const lower = raw
     .toLowerCase()
-    .replace(/[\.,\-_/]/g, ' ')
+    .replace(/[.,\-_/]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
