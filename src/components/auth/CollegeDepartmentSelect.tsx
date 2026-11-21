@@ -25,7 +25,9 @@ const ACRONYM_MAP: Record<string, string> = {
   pict: 'Pune Institute of Computer Technology',
   pccoe: 'Pimpri Chinchwad College of Engineering',
   cit: 'Chennai Institute of Technology',
-  vsb: 'VSB Engineering College',
+  vsb: 'VSB Engineering College, Karur',
+  jecrc: 'JECRC University & Foundation, Jaipur',
+  jsrc: 'JECRC University & Foundation, Jaipur',
   gcek: 'Government College of Engineering, Karad',
   spit: 'Sardar Patel Institute of Technology',
   rvce: 'R.V. College of Engineering',
@@ -82,8 +84,12 @@ export const CollegeDepartmentSelect: React.FC<CollegeDepartmentSelectProps> = (
         if (res.ok) {
           const allColleges: string[] = await res.json();
           
-          // Fetch existing active colleges from profiles (only include verified valid names)
-          const { data } = await supabase.from('profiles').select('college');
+          // Fetch existing active colleges from profiles (only include verified valid names, limited for performance)
+          const { data } = await supabase
+            .from('profiles')
+            .select('college')
+            .not('college', 'is', null)
+            .limit(100);
           const existingInDb = (data || [])
             .map((d: any) => d.college?.trim())
             .filter((c: any) => c && isValidCollegeName(c).valid);

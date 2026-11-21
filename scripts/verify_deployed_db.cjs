@@ -76,7 +76,7 @@ async function verifyDeployedDatabase() {
 
   // 5. Check if attempt_id column exists on game_sessions in deployed database
   console.log('\n5. Checking if attempt_id column exists on game_sessions in deployed database...');
-  const { data: sampleSession, error: sampleError } = await supabase
+  const { error: sampleError } = await supabase
     .from('game_sessions')
     .select('id, attempt_id')
     .limit(1);

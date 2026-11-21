@@ -1,6 +1,3 @@
-const fs = require('fs');
-const path = require('path');
-
 console.log('====================================================');
 console.log('🔒 TRUSTED ATTEMPT ENGINE & ZERO-TRUST SECURITY AUDIT');
 console.log('====================================================\n');

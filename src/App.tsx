@@ -3,21 +3,24 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layout/MainLayout';
 import Home from './pages/Home';
 import Games from './pages/Games';
-import Dashboard from './pages/Dashboard';
-import Progress from './pages/Progress';
-import Leaderboard from './pages/Leaderboard';
-import Profile from './pages/Profile';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import AboutUs from './pages/AboutUs';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AdminRoute } from './components/auth/AdminRoute';
 
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
-// Lazy-load heavier routes & games to keep AptiVerse lightweight
+// Lazy-load heavier routes & games to keep AptiVerse lightweight and eliminate lag
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Progress = lazy(() => import('./pages/Progress'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const InfosysPrep = lazy(() => import('./pages/company/InfosysPrep'));
+
+// Lazy-load interactive games
 const MotionChallenge = lazy(() => import('./games/MotionChallenge'));
 const GeoSudoku = lazy(() => import('./games/GeoSudoku'));
 const GridChallenge = lazy(() => import('./games/GridChallenge'));
@@ -26,7 +29,6 @@ const InductiveChallenge = lazy(() => import('./games/inductive/InductiveChallen
 const DIChallenge = lazy(() => import('./games/di/DIChallenge'));
 const RCChallenge = lazy(() => import('./games/rc/RCChallenge'));
 const QueensChallenge = lazy(() => import('./games/queens/QueensChallenge'));
-const InfosysPrep = lazy(() => import('./pages/company/InfosysPrep'));
 
 const RouteLoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">

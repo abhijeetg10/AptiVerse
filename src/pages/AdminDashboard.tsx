@@ -8,6 +8,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { isValidCollegeName } from '../constants/institutions';
+import { normalizeCollege } from '../utils/normalizeCollege';
 
 const SQL_CLEANUP_QUERY = `-- ====================================================================
 -- APTIVERSE MASTER DATABASE AUDIT & SECURITY MIGRATION
@@ -235,16 +236,43 @@ DELETE FROM public.daily_challenge_solvers
 WHERE candidate_name IN ('Ananya Deshmukh', 'Rahul Kulkarni', 'Siddharth Roy', 'Sample Candidate', 'Test Candidate')
    OR candidate_name ILIKE '%test%';
 
-NOTIFY pgrst, 'reload schema';`;
+-- 8. HIGH-CONCURRENCY SCALABILITY & COMPOSITE INDEXES (2,750+ Users)
+CREATE INDEX IF NOT EXISTS idx_game_sessions_user_created ON public.game_sessions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_game_created ON public.game_sessions(game_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_user_score ON public.game_sessions(user_id, score);
+CREATE INDEX IF NOT EXISTS idx_profiles_unblocked ON public.profiles(is_blocked);
+CREATE INDEX IF NOT EXISTS idx_profiles_college_active ON public.profiles(college) WHERE (college IS NOT NULL AND college <> '-');
+CREATE INDEX IF NOT EXISTS idx_daily_solvers_date ON public.daily_challenge_solvers(challenge_date);
+CREATE INDEX IF NOT EXISTS idx_daily_solvers_created ON public.daily_challenge_solvers(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_company_mock_scores_user_created ON public.company_mock_scores(user_id, created_at DESC);
 
-const normalizeCollege = (name: string | null | undefined) => {
-  if (!name || name.trim() === '') return '-';
-  const lower = name.trim().toLowerCase();
-  if (lower === 'cit' || lower === 'chennai institute of technology') {
-    return 'Chennai Institute of Technology';
-  }
-  return name.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-};
+-- Standardize and Merge Duplicate College Names
+UPDATE public.profiles SET college = 'JECRC University & Foundation, Jaipur' WHERE college ILIKE '%jecrc%' OR college ILIKE '%jsrc%' OR college ILIKE '%jaipur engineering college%research%';
+UPDATE public.profiles SET college = 'VSB Engineering College, Karur' WHERE college ILIKE '%vsb%' OR college ILIKE '%v.s.b.%';
+UPDATE public.profiles SET college = 'Chennai Institute of Technology (CIT), Chennai' WHERE college ILIKE 'cit' OR college ILIKE '%chennai institute of technology%';
+UPDATE public.profiles SET college = 'Rajarambapu Institute of Technology (RIT), Sangli' WHERE college ILIKE 'rit' OR college ILIKE '%rajarambapu institute of technology%';
+UPDATE public.profiles SET college = 'KG College of Arts and Science (KGCAS), Coimbatore' WHERE college ILIKE '%kgcas%' OR college ILIKE '%kg college of%' OR college ILIKE '%kg college of arys%';
+
+-- Ensure Cumulative College Leaderboard View
+DROP VIEW IF EXISTS public.college_leaderboard CASCADE;
+CREATE VIEW public.college_leaderboard AS
+SELECT 
+  p.college AS name,
+  COUNT(DISTINCT p.id)::integer AS students,
+  COALESCE(SUM(s.score), 0)::numeric AS total_score,
+  COALESCE(ROUND(AVG(s.accuracy)), 0)::numeric AS avg_accuracy,
+  COUNT(s.id)::integer AS total_games
+FROM public.profiles p
+JOIN public.game_sessions s ON p.id = s.user_id
+WHERE (p.is_blocked IS NOT TRUE)
+  AND p.college IS NOT NULL 
+  AND LENGTH(TRIM(p.college)) > 0 
+  AND p.college <> '-'
+GROUP BY p.college;
+
+GRANT SELECT ON public.college_leaderboard TO anon, authenticated;
+
+NOTIFY pgrst, 'reload schema';`;
 
 const PAGE_SIZE = 25;
 
@@ -298,7 +326,7 @@ export const AdminDashboard = () => {
         });
         fetchTabData();
       }
-    } catch (err: any) {
+    } catch {
       setSyncResult({
         text: 'Run 20261031_sync_registered_emails.sql in Supabase SQL editor to sync emails.',
         success: false
@@ -339,53 +367,21 @@ export const AdminDashboard = () => {
 
       // Exact Daily Challenge Solvers (Total and Today - Distinct Candidates)
       try {
-        let totalCount = 0;
-        let todayCount = 0;
         const todayKey = new Date().toISOString().split('T')[0];
 
-        // 1. Try daily_challenge_solvers
-        const { data: allSolvers, error: errSolvers } = await supabase
+        // 1. Fetch exact total daily solver count
+        const { count: totalSolversCount } = await supabase
           .from('daily_challenge_solvers')
-          .select('user_id, candidate_name, challenge_date');
+          .select('id', { count: 'exact', head: true });
 
-        if (!errSolvers && allSolvers && allSolvers.length > 0) {
-          const distinctToday = new Set<string>();
-          const distinctTotal = new Set<string>();
+        // 2. Fetch exact today daily solver count
+        const { count: todaySolversCount } = await supabase
+          .from('daily_challenge_solvers')
+          .select('id', { count: 'exact', head: true })
+          .eq('challenge_date', todayKey);
 
-          allSolvers.forEach((s: any) => {
-            const dateStr = s.challenge_date || '';
-            const uKey = s.user_id || (s.candidate_name || '').trim().toLowerCase();
-            if (dateStr === todayKey) {
-              distinctToday.add(uKey);
-            }
-            distinctTotal.add(`${uKey}_${dateStr}`);
-          });
-
-          totalCount = distinctTotal.size;
-          todayCount = distinctToday.size;
-        } else {
-          // 2. Fallback to game_sessions
-          const { data: sess } = await supabase
-            .from('game_sessions')
-            .select('user_id, created_at')
-            .eq('game_id', 'daily_challenge');
-
-          if (sess && sess.length > 0) {
-            const distinctToday = new Set<string>();
-            const distinctTotal = new Set<string>();
-            sess.forEach((s: any) => {
-              const dateStr = (s.created_at || '').split('T')[0];
-              const uKey = s.user_id || 'anon';
-              if (dateStr === todayKey) distinctToday.add(uKey);
-              distinctTotal.add(`${uKey}_${dateStr}`);
-            });
-            totalCount = distinctTotal.size;
-            todayCount = distinctToday.size;
-          }
-        }
-
-        setTotalDailySolversCount(totalCount);
-        setTodayDailySolversCount(todayCount);
+        setTotalDailySolversCount(totalSolversCount ?? 0);
+        setTodayDailySolversCount(todaySolversCount ?? 0);
       } catch {
         setTotalDailySolversCount(0);
         setTodayDailySolversCount(0);
@@ -401,22 +397,31 @@ export const AdminDashboard = () => {
         setActiveUsersCount(usersCount ? Math.min(usersCount, 100) : 0);
       }
 
-      // Exact Colleges Count (distinct registered institutions)
+      // Exact Colleges Count (distinct registered institutions from college_leaderboard)
       try {
-        const { data: profColleges } = await supabase
-          .from('profiles')
-          .select('college')
-          .not('college', 'is', null);
+        const { count: collegesCount, error: colErr } = await supabase
+          .from('college_leaderboard')
+          .select('name', { count: 'exact', head: true });
 
-        if (profColleges && profColleges.length > 0) {
-          const distinctColleges = new Set(
-            profColleges
-              .map(p => normalizeCollege(p.college))
-              .filter(c => c && c !== '-')
-          );
-          setTotalCollegesCount(distinctColleges.size);
+        if (!colErr && collegesCount !== null) {
+          setTotalCollegesCount(collegesCount);
         } else {
-          setTotalCollegesCount(0);
+          const { data: profColleges } = await supabase
+            .from('profiles')
+            .select('college')
+            .not('college', 'is', null)
+            .limit(1000);
+
+          if (profColleges && profColleges.length > 0) {
+            const distinctColleges = new Set(
+              profColleges
+                .map(p => normalizeCollege(p.college))
+                .filter(c => c && c !== '-')
+            );
+            setTotalCollegesCount(distinctColleges.size);
+          } else {
+            setTotalCollegesCount(0);
+          }
         }
       } catch {
         setTotalCollegesCount(0);
@@ -452,7 +457,16 @@ export const AdminDashboard = () => {
           .select('id, name, email, college, department, role, is_blocked, avatar_url, updated_at', { count: 'exact' });
 
         if (searchTerm.trim()) {
-          query = query.or(`name.ilike.%${searchTerm.trim()}%,email.ilike.%${searchTerm.trim()}%,college.ilike.%${searchTerm.trim()}%`);
+          const term = searchTerm.trim();
+          const lowerTerm = term.toLowerCase();
+          let orConditions = `name.ilike.%${term}%,email.ilike.%${term}%,college.ilike.%${term}%`;
+          if (lowerTerm.includes('vsb') || lowerTerm.includes('v.s.b')) {
+            orConditions += `,college.ilike.%vsb%,college.ilike.%v.s.b.%`;
+          }
+          if (lowerTerm.includes('jecrc') || lowerTerm.includes('jsrc')) {
+            orConditions += `,college.ilike.%jecrc%,college.ilike.%jsrc%,college.ilike.%jaipur engineering%`;
+          }
+          query = query.or(orConditions);
         }
 
         const { data, count, error } = await query
@@ -749,15 +763,23 @@ export const AdminDashboard = () => {
         setTotalTabCount(count ?? 0);
       }
       else if (activeTab === 'colleges') {
-        const { data: profColleges, error } = await supabase
-          .from('profiles')
-          .select('college')
-          .not('college', 'is', null);
-
-        if (error) throw error;
+        // Fetch all colleges across all profiles using range pagination to eliminate PostgREST 1000 row limits
+        let allProfilesColleges: any[] = [];
+        let pFrom = 0;
+        while (true) {
+          const { data, error: pErr } = await supabase
+            .from('profiles')
+            .select('college')
+            .not('college', 'is', null)
+            .range(pFrom, pFrom + 999);
+          if (pErr || !data || data.length === 0) break;
+          allProfilesColleges = allProfilesColleges.concat(data);
+          if (data.length < 1000) break;
+          pFrom += 1000;
+        }
 
         const map = new Map<string, number>();
-        (profColleges || []).forEach(u => {
+        allProfilesColleges.forEach(u => {
           const normalized = normalizeCollege(u.college);
           if (normalized === '-') return;
           map.set(normalized, (map.get(normalized) || 0) + 1);

@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { 
   createInitialState, 
-  handleCellClick, 
-  undo, 
-  resetBoard 
+  handleCellClick 
 } from '../src/games/queens/engine';
 import { 
   checkConflicts, 

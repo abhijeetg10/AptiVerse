@@ -19,7 +19,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
       if (typeof window !== "undefined") {
         ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
       }
-    } catch (err) {
+    } catch {
       // Silently handle ad push errors to prevent console pollution
     }
   }, [isValidSlot]);

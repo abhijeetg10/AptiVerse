@@ -23,14 +23,7 @@ const GAME_OPTIONS = [
   { id: 'queens', label: 'Queens Challenge', icon: Crown, matchIds: ['queens'] },
 ];
 
-const normalizeCollege = (name: string | null | undefined) => {
-  if (!name) return '-';
-  const lower = name.trim().toLowerCase();
-  if (lower === 'cit' || lower === 'chennai institute of technology') {
-    return 'Chennai Institute of Technology';
-  }
-  return name.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-};
+import { normalizeCollege } from '../utils/normalizeCollege';
 
 export const sortLeaderboardEntries = (a: any, b: any) => {
   if ((b.total_score || 0) !== (a.total_score || 0)) {
@@ -58,6 +51,7 @@ const Leaderboard = () => {
   const [visibleCount, setVisibleCount] = useState(25);
 
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [collegesList, setCollegesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -92,193 +86,111 @@ const Leaderboard = () => {
       const isWeekly = activeTab === 'this-week';
 
       try {
-        // Fetch blocked user IDs to ensure 100% parity with Admin Dashboard
-        const { data: blockedUsers } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('is_blocked', true);
-        const blockedSet = new Set(blockedUsers?.map(b => b.id) || []);
+        if (activeTab === 'college') {
+          // Dedicated College Leaderboard: Query database college_leaderboard view directly
+          const { data: dbColleges, error: colError } = await supabase
+            .from('college_leaderboard')
+            .select('*')
+            .order('total_score', { ascending: false })
+            .limit(250);
 
-        if (!isSpecificGame && !isWeekly) {
-          // Direct aggregation from profiles joined with all their game_sessions
-          // This groups all 85,000+ sessions by student without being truncated by PostgREST 1,000 row limits!
-          const { data: profileData, error: profileErr } = await supabase
-            .from('profiles')
-            .select('id, name, college, avatar_url, is_blocked, game_sessions(score, accuracy, time_spent, game_id, created_at)')
-            .eq('is_blocked', false);
+          if (!colError && dbColleges && !isCancelled) {
+            // Merge duplicate/variant names (JECRC/JSRC, VSB, etc.) into one canonical institution
+            const mergedMap = new Map<string, { name: string; score: number; students: number; weightedAcc: number }>();
 
-          if (!profileErr && profileData && profileData.length > 0 && !isCancelled) {
-            const list: any[] = [];
-            profileData.forEach((p: any) => {
-              const sessions = p.game_sessions || [];
-              if (sessions.length === 0) return;
+            dbColleges.forEach(c => {
+              const canonical = normalizeCollege(c.name);
+              if (canonical === '-') return;
 
-              let total_score = 0;
-              let accuracy_sum = 0;
-              let total_time = 0;
-              sessions.forEach((s: any) => {
-                total_score += Number(s.score) || 0;
-                accuracy_sum += Number(s.accuracy) || 0;
-                total_time += Number(s.time_spent) || 0;
-              });
+              const existing = mergedMap.get(canonical) || {
+                name: canonical,
+                score: 0,
+                students: 0,
+                weightedAcc: 0,
+              };
 
-              list.push({
-                user_id: p.id,
-                name: p.name || 'Anonymous',
-                college: normalizeCollege(p.college),
-                avatar_url: p.avatar_url,
-                total_score,
-                avg_accuracy: sessions.length > 0 ? Math.round(accuracy_sum / sessions.length) : 0,
-                total_games: sessions.length,
-                total_time,
-              });
+              const cScore = Number(c.total_score) || 0;
+              const cStudents = Number(c.students) || 0;
+              const cAcc = Number(c.avg_accuracy) || 0;
+
+              existing.score += cScore;
+              existing.students += cStudents;
+              existing.weightedAcc += (cAcc * cStudents);
+
+              mergedMap.set(canonical, existing);
             });
 
-            list.sort(sortLeaderboardEntries);
-            setLeaderboard(list);
-          } else {
-            // Fallback to global_leaderboard view
-            const { data, error } = await supabase
-              .from('global_leaderboard')
-              .select('*')
-              .order('total_score', { ascending: false })
-              .order('avg_accuracy', { ascending: false })
-              .order('total_time', { ascending: true })
-              .limit(1000);
+            const mergedList = Array.from(mergedMap.values())
+              .map(c => ({
+                name: c.name,
+                score: c.score,
+                students: c.students,
+                avgAccuracy: c.students > 0 ? Math.round(c.weightedAcc / c.students) : 0
+              }))
+              .sort((a, b) => b.score - a.score);
 
-            if (!error && data && !isCancelled) {
-              const normalizedData = data
-                .filter(u => !blockedSet.has(u.user_id))
-                .map(u => ({
-                  ...u,
-                  college: normalizeCollege(u.college),
-                }))
-                .sort(sortLeaderboardEntries);
+            setCollegesList(mergedList);
+          } else if (colError) {
+            throw colError;
+          }
+        } else if (!isSpecificGame && !isWeekly) {
+          // 1. All-time global rankings: Query server-side aggregated global_leaderboard view
+          const { data, error } = await supabase
+            .from('global_leaderboard')
+            .select('user_id, name, college, avatar_url, total_score, avg_accuracy, total_games, total_time')
+            .order('total_score', { ascending: false })
+            .order('avg_accuracy', { ascending: false })
+            .order('total_time', { ascending: true })
+            .limit(250);
 
-              setLeaderboard(normalizedData);
-            }
+          if (!error && data && !isCancelled) {
+            const normalizedData = data.map(u => ({
+              ...u,
+              college: normalizeCollege(u.college),
+            }));
+            setLeaderboard(normalizedData);
+          } else if (error) {
+            throw error;
           }
         } else if (isWeekly && !isSpecificGame) {
-          // Weekly direct aggregation from profiles joined with recent game_sessions
-          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-          const { data: profileData, error: profileErr } = await supabase
-            .from('profiles')
-            .select('id, name, college, avatar_url, is_blocked, game_sessions(score, accuracy, time_spent, game_id, created_at)')
-            .eq('is_blocked', false);
+          // 2. Weekly rankings: Query server-side aggregated weekly_leaderboard view
+          const { data, error } = await supabase
+            .from('weekly_leaderboard')
+            .select('user_id, name, college, avatar_url, total_score, avg_accuracy, total_games, total_time')
+            .order('total_score', { ascending: false })
+            .order('avg_accuracy', { ascending: false })
+            .order('total_time', { ascending: true })
+            .limit(250);
 
-          if (!profileErr && profileData && profileData.length > 0 && !isCancelled) {
-            const list: any[] = [];
-            profileData.forEach((p: any) => {
-              const allSessions = p.game_sessions || [];
-              const sessions = allSessions.filter((s: any) => s.created_at >= sevenDaysAgo);
-              if (sessions.length === 0) return;
-
-              let total_score = 0;
-              let accuracy_sum = 0;
-              let total_time = 0;
-              sessions.forEach((s: any) => {
-                total_score += Number(s.score) || 0;
-                accuracy_sum += Number(s.accuracy) || 0;
-                total_time += Number(s.time_spent) || 0;
-              });
-
-              list.push({
-                user_id: p.id,
-                name: p.name || 'Anonymous',
-                college: normalizeCollege(p.college),
-                avatar_url: p.avatar_url,
-                total_score,
-                avg_accuracy: sessions.length > 0 ? Math.round(accuracy_sum / sessions.length) : 0,
-                total_games: sessions.length,
-                total_time,
-              });
-            });
-
-            list.sort(sortLeaderboardEntries);
-            setLeaderboard(list);
-          } else {
-            // Fallback to weekly view
-            try {
-              const { data: weekData, error: weekErr } = await supabase
-                .from('weekly_leaderboard')
-                .select('*')
-                .order('total_score', { ascending: false })
-                .limit(1000);
-
-              if (!weekErr && weekData && !isCancelled) {
-                setLeaderboard(
-                  weekData
-                    .filter(u => !blockedSet.has(u.user_id))
-                    .map(u => ({ ...u, college: normalizeCollege(u.college) }))
-                    .sort(sortLeaderboardEntries)
-                );
-              }
-            } catch {}
+          if (!error && data && !isCancelled) {
+            const normalizedData = data.map(u => ({
+              ...u,
+              college: normalizeCollege(u.college),
+            }));
+            setLeaderboard(normalizedData);
+          } else if (error) {
+            throw error;
           }
         } else {
-          // Specific game: aggregation per student filtered by game_id
-          const { data: profileData, error: profileErr } = await supabase
-            .from('profiles')
-            .select('id, name, college, avatar_url, is_blocked, game_sessions(score, accuracy, time_spent, game_id, created_at)')
-            .eq('is_blocked', false);
+          // 3. Specific Game rankings: Query server-side aggregated game_leaderboard view
+          const matchIds = activeGameOption?.matchIds || [selectedGame === 'geo_sudoku' ? 'sudoku' : selectedGame];
+          const { data, error } = await supabase
+            .from('game_leaderboard')
+            .select('game_id, user_id, name, college, avatar_url, total_score, avg_accuracy, total_games, total_time')
+            .in('game_id', matchIds)
+            .order('total_score', { ascending: false })
+            .order('avg_accuracy', { ascending: false })
+            .order('total_time', { ascending: true })
+            .limit(250);
 
-          const matchIds = activeGameOption?.matchIds || [];
-
-          if (!profileErr && profileData && profileData.length > 0 && !isCancelled) {
-            const list: any[] = [];
-            profileData.forEach((p: any) => {
-              const allSessions = p.game_sessions || [];
-              const sessions = matchIds.length > 0 
-                ? allSessions.filter((s: any) => matchIds.includes(s.game_id === 'geo_sudoku' ? 'sudoku' : s.game_id))
-                : allSessions;
-              if (sessions.length === 0) return;
-
-              let total_score = 0;
-              let accuracy_sum = 0;
-              let total_time = 0;
-              sessions.forEach((s: any) => {
-                total_score += Number(s.score) || 0;
-                accuracy_sum += Number(s.accuracy) || 0;
-                total_time += Number(s.time_spent) || 0;
-              });
-
-              list.push({
-                user_id: p.id,
-                name: p.name || 'Anonymous',
-                college: normalizeCollege(p.college),
-                avatar_url: p.avatar_url,
-                total_score,
-                avg_accuracy: sessions.length > 0 ? Math.round(accuracy_sum / sessions.length) : 0,
-                total_games: sessions.length,
-                total_time,
-              });
-            });
-
-            list.sort(sortLeaderboardEntries);
-            setLeaderboard(list);
-          } else {
-            // Fallback to game_leaderboard view
-            try {
-              if (activeGameOption?.matchIds?.length) {
-                const { data: viewData, error: viewError } = await supabase
-                  .from('game_leaderboard')
-                  .select('*')
-                  .in('game_id', activeGameOption.matchIds)
-                  .order('total_score', { ascending: false });
-
-                if (viewData && !viewError && !isCancelled && viewData.length > 0) {
-                  const normalizedData = viewData
-                    .filter(u => !blockedSet.has(u.user_id))
-                    .map(u => ({
-                      ...u,
-                      college: normalizeCollege(u.college),
-                    }))
-                    .sort(sortLeaderboardEntries);
-
-                  setLeaderboard(normalizedData);
-                }
-              }
-            } catch {}
+          if (!error && data && !isCancelled) {
+            const normalizedData = data.map(u => ({
+              ...u,
+              college: normalizeCollege(u.college),
+            }));
+            setLeaderboard(normalizedData);
+          } else if (error) {
+            throw error;
           }
         }
       } catch (err: any) {
@@ -298,20 +210,27 @@ const Leaderboard = () => {
     };
   }, [activeTab, selectedGame, refreshTrigger]);
 
-  // Realtime subscription: whenever a game session is saved, automatically trigger leaderboard refresh
+  // Realtime subscription: debounced to avoid overwhelming clients during high-concurrency gameplay
   useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel('leaderboard-realtime')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'game_sessions' },
+        { event: 'INSERT', schema: 'public', table: 'game_sessions' },
         () => {
-          setRefreshTrigger(prev => prev + 1);
+          if (!debounceTimer) {
+            debounceTimer = setTimeout(() => {
+              setRefreshTrigger(prev => prev + 1);
+              debounceTimer = null;
+            }, 15000); // Throttle to at most once per 15s
+          }
         }
       )
       .subscribe();
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, []);
@@ -330,12 +249,19 @@ const Leaderboard = () => {
 
   // College Aggregation
   const collegeLeaderboard = useMemo(() => {
+    if (collegesList.length > 0) {
+      return collegesList;
+    }
+
     const map = new Map<string, { name: string; score: number; studentCount: Set<string>; accuracySum: number; gamesCount: number }>();
 
     leaderboard.forEach(u => {
       if (!u.college || u.college === '-') return;
-      const existing = map.get(u.college) || {
-        name: u.college,
+      const canonical = normalizeCollege(u.college);
+      if (canonical === '-') return;
+
+      const existing = map.get(canonical) || {
+        name: canonical,
         score: 0,
         studentCount: new Set<string>(),
         accuracySum: 0,
@@ -346,7 +272,7 @@ const Leaderboard = () => {
       existing.studentCount.add(u.user_id);
       existing.accuracySum += (u.avg_accuracy || 0);
       existing.gamesCount += 1;
-      map.set(u.college, existing);
+      map.set(canonical, existing);
     });
 
     return Array.from(map.values())
@@ -357,7 +283,7 @@ const Leaderboard = () => {
         avgAccuracy: Math.round(c.accuracySum / c.gamesCount),
       }))
       .sort((a, b) => b.score - a.score);
-  }, [leaderboard]);
+  }, [collegesList, leaderboard]);
 
   // Top 100 players for the public leaderboard
   const top100Users = useMemo(() => {

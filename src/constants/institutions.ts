@@ -18,9 +18,11 @@ export const DEPARTMENTS = [
 ] as const;
 
 export const POPULAR_COLLEGES = [
+  'JECRC University & Foundation, Jaipur',
+  'VSB Engineering College, Karur',
   'Rajarambapu Institute of Technology, Sangli, Maharashtra, India',
   'Chennai Institute of Technology, Chennai',
-  'VSB Engineering College, Karur',
+  'KG College of Arts and Science (KGCAS), Coimbatore',
   'College of Engineering, Pune (COEP)',
   'Veermata Jijabai Technological Institute (VJTI), Mumbai',
   'Walchand College of Engineering, Sangli',
