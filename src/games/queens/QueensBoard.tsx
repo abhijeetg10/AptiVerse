@@ -71,21 +71,14 @@ export const QueensBoard: React.FC<QueensBoardProps> = ({
               const hasConflict = conflictMap.has(`${r},${c}`);
               const isSuggested = suggestedCell?.row === r && suggestedCell?.col === c;
 
-              // Hover effect calculations
+              // Hover effect calculation - single cell only (LinkedIn Queens style)
               const isHovered = activeCell?.row === r && activeCell?.col === c;
-              const isSameRow = activeCell?.row === r;
-              const isSameCol = activeCell?.col === c;
-              const isSameRegion = activeCell && regions[activeCell.row][activeCell.col] === regId;
-              const isNeighbor =
-                activeCell &&
-                Math.abs(activeCell.row - r) <= 1 &&
-                Math.abs(activeCell.col - c) <= 1 &&
-                !isHovered;
 
               return (
                 <div
                   key={`${r}-${c}`}
                   onClick={() => !disabled && onCellClick(r, c)}
+                  onDoubleClick={() => !disabled && onCellClick(r, c, 'queen')}
                   onContextMenu={(e) => handleContextMenu(e, r, c)}
                   onMouseEnter={() => setHoveredCell({ row: r, col: c })}
                   className={`relative flex items-center justify-center cursor-pointer transition-colors duration-100 ease-out group ${
@@ -105,23 +98,9 @@ export const QueensBoard: React.FC<QueensBoardProps> = ({
                   }}
                   title={hasConflict ? conflictMap.get(`${r},${c}`) : `Region ${regId + 1}`}
                 >
-                  {/* Row/Col/Region/Neighbor Hover Wash */}
-                  {(isSameRow || isSameCol || isSameRegion) && (
-                    <div
-                      className="absolute inset-0 pointer-events-none transition-opacity duration-150"
-                      style={{
-                        backgroundColor: isHovered
-                          ? 'rgba(99, 102, 241, 0.22)'
-                          : isSameRegion
-                          ? 'rgba(99, 102, 241, 0.12)'
-                          : 'rgba(0, 0, 0, 0.04)',
-                      }}
-                    />
-                  )}
-
-                  {/* Neighbor prohibited zone highlight when hovered */}
-                  {isNeighbor && (
-                    <div className="absolute inset-0 border border-dashed border-red-400/40 bg-red-500/5 pointer-events-none" />
+                  {/* Subtle single-cell hover highlight only (No row, column, or diagonal wash) */}
+                  {isHovered && (
+                    <div className="absolute inset-0 bg-white/25 pointer-events-none transition-opacity duration-100" />
                   )}
 
                   {/* Suggested Cell Glow (Hint) */}

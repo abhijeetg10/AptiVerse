@@ -260,9 +260,8 @@ export function calculateScoreSummary(state: QueensGameState): ScoreSummary {
     stars = 2;
   }
 
-  // Normalized score (0.00 - 10.00) for AptiVerse backend attempt submission
-  const maxPossible = baseScore * 1.7;
-  const normalizedScore = Math.min(10, Math.max(1, Math.round((rawScore / maxPossible) * 10 * 100) / 100));
+  // Standardized AptiVerse points (10.00 points awarded per completed level)
+  const normalizedScore = 10;
 
   return {
     difficulty: state.puzzle.difficulty,

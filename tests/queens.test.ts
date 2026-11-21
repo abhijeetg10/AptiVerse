@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { 
   createInitialState, 
-  handleCellClick 
+  handleCellClick,
+  calculateScoreSummary
 } from '../src/games/queens/engine';
 import { 
   checkConflicts, 
@@ -105,5 +106,13 @@ describe('Queens Challenge Engine & CSP Solver', () => {
     const count = countSolutions(4, samplePuzzle.regions, 2);
     expect(typeof count).toBe('number');
     expect(count).toBeGreaterThanOrEqual(0);
+  });
+
+  it('awards standard 10 points for completed level in calculateScoreSummary', () => {
+    const state = createInitialState(samplePuzzle);
+    state.status = 'completed';
+    state.timeElapsed = 25;
+    const summary = calculateScoreSummary(state);
+    expect(summary.normalizedScore).toBe(10);
   });
 });

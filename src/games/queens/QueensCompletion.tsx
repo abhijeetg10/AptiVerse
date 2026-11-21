@@ -7,7 +7,8 @@ import { DIFFICULTY_CONFIG } from './generator';
 interface QueensCompletionProps {
   isOpen: boolean;
   summary: ScoreSummary | null;
-  onPlayAgain: () => void;
+  onNextLevel: () => void;
+  onReplayLevel: () => void;
   onNextDifficulty: () => void;
   canNextDifficulty: boolean;
 }
@@ -15,7 +16,8 @@ interface QueensCompletionProps {
 export const QueensCompletion: React.FC<QueensCompletionProps> = ({
   isOpen,
   summary,
-  onPlayAgain,
+  onNextLevel,
+  onReplayLevel,
   onNextDifficulty,
   canNextDifficulty,
 }) => {
@@ -79,14 +81,14 @@ export const QueensCompletion: React.FC<QueensCompletionProps> = ({
         <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 mb-6">
           <div className="grid grid-cols-2 gap-4 divide-x divide-slate-200">
             <div>
-              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
-                Total Score
+              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">
+                Points Earned
               </span>
-              <span className="text-2xl font-black text-indigo-600 font-mono">
-                {summary.finalScore.toLocaleString()}
+              <span className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono">
+                +10 PTS
               </span>
-              <span className="text-[10px] text-slate-600 block mt-0.5">
-                Rating: {summary.normalizedScore.toFixed(1)}/10
+              <span className="text-[10px] text-slate-500 block mt-0.5">
+                Added to your score
               </span>
             </div>
             <div>
@@ -96,7 +98,7 @@ export const QueensCompletion: React.FC<QueensCompletionProps> = ({
               <span className="text-2xl font-black text-slate-800 font-mono">
                 {formatTime(summary.timeElapsed)}
               </span>
-              <span className="text-[10px] text-slate-600 block mt-0.5">
+              <span className="text-[10px] text-slate-500 block mt-0.5">
                 {summary.movesCount} moves • {summary.mistakesCount} mistakes
               </span>
             </div>
@@ -105,15 +107,15 @@ export const QueensCompletion: React.FC<QueensCompletionProps> = ({
           {/* Points Breakdown */}
           <div className="mt-3 pt-3 border-t border-slate-200/60 grid grid-cols-3 gap-1 text-[11px] text-slate-600">
             <div>
-              <span className="block text-slate-600 text-[10px]">Base</span>
+              <span className="block text-slate-500 text-[10px]">Base</span>
               <span className="font-bold text-slate-700">+{summary.baseScore}</span>
             </div>
             <div>
-              <span className="block text-slate-600 text-[10px]">Speed</span>
+              <span className="block text-slate-500 text-[10px]">Speed</span>
               <span className="font-bold text-emerald-600">+{summary.timeBonus}</span>
             </div>
             <div>
-              <span className="block text-slate-600 text-[10px]">Accuracy</span>
+              <span className="block text-slate-500 text-[10px]">Accuracy</span>
               <span className="font-bold text-indigo-600">+{summary.accuracyBonus}</span>
             </div>
           </div>
@@ -122,25 +124,25 @@ export const QueensCompletion: React.FC<QueensCompletionProps> = ({
         {/* Action Buttons */}
         <div className="flex flex-col gap-2.5">
           
-          {canNextDifficulty ? (
+          <button
+            onClick={onNextLevel}
+            className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 active:scale-98"
+          >
+            <span>Next Level (+10 PTS)</span> <ArrowRight size={17} />
+          </button>
+
+          {canNextDifficulty && (
             <button
               onClick={onNextDifficulty}
-              className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 active:scale-98"
+              className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5"
             >
-              <span>Next Difficulty</span> <ArrowRight size={17} />
-            </button>
-          ) : (
-            <button
-              onClick={onPlayAgain}
-              className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 active:scale-98"
-            >
-              <RotateCcw size={17} /> <span>Play Another Puzzle</span>
+              <span>Next Difficulty</span> <ArrowRight size={14} />
             </button>
           )}
 
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={onPlayAgain}
+              onClick={onReplayLevel}
               className="py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5"
             >
               <RotateCcw size={14} /> Replay Level
@@ -166,4 +168,3 @@ export const QueensCompletion: React.FC<QueensCompletionProps> = ({
     </div>
   );
 };
-

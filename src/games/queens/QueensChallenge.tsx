@@ -103,9 +103,10 @@ export const QueensChallenge: React.FC = () => {
       );
       const elapsed = Math.max(3, gameState.timeElapsed);
 
+      // Award 10 points for each level completed (identical to motion/sudoku/switch)
       saveSession(
         levelIndex + 1,
-        summary.normalizedScore,
+        10,
         accuracy,
         elapsed,
         true,
@@ -174,6 +175,14 @@ export const QueensChallenge: React.FC = () => {
     loadPuzzle(newDiff, 0);
   };
 
+  const handleNextLevel = () => {
+    loadPuzzle(difficulty, levelIndex + 1);
+  };
+
+  const handleReplayLevel = () => {
+    loadPuzzle(difficulty, levelIndex);
+  };
+
   const handleNextDifficulty = () => {
     const currentIdx = DIFFICULTY_LEVELS.indexOf(difficulty);
     if (currentIdx < DIFFICULTY_LEVELS.length - 1) {
@@ -181,10 +190,6 @@ export const QueensChallenge: React.FC = () => {
     } else {
       loadPuzzle(difficulty, levelIndex + 1);
     }
-  };
-
-  const handlePlayAgain = () => {
-    loadPuzzle(difficulty, levelIndex + 1);
   };
 
   // Count placed queens
@@ -204,6 +209,7 @@ export const QueensChallenge: React.FC = () => {
       {/* Header */}
       <QueensHeader
         difficulty={difficulty}
+        level={levelIndex + 1}
         onDifficultyChange={handleDifficultyChange}
         timeElapsed={gameState.timeElapsed}
         queensPlaced={queensPlaced}
@@ -263,7 +269,8 @@ export const QueensChallenge: React.FC = () => {
       <QueensCompletion
         isOpen={isCompletionOpen}
         summary={scoreSummary}
-        onPlayAgain={handlePlayAgain}
+        onNextLevel={handleNextLevel}
+        onReplayLevel={handleReplayLevel}
         onNextDifficulty={handleNextDifficulty}
         canNextDifficulty={canNextDifficulty}
       />

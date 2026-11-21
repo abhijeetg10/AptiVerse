@@ -6,6 +6,7 @@ import { DIFFICULTY_CONFIG } from './generator';
 
 interface QueensHeaderProps {
   difficulty: Difficulty;
+  level: number;
   onDifficultyChange: (diff: Difficulty) => void;
   timeElapsed: number;
   queensPlaced: number;
@@ -17,6 +18,7 @@ interface QueensHeaderProps {
 
 export const QueensHeader: React.FC<QueensHeaderProps> = ({
   difficulty,
+  level,
   onDifficultyChange,
   timeElapsed,
   queensPlaced,
@@ -64,8 +66,8 @@ export const QueensHeader: React.FC<QueensHeaderProps> = ({
               </button>
             </div>
             
-            {/* Difficulty Selector Dropdown */}
-            <div className="flex items-center gap-1.5 mt-0.5">
+            {/* Difficulty Selector Dropdown & Level Badge */}
+            <div className="flex items-center gap-2 mt-0.5">
               <select
                 value={difficulty}
                 onChange={(e) => onDifficultyChange(e.target.value as Difficulty)}
@@ -77,6 +79,10 @@ export const QueensHeader: React.FC<QueensHeaderProps> = ({
                   </option>
                 ))}
               </select>
+
+              <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold tracking-tight">
+                Level {level} • +10 PTS
+              </span>
             </div>
           </div>
         </div>
